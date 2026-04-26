@@ -1,5 +1,26 @@
 # uapkg
 
+## 1.1.6
+
+### Patch Changes
+
+- [`3b8964b`](https://github.com/MaximDevoir/uapkg/commit/3b8964b57adac9f7af285642769377d564cce00a) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Finish up moving to dedicated Git repo
+
+- [`407c318`](https://github.com/MaximDevoir/uapkg/commit/407c318ca0d863f9b8b7a534d6d5948569f19d56) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - bump version
+
+- Updated dependencies [[`3b8964b`](https://github.com/MaximDevoir/uapkg/commit/3b8964b57adac9f7af285642769377d564cce00a), [`407c318`](https://github.com/MaximDevoir/uapkg/commit/407c318ca0d863f9b8b7a534d6d5948569f19d56)]:
+  - @uapkg/package-manifest-schema@1.1.6
+  - @uapkg/diagnostics-format@1.1.6
+  - @uapkg/package-manifest@1.1.6
+  - @uapkg/common-schema@1.1.6
+  - @uapkg/registry-core@1.1.6
+  - @uapkg/diagnostics@1.1.6
+  - @uapkg/installer@1.1.6
+  - @uapkg/common@1.1.6
+  - @uapkg/config@1.1.6
+  - @uapkg/pack@1.1.6
+  - @uapkg/log@1.1.6
+
 ## 1.1.4
 
 ### Patch Changes
