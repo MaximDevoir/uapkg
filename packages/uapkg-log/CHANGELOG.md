@@ -1,5 +1,11 @@
 # @uapkg/log
 
+## 1.1.9
+
+### Patch Changes
+
+- [`4a76025`](https://github.com/MaximDevoir/uapkg/commit/4a7602561ce4585e5b9045684e4a6dd9a155738e) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - fix: build before publish
+
 ## 1.1.8
 
 ### Patch Changes
