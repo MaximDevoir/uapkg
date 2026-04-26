@@ -18,11 +18,9 @@ export interface InitCommandOptions {
 //
 // - Writes via `@uapkg/package-manifest` ManifestWriter.
 // - Pre-check uses ManifestReader (fails fast if manifest already present).
-// - No mutation beyond the single write; idempotency is the caller's duty
-//   (create-atc-harness checks existence before calling).
 // ---------------------------------------------------------------------------
 
-const DEFAULT_INITIAL_VERSION = '0.0.0';
+const DEFAULT_INITIAL_VERSION = '0.1.0';
 
 export class InitCommand implements Command {
   public constructor(

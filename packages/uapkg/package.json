@@ -1,6 +1,6 @@
 {
   "name": "@uapkg/cli",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "type": "module",
   "sideEffects": false,
   "bin": {
@@ -55,7 +55,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/MaximDevoir/ATO.git",
+    "url": "https://github.com/MaximDevoir/uapkg.git",
     "directory": "packages/uapkg"
   }
 }

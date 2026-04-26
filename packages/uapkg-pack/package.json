@@ -1,6 +1,6 @@
 {
   "name": "@uapkg/pack",
-  "version": "0.1.2",
+  "version": "1.1.5",
   "type": "module",
   "sideEffects": false,
   "files": [
@@ -33,7 +33,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/MaximDevoir/ATO.git",
+    "url": "https://github.com/MaximDevoir/uapkg.git",
     "directory": "packages/uapkg-pack"
   },
   "devDependencies": {

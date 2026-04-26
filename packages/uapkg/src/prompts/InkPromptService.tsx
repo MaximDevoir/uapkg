@@ -10,8 +10,7 @@ import type { PromptService, SelectOption } from './PromptService.js';
 // InkPromptService — renders interactive prompts via Ink/React.
 //
 // Auto-detects non-interactive environments (no TTY or CI) and returns the
-// supplied fallback without ever rendering. This mirrors the behavior expected
-// by `create-atc-harness` + CI pipelines: prompts must never block.
+// supplied fallback without ever rendering.
 // ---------------------------------------------------------------------------
 
 export class InkPromptService implements PromptService {
