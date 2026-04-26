@@ -16,6 +16,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "prepack": "pnpm run build",
     "build:watch": "tsc -p tsconfig.build.json --watch",
     "lint": "biome lint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
