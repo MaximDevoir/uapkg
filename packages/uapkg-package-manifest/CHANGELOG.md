@@ -1,5 +1,19 @@
 # @uapkg/package-manifest
 
+## 1.1.7
+
+### Patch Changes
+
+- [`c89d066`](https://github.com/MaximDevoir/uapkg/commit/c89d066831e1add8785fe77912222f892927d389) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - ci: OIDC CI Publish Test
+
+- Updated dependencies [[`c89d066`](https://github.com/MaximDevoir/uapkg/commit/c89d066831e1add8785fe77912222f892927d389)]:
+  - @uapkg/common@1.1.7
+  - @uapkg/common-schema@1.1.7
+  - @uapkg/config@1.1.7
+  - @uapkg/diagnostics@1.1.7
+  - @uapkg/package-manifest-schema@1.1.7
+  - @uapkg/registry-core@1.1.7
+
 ## 1.1.6
 
 ### Patch Changes

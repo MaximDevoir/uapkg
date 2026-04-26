@@ -1,5 +1,11 @@
 # @uapkg/log
 
+## 1.1.7
+
+### Patch Changes
+
+- [`c89d066`](https://github.com/MaximDevoir/uapkg/commit/c89d066831e1add8785fe77912222f892927d389) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - ci: OIDC CI Publish Test
+
 ## 1.1.6
 
 ### Patch Changes
