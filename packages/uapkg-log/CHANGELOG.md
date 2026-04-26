@@ -1,5 +1,11 @@
 # @uapkg/log
 
+## 1.1.8
+
+### Patch Changes
+
+- [`e2c21da`](https://github.com/MaximDevoir/uapkg/commit/e2c21dad6c2164cbf73f35038cb66b4ecbe3a949) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - chore: remove unused README files from uapkg packages
+
 ## 1.1.7
 
 ### Patch Changes

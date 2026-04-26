@@ -1,5 +1,17 @@
 # @uapkg/package-manifest
 
+## 1.1.8
+
+### Patch Changes
+
+- Updated dependencies [[`e2c21da`](https://github.com/MaximDevoir/uapkg/commit/e2c21dad6c2164cbf73f35038cb66b4ecbe3a949)]:
+  - @uapkg/config@1.1.8
+  - @uapkg/common@1.1.8
+  - @uapkg/common-schema@1.1.8
+  - @uapkg/diagnostics@1.1.8
+  - @uapkg/package-manifest-schema@1.1.8
+  - @uapkg/registry-core@1.1.8
+
 ## 1.1.7
 
 ### Patch Changes
