@@ -7,30 +7,13 @@ interface RunOptions {
 
 export class ProcessRunner {
   run(command: string, args: string[], cwd: string, options: RunOptions = {}) {
-    const result = spawnSync(command, args, {
-      cwd,
-      stdio: 'inherit',
-      shell: process.platform === 'win32',
-      env: {
-        ...process.env,
-        ...options.env,
-      },
-    });
+    const result = this.spawn(command, args, cwd, 'inherit', options);
 
     this.throwIfFailed(command, args, result.error, result.status, options.ignoreFailure);
   }
 
   runAndCapture(command: string, args: string[], cwd: string, options: RunOptions = {}) {
-    const result = spawnSync(command, args, {
-      cwd,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      encoding: 'utf8',
-      shell: process.platform === 'win32',
-      env: {
-        ...process.env,
-        ...options.env,
-      },
-    });
+    const result = this.spawn(command, args, cwd, ['ignore', 'pipe', 'pipe'], options);
 
     this.throwIfFailed(command, args, result.error, result.status, options.ignoreFailure);
 
@@ -39,6 +22,41 @@ export class ProcessRunner {
       stderr: result.stderr ?? '',
       status: result.status ?? 0,
     };
+  }
+
+  private spawn(
+    command: string,
+    args: string[],
+    cwd: string,
+    stdio: 'inherit' | ['ignore', 'pipe', 'pipe'],
+    options: RunOptions,
+  ) {
+    const env = {
+      ...process.env,
+      ...options.env,
+    };
+
+    if (process.platform === 'win32' && this.isCmdShim(command)) {
+      return spawnSync('cmd.exe', ['/d', '/s', '/c', command, ...args], {
+        cwd,
+        stdio,
+        encoding: stdio === 'inherit' ? undefined : 'utf8',
+        shell: false,
+        env,
+      });
+    }
+
+    return spawnSync(command, args, {
+      cwd,
+      stdio,
+      encoding: stdio === 'inherit' ? undefined : 'utf8',
+      shell: false,
+      env,
+    });
+  }
+
+  private isCmdShim(command: string): boolean {
+    return ['pnpm', 'npm', 'npx', 'yarn'].includes(command);
   }
 
   private throwIfFailed(
