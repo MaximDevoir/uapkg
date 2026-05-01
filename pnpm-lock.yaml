@@ -313,6 +313,34 @@ importers:
         specifier: 4.3.6
         version: 4.3.6
 
+  packages/uapkg-registry-tools:
+    dependencies:
+      '@uapkg/common':
+        specifier: workspace:^
+        version: link:../uapkg-common
+      '@uapkg/common-schema':
+        specifier: workspace:^
+        version: link:../uapkg-common-schema
+      '@uapkg/diagnostics':
+        specifier: workspace:^
+        version: link:../uapkg-diagnostics
+      '@uapkg/package-manifest-schema':
+        specifier: workspace:^
+        version: link:../uapkg-package-manifest-schema
+      '@uapkg/registry-schema':
+        specifier: workspace:^
+        version: link:../uapkg-registry-schema
+      semver:
+        specifier: 7.7.1
+        version: 7.7.1
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@types/semver':
+        specifier: 7.7.0
+        version: 7.7.0
+
 packages:
 
   '@alcalzone/ansi-tokenize@0.2.5':

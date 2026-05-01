@@ -9,6 +9,7 @@ export { manifestFormatters } from './formatters/manifest/manifestFormatters.js'
 export { formatPlainText } from './formatters/PlainTextFormatter.js';
 export { postinstallFormatters } from './formatters/postinstall/postinstallFormatters.js';
 export { registryFormatters } from './formatters/registry/registryFormatters.js';
+export { registryToolsFormatters } from './formatters/registryTools/registryToolsFormatters.js';
 export { resolverFormatters } from './formatters/resolver/resolverFormatters.js';
 export { safetyFormatters } from './formatters/safety/safetyFormatters.js';
 export { specFormatters } from './formatters/spec/specFormatters.js';

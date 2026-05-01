@@ -5,6 +5,7 @@ import { manifestFormatters } from '../formatters/manifest/manifestFormatters.js
 import { packFormatters } from '../formatters/pack/packFormatters.js';
 import { postinstallFormatters } from '../formatters/postinstall/postinstallFormatters.js';
 import { registryFormatters } from '../formatters/registry/registryFormatters.js';
+import { registryToolsFormatters } from '../formatters/registryTools/registryToolsFormatters.js';
 import { resolverFormatters } from '../formatters/resolver/resolverFormatters.js';
 import { safetyFormatters } from '../formatters/safety/safetyFormatters.js';
 import { specFormatters } from '../formatters/spec/specFormatters.js';
@@ -16,6 +17,7 @@ export const defaultFormatters: FormatterMap = {
   ...resolverFormatters,
   ...configFormatters,
   ...registryFormatters,
+  ...registryToolsFormatters,
   ...manifestFormatters,
   ...packFormatters,
   ...installerFormatters,

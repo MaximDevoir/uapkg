@@ -23,6 +23,7 @@
       "@uapkg/common-schema": ["./packages/uapkg-common-schema/src/index.ts"],
       "@uapkg/registry-schema": ["./packages/uapkg-registry-schema/src/index.ts"],
       "@uapkg/registry-core": ["./packages/uapkg-registry-core/src/index.ts"],
+      "@uapkg/registry-tools": ["./packages/uapkg-registry-tools/src/index.ts"],
       "@uapkg/package-manifest-schema": ["./packages/uapkg-package-manifest-schema/src/index.ts"],
       "@uapkg/package-manifest": ["./packages/uapkg-package-manifest/src/index.ts"],
       "@uapkg/installer": ["./packages/uapkg-installer/src/index.ts"],

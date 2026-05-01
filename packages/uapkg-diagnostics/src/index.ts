@@ -144,6 +144,42 @@ export {
   createRegistryUnreachableDiagnostic,
   createSchemaInvalidDiagnostic,
 } from './registry/RegistryDiagnostics.js';
+// --- Registry-tools family ---
+export type {
+  RegistryToolsDependencyNotInRegistryDiagnostic,
+  RegistryToolsDependencyRangeUnreachableDiagnostic,
+  RegistryToolsDiagnostic,
+  RegistryToolsExternalRegistryDeniedDiagnostic,
+  RegistryToolsExternalRegistryNotAllowedDiagnostic,
+  RegistryToolsIntegrityMismatchDiagnostic,
+  RegistryToolsOfficialPolicyViolationDiagnostic,
+  RegistryToolsPackageMissingDiagnostic,
+  RegistryToolsPackageSourceMismatchDiagnostic,
+  RegistryToolsPathMismatchDiagnostic,
+  RegistryToolsReleaseFileNameInvalidDiagnostic,
+  RegistryToolsRemovalDeniedDiagnostic,
+  RegistryToolsUnknownKeyDiagnostic,
+  RegistryToolsVersionExistsDiagnostic,
+  RegistryToolsVersionNotFoundDiagnostic,
+  RegistryToolsVersionsUnsortedDiagnostic,
+} from './registryTools/RegistryToolsDiagnostics.js';
+export {
+  createRegistryToolsDependencyNotInRegistryDiagnostic,
+  createRegistryToolsDependencyRangeUnreachableDiagnostic,
+  createRegistryToolsExternalRegistryDeniedDiagnostic,
+  createRegistryToolsExternalRegistryNotAllowedDiagnostic,
+  createRegistryToolsIntegrityMismatchDiagnostic,
+  createRegistryToolsOfficialPolicyViolationDiagnostic,
+  createRegistryToolsPackageMissingDiagnostic,
+  createRegistryToolsPackageSourceMismatchDiagnostic,
+  createRegistryToolsPathMismatchDiagnostic,
+  createRegistryToolsReleaseFileNameInvalidDiagnostic,
+  createRegistryToolsRemovalDeniedDiagnostic,
+  createRegistryToolsUnknownKeyDiagnostic,
+  createRegistryToolsVersionExistsDiagnostic,
+  createRegistryToolsVersionNotFoundDiagnostic,
+  createRegistryToolsVersionsUnsortedDiagnostic,
+} from './registryTools/RegistryToolsDiagnostics.js';
 // --- Resolver family ---
 export type {
   CircularDepDiagnostic,
