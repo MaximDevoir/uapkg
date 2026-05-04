@@ -8,10 +8,12 @@ import { RegistryVersionSchema } from './RegistryVersionSchema.js';
  *
  * File layout: `packages/{first-letter}/{package-name}.json`
  */
-export const PackageRegistryManifestSchema = z.object({
-  name: PackageNameSchema,
-  packageSource: PackageSourceSchema,
-  versions: z.record(PackageVersionSchema, RegistryVersionSchema),
-});
+export const PackageRegistryManifestSchema = z
+  .object({
+    name: PackageNameSchema,
+    packageSource: PackageSourceSchema,
+    versions: z.record(PackageVersionSchema, RegistryVersionSchema),
+  })
+  .strict();
 
 export type PackageRegistryManifest = z.infer<typeof PackageRegistryManifestSchema>;

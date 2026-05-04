@@ -6,28 +6,34 @@ import { RegistryDependencySchema } from './RegistryDependencySchema.js';
 /**
  * Release files attached to a version.
  */
-export const ReleaseFilesSchema = z.object({
-  package: RegistryAssetSchema,
-});
+export const ReleaseFilesSchema = z
+  .object({
+    package: RegistryAssetSchema,
+  })
+  .strict();
 
 /**
  * Metadata about a published version.
  */
-export const VersionMetaSchema = z.object({
-  publishedAt: UnixTimestampSchema,
-});
+export const VersionMetaSchema = z
+  .object({
+    publishedAt: UnixTimestampSchema,
+  })
+  .strict();
 
 /**
  * A single version entry within a package registry manifest.
  */
-export const RegistryVersionSchema = z.object({
-  gitTree: GitTreeSchema,
-  meta: VersionMetaSchema.optional(),
-  releaseFiles: ReleaseFilesSchema,
-  dependencies: z.record(PackageNameSchema, RegistryDependencySchema).optional(),
-  devDependencies: z.record(PackageNameSchema, RegistryDependencySchema).optional(),
-  peerDependencies: z.record(PackageNameSchema, RegistryDependencySchema).optional(),
-});
+export const RegistryVersionSchema = z
+  .object({
+    gitTree: GitTreeSchema,
+    meta: VersionMetaSchema.optional(),
+    releaseFiles: ReleaseFilesSchema,
+    dependencies: z.record(PackageNameSchema, RegistryDependencySchema).optional(),
+    devDependencies: z.record(PackageNameSchema, RegistryDependencySchema).optional(),
+    peerDependencies: z.record(PackageNameSchema, RegistryDependencySchema).optional(),
+  })
+  .strict();
 
 export type RegistryVersion = z.infer<typeof RegistryVersionSchema>;
 export type ReleaseFiles = z.infer<typeof ReleaseFilesSchema>;

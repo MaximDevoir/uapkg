@@ -21,15 +21,7 @@ export interface RegistryToolsPolicy {
 }
 
 /** Fully resolved policy with defaults applied. */
-export interface ResolvedRegistryToolsPolicy {
-  readonly externalRegistries: ExternalRegistryPolicyMode;
-  readonly allowedExternalRegistryNames: readonly string[];
-  readonly removals: RemovalsPolicyMode;
-  readonly unknownKeys: UnknownKeysPolicyMode;
-  readonly requireExistingDependencies: boolean;
-  readonly requireReachableDependencyRanges: boolean;
-  readonly requireSortedVersions: boolean;
-}
+export type ResolvedRegistryToolsPolicy = Required<RegistryToolsPolicy>;
 
 export interface RegistryToolsOptions {
   /** Root directory of the registry repo (NOT a package directory). */

@@ -7,10 +7,12 @@ import { z } from 'zod';
  * Both `version` (range) and `registry` (logical name) are required
  * so that multi-registry resolution can work.
  */
-export const RegistryDependencyLongSchema = z.object({
-  version: VersionRangeSchema,
-  registry: RegistryNameSchema.optional(),
-});
+export const RegistryDependencyLongSchema = z
+  .object({
+    version: VersionRangeSchema,
+    registry: RegistryNameSchema.optional(),
+  })
+  .strict();
 
 export const RegistryDependencyShortSchema = VersionRangeSchema;
 

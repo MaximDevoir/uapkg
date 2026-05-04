@@ -4,9 +4,11 @@ import { z } from 'zod';
 /**
  * Integrity block for a release asset.
  */
-export const IntegritySchema = z.object({
-  hash: AssetHashSchema,
-  size: z.number().int().nonnegative(),
-});
+export const IntegritySchema = z
+  .object({
+    hash: AssetHashSchema,
+    size: z.number().int().nonnegative(),
+  })
+  .strict();
 
 export type Integrity = z.infer<typeof IntegritySchema>;
