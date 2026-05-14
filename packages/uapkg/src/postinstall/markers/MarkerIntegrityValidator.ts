@@ -1,5 +1,5 @@
 /**
- * Detects corruption in UAPKG marker blocks for a single `(pluginName, zone)`
+ * Detects corruption in uapkg marker blocks for a single `(pluginName, zone)`
  * owning pair. Corruption rules (scoped to the owning pair — foreign plugins'
  * blocks are ignored on purpose):
  *
