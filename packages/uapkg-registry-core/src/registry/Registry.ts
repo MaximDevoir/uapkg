@@ -101,7 +101,7 @@ export class Registry {
       return ok(reason);
     }
 
-    return this.performUpdate(initialized, options?.logicalRegistryName);
+    return this.performUpdate(initialized, options?.logicalRegistryName, forced);
   }
 
   /** Read a package registry manifest from the local cache. */
@@ -160,6 +160,7 @@ export class Registry {
   private async performUpdate(
     initialized: boolean,
     logicalRegistryName?: string,
+    forced = false,
   ): Promise<Result<RegistryUpdateResult>> {
     const bag = new DiagnosticBag();
     const lock = new RegistryLock(getRegistryLockPath(this.shortId));
@@ -177,7 +178,10 @@ export class Registry {
         lastSyncAt: lastSync,
         ttlSeconds: this.ttlSeconds,
         hasUpdatedWithinProcessLifetime: false,
-        forced: false,
+        // Preserve an explicit force request across the lock boundary.  The
+        // former hard-coded `false` made a fresh cache win the second
+        // freshness check, so callers could not force a post-publish fetch.
+        forced,
       });
 
       if (recheck === 'skip') {

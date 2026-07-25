@@ -37,6 +37,35 @@ export class InkPromptService implements PromptService {
       Promise.resolve().then(() => app.waitUntilExit());
     });
   }
+
+  public async secret(message: string): Promise<string> {
+    if (!this.isInteractive) {
+      throw new Error(`${message} requires an interactive terminal.`);
+    }
+    return await new Promise<string>((resolve) => {
+      const app = render(<SecretPrompt message={message} onSubmit={(value) => resolve(value)} />);
+      Promise.resolve().then(() => app.waitUntilExit());
+    });
+  }
+}
+
+function SecretPrompt({ message, onSubmit }: { message: string; onSubmit(value: string): void }) {
+  const [value, setValue] = useState('');
+  const { exit } = useApp();
+
+  useInput((_, key) => {
+    if (key.return) {
+      onSubmit(value.trim());
+      exit();
+    }
+  });
+
+  return (
+    <Box flexDirection="column">
+      <Text>{message}</Text>
+      <TextInput value={value} onChange={setValue} mask="*" />
+    </Box>
+  );
 }
 
 function SelectPrompt({

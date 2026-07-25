@@ -13,4 +13,6 @@ export interface SelectOption {
 export interface PromptService {
   select(message: string, options: SelectOption[], fallbackValue: string): Promise<string>;
   text(message: string, initialValue: string): Promise<string>;
+  /** Read a value without echoing it. Never supplies a non-interactive fallback. */
+  secret(message: string): Promise<string>;
 }

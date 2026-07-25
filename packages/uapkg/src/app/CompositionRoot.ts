@@ -2,6 +2,8 @@ import { ConfigInstance } from '@uapkg/config';
 import { Installer } from '@uapkg/installer';
 import { PackageManifest } from '@uapkg/package-manifest';
 import { RegistryCore } from '@uapkg/registry-core';
+import { AccountManager } from '../control-plane/AccountManager.js';
+import { RegistryTrustResolver } from '../control-plane/RegistryTrustResolver.js';
 import { PostinstallOrchestrator } from '../postinstall/runner/PostinstallOrchestrator.js';
 import { DiagnosticReporter } from '../reporting/DiagnosticReporter.js';
 import { JsonReporter } from '../reporting/JsonReporter.js';
@@ -35,6 +37,8 @@ export class CompositionRoot {
   private _postinstall?: PostinstallOrchestrator;
   private _diagnostics?: DiagnosticReporter;
   private _json?: JsonReporter;
+  private _accountManager?: AccountManager;
+  private _registryTrustResolver?: RegistryTrustResolver;
 
   public constructor(private readonly options: CompositionRootOptions) {}
 
@@ -105,5 +109,19 @@ export class CompositionRoot {
       this._json = new JsonReporter();
     }
     return this._json;
+  }
+
+  public get accountManager(): AccountManager {
+    if (!this._accountManager) {
+      this._accountManager = new AccountManager();
+    }
+    return this._accountManager;
+  }
+
+  public get registryTrustResolver(): RegistryTrustResolver {
+    if (!this._registryTrustResolver) {
+      this._registryTrustResolver = new RegistryTrustResolver(this);
+    }
+    return this._registryTrustResolver;
   }
 }

@@ -11,11 +11,23 @@ export type UAPKGCommandName =
   | 'why'
   | 'list'
   | 'remove'
-  | 'account';
+  | 'login'
+  | 'logout'
+  | 'whoami'
+  | 'publish'
+  | 'requests';
 export type UAPKGConfigAction = 'get' | 'list' | 'set' | 'delete' | 'edit';
 export type UAPKGRegistryAction = 'add' | 'remove' | 'list' | 'use';
-export type UAPKGAccountAction = 'status' | 'logout' | 'token-list' | 'token-create' | 'token-revoke';
-export type UAPKGTokenAccessMode = 'none' | 'all' | 'selected';
+export type UAPKGRequestsAction = 'list' | 'status';
+export type UAPKGControlPlaneAuthMode = 'auto' | 'login' | 'gat' | 'oidc';
+export type UAPKGRegistryRequestStatus =
+  | 'queued'
+  | 'running'
+  | 'waiting_for_pr_checks'
+  | 'accepted'
+  | 'failed'
+  | 'timed_out'
+  | 'finalization_failed';
 export type UAPKGConfigScope = 'global' | 'local';
 export type UAPKGOutputFormat = 'text' | 'json';
 
@@ -113,22 +125,48 @@ export interface RemoveCommandLine extends BaseCommandLine {
   outputFormat: UAPKGOutputFormat;
 }
 
-export interface AccountCommandLine extends BaseCommandLine {
-  command: 'account';
-  action: UAPKGAccountAction;
+export interface LoginCommandLine extends BaseCommandLine {
+  command: 'login';
+  registry?: string;
+  deviceName?: string;
+  reauthorize: boolean;
   outputFormat: UAPKGOutputFormat;
-  apiUrl?: string;
-  bearerToken?: string;
-  tokenId?: string;
-  tokenName?: string;
-  tokenResourceOwnerOrganizationId?: string;
-  tokenRegistryAccessMode: UAPKGTokenAccessMode;
-  tokenRegistryIds: string[];
-  tokenPackageAccessMode: UAPKGTokenAccessMode;
-  tokenPackageIds: string[];
-  tokenPermissions: string[];
-  tokenExpiresInDays?: number;
-  tokenJustification?: string;
+}
+
+export interface LogoutCommandLine extends BaseCommandLine {
+  command: 'logout';
+  registry?: string;
+  localOnly: boolean;
+  outputFormat: UAPKGOutputFormat;
+}
+
+export interface WhoamiCommandLine extends BaseCommandLine {
+  command: 'whoami';
+  registry?: string;
+  outputFormat: UAPKGOutputFormat;
+}
+
+export interface PublishCommandLine extends BaseCommandLine {
+  command: 'publish';
+  registry?: string;
+  owner?: string;
+  repository?: string;
+  tag?: string;
+  asset?: string;
+  manifestPath?: string;
+  auth: UAPKGControlPlaneAuthMode;
+  detach: boolean;
+  outputFormat: UAPKGOutputFormat;
+}
+
+export interface RequestsCommandLine extends BaseCommandLine {
+  command: 'requests';
+  action: UAPKGRequestsAction;
+  requestId?: string;
+  registry?: string;
+  status?: UAPKGRegistryRequestStatus;
+  watch: boolean;
+  outputFormat: UAPKGOutputFormat;
 }
 
 export type UAPKGCommandLine =
@@ -144,7 +182,11 @@ export type UAPKGCommandLine =
   | WhyCommandLine
   | ListCommandLine
   | RemoveCommandLine
-  | AccountCommandLine;
+  | LoginCommandLine
+  | LogoutCommandLine
+  | WhoamiCommandLine
+  | PublishCommandLine
+  | RequestsCommandLine;
 
 export interface CommonCommandLineOptions {
   cwd?: string;
@@ -187,20 +229,34 @@ export interface RemoveFactoryOptions extends CommonCommandLineOptions {
   outputFormat?: UAPKGOutputFormat;
 }
 
-export interface AccountCommandLineOptions extends CommonCommandLineOptions {
+export interface RegistryAuthCommandLineOptions extends CommonCommandLineOptions {
+  registry?: string;
   outputFormat?: UAPKGOutputFormat;
-  apiUrl?: string;
-  bearerToken?: string;
-  tokenId?: string;
-  tokenName?: string;
-  tokenResourceOwnerOrganizationId?: string;
-  tokenRegistryAccessMode?: UAPKGTokenAccessMode;
-  tokenRegistryIds?: string[];
-  tokenPackageAccessMode?: UAPKGTokenAccessMode;
-  tokenPackageIds?: string[];
-  tokenPermissions?: string[];
-  tokenExpiresInDays?: number;
-  tokenJustification?: string;
+}
+
+export interface LoginCommandLineOptions extends RegistryAuthCommandLineOptions {
+  deviceName?: string;
+  reauthorize?: boolean;
+}
+
+export interface LogoutCommandLineOptions extends RegistryAuthCommandLineOptions {
+  localOnly?: boolean;
+}
+
+export interface PublishCommandLineOptions extends RegistryAuthCommandLineOptions {
+  owner?: string;
+  repository?: string;
+  tag?: string;
+  asset?: string;
+  manifestPath?: string;
+  auth?: UAPKGControlPlaneAuthMode;
+  detach?: boolean;
+}
+
+export interface RequestsCommandLineOptions extends RegistryAuthCommandLineOptions {
+  requestId?: string;
+  status?: UAPKGRegistryRequestStatus;
+  watch?: boolean;
 }
 
 export interface ConfigCommonOptions extends CommonCommandLineOptions {
@@ -309,24 +365,62 @@ export class UAPKGCommandLineFactory {
     };
   }
 
-  createAccount(action: UAPKGAccountAction, options: AccountCommandLineOptions = {}): AccountCommandLine {
+  createLogin(options: LoginCommandLineOptions = {}): LoginCommandLine {
     return {
-      command: 'account',
+      command: 'login',
+      cwd: this.resolveCwd(options.cwd),
+      registry: options.registry,
+      deviceName: options.deviceName,
+      reauthorize: options.reauthorize === true,
+      outputFormat: options.outputFormat ?? 'text',
+    };
+  }
+
+  createLogout(options: LogoutCommandLineOptions = {}): LogoutCommandLine {
+    return {
+      command: 'logout',
+      cwd: this.resolveCwd(options.cwd),
+      registry: options.registry,
+      localOnly: options.localOnly === true,
+      outputFormat: options.outputFormat ?? 'text',
+    };
+  }
+
+  createWhoami(options: RegistryAuthCommandLineOptions = {}): WhoamiCommandLine {
+    return {
+      command: 'whoami',
+      cwd: this.resolveCwd(options.cwd),
+      registry: options.registry,
+      outputFormat: options.outputFormat ?? 'text',
+    };
+  }
+
+  createPublish(options: PublishCommandLineOptions = {}): PublishCommandLine {
+    return {
+      command: 'publish',
+      cwd: this.resolveCwd(options.cwd),
+      registry: options.registry,
+      owner: options.owner,
+      repository: options.repository,
+      tag: options.tag,
+      asset: options.asset,
+      manifestPath: options.manifestPath,
+      auth: options.auth ?? 'auto',
+      detach: options.detach === true,
+      outputFormat: options.outputFormat ?? 'text',
+    };
+  }
+
+  createRequests(action: UAPKGRequestsAction, options: RequestsCommandLineOptions = {}): RequestsCommandLine {
+    return {
+      command: 'requests',
       action,
       cwd: this.resolveCwd(options.cwd),
+      requestId: options.requestId,
+      registry: options.registry,
+      status: options.status,
+      watch: options.watch === true,
       outputFormat: options.outputFormat ?? 'text',
-      apiUrl: options.apiUrl,
-      bearerToken: options.bearerToken,
-      tokenId: options.tokenId,
-      tokenName: options.tokenName,
-      tokenResourceOwnerOrganizationId: options.tokenResourceOwnerOrganizationId,
-      tokenRegistryAccessMode: options.tokenRegistryAccessMode ?? 'none',
-      tokenRegistryIds: options.tokenRegistryIds ?? [],
-      tokenPackageAccessMode: options.tokenPackageAccessMode ?? 'none',
-      tokenPackageIds: options.tokenPackageIds ?? [],
-      tokenPermissions: options.tokenPermissions ?? [],
-      tokenExpiresInDays: options.tokenExpiresInDays,
-      tokenJustification: options.tokenJustification,
     };
   }
 

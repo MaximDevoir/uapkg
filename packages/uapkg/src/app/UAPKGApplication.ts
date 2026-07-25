@@ -1,16 +1,20 @@
 import type { UAPKGCommandLine } from '../cli/UAPKGCommandLine.js';
-import { AccountCommand } from '../commands/AccountCommand.js';
 import { AddCommand } from '../commands/AddCommand.js';
 import { ConfigCommand } from '../commands/ConfigCommand.js';
 import { InitCommand } from '../commands/InitCommand.js';
 import { InstallCommand } from '../commands/InstallCommand.js';
 import { ListCommand } from '../commands/ListCommand.js';
+import { LoginCommand } from '../commands/LoginCommand.js';
+import { LogoutCommand } from '../commands/LogoutCommand.js';
 import { OutdatedCommand } from '../commands/OutdatedCommand.js';
 import { PackCommand } from '../commands/PackCommand.js';
 import { ProjectGetNameCommand } from '../commands/ProjectGetNameCommand.js';
+import { PublishCommand } from '../commands/PublishCommand.js';
 import { RegistryCommand } from '../commands/RegistryCommand.js';
 import { RemoveCommand } from '../commands/RemoveCommand.js';
+import { RequestsCommand } from '../commands/RequestsCommand.js';
 import { UpdateCommand } from '../commands/UpdateCommand.js';
+import { WhoamiCommand } from '../commands/WhoamiCommand.js';
 import { WhyCommand } from '../commands/WhyCommand.js';
 import { InkPromptService } from '../prompts/InkPromptService.js';
 import { ProjectContextDetector } from '../prompts/ProjectContextDetector.js';
@@ -110,22 +114,48 @@ export class UAPKGApplication {
           output: commandLine.output,
         }).execute();
 
-      case 'account':
-        return new AccountCommand(root, {
-          action: commandLine.action,
+      case 'login':
+        return new LoginCommand(root, {
+          registry: commandLine.registry,
+          deviceName: commandLine.deviceName,
+          reauthorize: commandLine.reauthorize,
           outputFormat: commandLine.outputFormat,
-          apiUrl: commandLine.apiUrl,
-          bearerToken: commandLine.bearerToken,
-          tokenId: commandLine.tokenId,
-          tokenName: commandLine.tokenName,
-          tokenResourceOwnerOrganizationId: commandLine.tokenResourceOwnerOrganizationId,
-          tokenRegistryAccessMode: commandLine.tokenRegistryAccessMode,
-          tokenRegistryIds: commandLine.tokenRegistryIds,
-          tokenPackageAccessMode: commandLine.tokenPackageAccessMode,
-          tokenPackageIds: commandLine.tokenPackageIds,
-          tokenPermissions: commandLine.tokenPermissions,
-          tokenExpiresInDays: commandLine.tokenExpiresInDays,
-          tokenJustification: commandLine.tokenJustification,
+        }).execute();
+
+      case 'logout':
+        return new LogoutCommand(root, {
+          registry: commandLine.registry,
+          localOnly: commandLine.localOnly,
+          outputFormat: commandLine.outputFormat,
+        }).execute();
+
+      case 'whoami':
+        return new WhoamiCommand(root, {
+          registry: commandLine.registry,
+          outputFormat: commandLine.outputFormat,
+        }).execute();
+
+      case 'publish':
+        return new PublishCommand(root, {
+          registry: commandLine.registry,
+          owner: commandLine.owner,
+          repository: commandLine.repository,
+          tag: commandLine.tag,
+          asset: commandLine.asset,
+          manifestPath: commandLine.manifestPath,
+          auth: commandLine.auth,
+          detach: commandLine.detach,
+          outputFormat: commandLine.outputFormat,
+        }).execute();
+
+      case 'requests':
+        return new RequestsCommand(root, {
+          action: commandLine.action,
+          requestId: commandLine.requestId,
+          registry: commandLine.registry,
+          status: commandLine.status,
+          watch: commandLine.watch,
+          outputFormat: commandLine.outputFormat,
         }).execute();
 
       case 'init':
