@@ -10,9 +10,12 @@ export type UAPKGCommandName =
   | 'outdated'
   | 'why'
   | 'list'
-  | 'remove';
+  | 'remove'
+  | 'account';
 export type UAPKGConfigAction = 'get' | 'list' | 'set' | 'delete' | 'edit';
 export type UAPKGRegistryAction = 'add' | 'remove' | 'list' | 'use';
+export type UAPKGAccountAction = 'status' | 'logout' | 'token-list' | 'token-create' | 'token-revoke';
+export type UAPKGTokenAccessMode = 'none' | 'all' | 'selected';
 export type UAPKGConfigScope = 'global' | 'local';
 export type UAPKGOutputFormat = 'text' | 'json';
 
@@ -110,6 +113,24 @@ export interface RemoveCommandLine extends BaseCommandLine {
   outputFormat: UAPKGOutputFormat;
 }
 
+export interface AccountCommandLine extends BaseCommandLine {
+  command: 'account';
+  action: UAPKGAccountAction;
+  outputFormat: UAPKGOutputFormat;
+  apiUrl?: string;
+  bearerToken?: string;
+  tokenId?: string;
+  tokenName?: string;
+  tokenResourceOwnerOrganizationId?: string;
+  tokenRegistryAccessMode: UAPKGTokenAccessMode;
+  tokenRegistryIds: string[];
+  tokenPackageAccessMode: UAPKGTokenAccessMode;
+  tokenPackageIds: string[];
+  tokenPermissions: string[];
+  tokenExpiresInDays?: number;
+  tokenJustification?: string;
+}
+
 export type UAPKGCommandLine =
   | InitCommandLine
   | AddCommandLine
@@ -122,7 +143,8 @@ export type UAPKGCommandLine =
   | OutdatedCommandLine
   | WhyCommandLine
   | ListCommandLine
-  | RemoveCommandLine;
+  | RemoveCommandLine
+  | AccountCommandLine;
 
 export interface CommonCommandLineOptions {
   cwd?: string;
@@ -163,6 +185,22 @@ export interface ListFactoryOptions extends CommonCommandLineOptions {
 
 export interface RemoveFactoryOptions extends CommonCommandLineOptions {
   outputFormat?: UAPKGOutputFormat;
+}
+
+export interface AccountCommandLineOptions extends CommonCommandLineOptions {
+  outputFormat?: UAPKGOutputFormat;
+  apiUrl?: string;
+  bearerToken?: string;
+  tokenId?: string;
+  tokenName?: string;
+  tokenResourceOwnerOrganizationId?: string;
+  tokenRegistryAccessMode?: UAPKGTokenAccessMode;
+  tokenRegistryIds?: string[];
+  tokenPackageAccessMode?: UAPKGTokenAccessMode;
+  tokenPackageIds?: string[];
+  tokenPermissions?: string[];
+  tokenExpiresInDays?: number;
+  tokenJustification?: string;
 }
 
 export interface ConfigCommonOptions extends CommonCommandLineOptions {
@@ -268,6 +306,27 @@ export class UAPKGCommandLineFactory {
       cwd: this.resolveCwd(options.cwd),
       packageName,
       outputFormat: options.outputFormat ?? 'text',
+    };
+  }
+
+  createAccount(action: UAPKGAccountAction, options: AccountCommandLineOptions = {}): AccountCommandLine {
+    return {
+      command: 'account',
+      action,
+      cwd: this.resolveCwd(options.cwd),
+      outputFormat: options.outputFormat ?? 'text',
+      apiUrl: options.apiUrl,
+      bearerToken: options.bearerToken,
+      tokenId: options.tokenId,
+      tokenName: options.tokenName,
+      tokenResourceOwnerOrganizationId: options.tokenResourceOwnerOrganizationId,
+      tokenRegistryAccessMode: options.tokenRegistryAccessMode ?? 'none',
+      tokenRegistryIds: options.tokenRegistryIds ?? [],
+      tokenPackageAccessMode: options.tokenPackageAccessMode ?? 'none',
+      tokenPackageIds: options.tokenPackageIds ?? [],
+      tokenPermissions: options.tokenPermissions ?? [],
+      tokenExpiresInDays: options.tokenExpiresInDays,
+      tokenJustification: options.tokenJustification,
     };
   }
 

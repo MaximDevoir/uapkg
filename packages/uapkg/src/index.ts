@@ -18,6 +18,7 @@ export type { UAPKGCommandLine } from './cli/UAPKGCommandLine.js';
 export { createUAPKGCommandLineFactory, UAPKGCommandLineFactory } from './cli/UAPKGCommandLine.js';
 
 // Commands — new surface
+export { AccountCommand, type AccountCommandOptions } from './commands/AccountCommand.js';
 export { AddCommand, type AddCommandOptions } from './commands/AddCommand.js';
 // Commands — retained, ported onto CompositionRoot in Phase 10
 export { ConfigCommand } from './commands/ConfigCommand.js';

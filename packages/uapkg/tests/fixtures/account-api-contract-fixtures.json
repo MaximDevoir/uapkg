@@ -1,0 +1,58 @@
+{
+  "session": {
+    "ok": true,
+    "session": {
+      "actorType": "token",
+      "actorId": "user:11111111-1111-4111-8111-111111111111",
+      "uapkgUserId": "11111111-1111-4111-8111-111111111111",
+      "accountState": "active",
+      "securedAccount": true,
+      "canWrite": true,
+      "authenticatedAt": 1700000000,
+      "allowedRegistries": ["uapkg-registry-official"]
+    }
+  },
+  "bootstrapWithCapabilities": {
+    "ok": true,
+    "session": {
+      "actorType": "token",
+      "actorId": "user:11111111-1111-4111-8111-111111111111",
+      "accountState": "active",
+      "securedAccount": true,
+      "canWrite": true
+    },
+    "capabilities": {
+      "canCreateApiTokens": true,
+      "canRevokeApiTokens": true,
+      "reasons": [],
+      "freshAuth": {
+        "isFresh": true,
+        "status": "fresh"
+      }
+    }
+  },
+  "capabilitiesFresh": {
+    "ok": true,
+    "capabilities": {
+      "canCreateApiTokens": true,
+      "canRevokeApiTokens": true,
+      "reasons": [],
+      "freshAuth": {
+        "isFresh": true,
+        "status": "fresh"
+      }
+    }
+  },
+  "capabilitiesExpired": {
+    "ok": true,
+    "capabilities": {
+      "canCreateApiTokens": false,
+      "canRevokeApiTokens": true,
+      "reasons": ["FRESH_AUTH_REQUIRED"],
+      "freshAuth": {
+        "isFresh": false,
+        "status": "expired"
+      }
+    }
+  }
+}

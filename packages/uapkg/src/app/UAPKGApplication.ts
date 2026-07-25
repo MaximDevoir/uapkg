@@ -1,4 +1,5 @@
 import type { UAPKGCommandLine } from '../cli/UAPKGCommandLine.js';
+import { AccountCommand } from '../commands/AccountCommand.js';
 import { AddCommand } from '../commands/AddCommand.js';
 import { ConfigCommand } from '../commands/ConfigCommand.js';
 import { InitCommand } from '../commands/InitCommand.js';
@@ -107,6 +108,24 @@ export class UAPKGApplication {
           refValue: commandLine.refValue,
           scope: commandLine.scope,
           output: commandLine.output,
+        }).execute();
+
+      case 'account':
+        return new AccountCommand(root, {
+          action: commandLine.action,
+          outputFormat: commandLine.outputFormat,
+          apiUrl: commandLine.apiUrl,
+          bearerToken: commandLine.bearerToken,
+          tokenId: commandLine.tokenId,
+          tokenName: commandLine.tokenName,
+          tokenResourceOwnerOrganizationId: commandLine.tokenResourceOwnerOrganizationId,
+          tokenRegistryAccessMode: commandLine.tokenRegistryAccessMode,
+          tokenRegistryIds: commandLine.tokenRegistryIds,
+          tokenPackageAccessMode: commandLine.tokenPackageAccessMode,
+          tokenPackageIds: commandLine.tokenPackageIds,
+          tokenPermissions: commandLine.tokenPermissions,
+          tokenExpiresInDays: commandLine.tokenExpiresInDays,
+          tokenJustification: commandLine.tokenJustification,
         }).execute();
 
       case 'init':

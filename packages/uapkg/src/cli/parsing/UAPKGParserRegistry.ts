@@ -1,6 +1,7 @@
 import type { Argv } from 'yargs';
 import type { UAPKGCommandLine } from '../UAPKGCommandLine.js';
 import type { UAPKGCommandModule } from './contracts/UAPKGCommandModule.js';
+import { AccountCommandModule } from './modules/AccountCommandModule.js';
 import { AddCommandModule } from './modules/AddCommandModule.js';
 import { ConfigCommandModule } from './modules/ConfigCommandModule.js';
 import { InitCommandModule } from './modules/InitCommandModule.js';
@@ -29,6 +30,7 @@ export class UAPKGParserRegistry {
       new ProjectGetNameCommandModule(),
       new ConfigCommandModule(),
       new RegistryCommandModule(),
+      new AccountCommandModule(),
     ],
   ) {}
 
