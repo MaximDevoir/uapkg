@@ -1,4 +1,5 @@
 import type { ProcessRunner } from './ProcessRunner';
+import type { CliBuildMode } from './types';
 
 export class BuildService {
   constructor(
@@ -6,18 +7,28 @@ export class BuildService {
     private readonly workspaceRoot: string,
   ) {}
 
-  buildAll() {
-    this.runner.run('pnpm', ['nx', 'run-many', '-t', 'build', '--all'], this.workspaceRoot);
+  buildAll(mode: CliBuildMode) {
+    this.runner.run('pnpm', ['nx', 'run-many', '-t', 'build', '--all', `--configuration=${mode}`], this.workspaceRoot);
   }
 
   buildCliWithDependencies() {
-    this.runner.run('pnpm', ['nx', 'run', 'uapkg:build'], this.workspaceRoot);
+    this.runner.run('pnpm', ['nx', 'run', 'uapkg:build:development'], this.workspaceRoot);
   }
 
   watchCliAndDependents() {
     this.runner.run(
       'pnpm',
-      ['nx', 'watch', '--projects=uapkg', '--includeDependentProjects', '--', 'pnpm', 'run', 'build:link'],
+      [
+        'nx',
+        'watch',
+        '--projects=uapkg',
+        '--includeDependentProjects',
+        '--initialRun',
+        '--',
+        'pnpm',
+        'run',
+        'build:link',
+      ],
       this.workspaceRoot,
     );
   }

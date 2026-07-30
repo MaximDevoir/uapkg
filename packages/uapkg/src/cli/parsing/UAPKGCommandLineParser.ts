@@ -1,5 +1,6 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import { UAPKG_BUILD_METADATA } from '../../build/BuildMetadata.js';
 import type { UAPKGCommandLine } from '../UAPKGCommandLine.js';
 import { UAPKGParserRegistry } from './UAPKGParserRegistry.js';
 
@@ -11,7 +12,13 @@ export class UAPKGCommandLineParser {
 
     const parser = this.registry
       .registerAll(
-        yargs(hideBin(rawArgv)).scriptName('uapkg').usage('$0 <command> [args]').demandCommand(1).strict().help(),
+        yargs(hideBin(rawArgv))
+          .scriptName('uapkg')
+          .usage('$0 <command> [args]')
+          .version(UAPKG_BUILD_METADATA.displayVersion)
+          .demandCommand(1)
+          .strict()
+          .help(),
         {
           set(commandLine) {
             parsed = commandLine;

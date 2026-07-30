@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import Config from '@uapkg/config';
 import Log, { configureLogger } from '@uapkg/log';
 import { runUAPKGCLI } from './cli/runUAPKGCLI.js';

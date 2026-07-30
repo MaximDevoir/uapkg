@@ -29,7 +29,8 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm nx run-many -t build --all
+      - run: pnpm run build -- --production
+      - run: pnpm --dir packages/uapkg run verify:production-build
 
       - name: Create Release Pull Request or Release
         uses: changesets/action@v1

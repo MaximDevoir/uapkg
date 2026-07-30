@@ -6,6 +6,7 @@ import { GlobalUapkgDevModeService } from './GlobalUapkgDevModeService';
 import { GlobalUapkgSnapshotStore } from './GlobalUapkgSnapshotStore';
 import { GlobalUapkgStateService } from './GlobalUapkgStateService';
 import { ProcessRunner } from './ProcessRunner';
+import type { CliBuildMode } from './types';
 
 export class DevBuildOrchestrator {
   private readonly buildService: BuildService;
@@ -30,8 +31,8 @@ export class DevBuildOrchestrator {
     );
   }
 
-  buildAll() {
-    this.buildService.buildAll();
+  buildAll(mode: CliBuildMode) {
+    this.buildService.buildAll(mode);
   }
 
   link(options: { force: boolean }) {

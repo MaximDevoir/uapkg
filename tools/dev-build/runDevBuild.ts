@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseDevBuildOptions } from './DevBuildOptions';
 import { DevBuildOrchestrator } from './DevBuildOrchestrator';
 import type { DevBuildMode } from './types';
 
@@ -40,18 +41,12 @@ function normalizeMode(rawMode: string | undefined): DevBuildMode {
   throw new Error(`[dev-build] Unsupported mode: ${rawMode}`);
 }
 
-function parseOptions(args: string[]) {
-  return {
-    force: args.includes('--force'),
-  };
-}
-
 const mode = normalizeMode(process.argv[2]);
-const options = parseOptions(process.argv.slice(3));
+const options = parseDevBuildOptions(mode, process.argv.slice(3));
 const orchestrator = new DevBuildOrchestrator(resolveWorkspaceRoot());
 
 if (mode === 'build') {
-  orchestrator.buildAll();
+  orchestrator.buildAll(options.buildMode ?? 'production');
 } else if (mode === 'link') {
   orchestrator.link(options);
 } else if (mode === 'watch') {

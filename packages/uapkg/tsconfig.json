@@ -4,5 +4,5 @@
     "types": ["node", "vitest/globals"],
     "jsx": "react-jsx"
   },
-  "include": ["src/**/*", "tests/**/*", "vitest.config.ts"]
+  "include": ["build/**/*", "src/**/*", "tests/**/*", "vitest.config.ts"]
 }

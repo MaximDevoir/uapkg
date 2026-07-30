@@ -1,5 +1,12 @@
 export type DevBuildMode = 'build' | 'link' | 'watch' | 'unlink' | 'status' | 'clean' | 'cleanAll';
 
+export type CliBuildMode = 'development' | 'production';
+
+export interface DevBuildOptions {
+  force: boolean;
+  buildMode?: CliBuildMode;
+}
+
 export type CurrentGlobalUapkgState =
   | { kind: 'none' }
   | { kind: 'published'; version: string }

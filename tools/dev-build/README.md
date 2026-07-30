@@ -18,9 +18,9 @@ This folder contains local development tooling executed directly with `tsx`.
 
 ## Behavior
 
-- `build`: normal monorepo build via Nx.
-- `build:link`: build `uapkg`, globally register only `packages/uapkg` as `@uapkg/cli`, and write global command shims in `pnpm bin --global` so `uapkg` works from any terminal.
-- `build:watch`: watch only `uapkg` with `--includeDependentProjects`, then run `build:link` on changes.
+- `build`: build the monorepo in production mode by default. Pass `--development` or `--production` to select the mode explicitly.
+- `build:link`: build `uapkg` in development mode, globally register only `packages/uapkg` as `@uapkg/cli`, and write global command shims in `pnpm bin --global` so `uapkg` works from any terminal.
+- `build:watch`: immediately run `build:link`, then watch only `uapkg` with `--includeDependentProjects` and relink a development build on changes.
 - `build:unlink`: remove the active global dev link and restore only safe previous state.
 - `build:status`: inspect snapshot state, current global state, global-bin/path health, and binary resolution.
 - `build:clean`: remove build artifacts (`dist`, `build`, `coverage`, Nx cache/workspace-data, `*.tsbuildinfo`) across root and workspace packages.
@@ -36,6 +36,15 @@ Snapshot file:
 - `pnpm run build:unlink -- --force`
 
 `--force` allows overriding conservative defaults, but external dev links are still never auto-restored.
+
+## Build modes
+
+- `pnpm run build` and `pnpm run build -- --production` produce production artifacts.
+- `pnpm run build -- --development` produces a development-stamped CLI artifact.
+- `--development` and `--production` are mutually exclusive.
+- `build:link` and `build:watch` always use development mode and reject either build-mode flag.
+
+The development banner is embedded in the built CLI rather than its global command shim. It is written to stderr so commands with machine-readable or `--json` stdout remain pipeable.
 
 ## Running from Anywhere
 
@@ -83,6 +92,7 @@ CI must not run:
 - `pnpm run build:unlink` restores published `@uapkg/cli@<version>` if that was the prior state.
 - If prior state was another dev link, unlink removes current link but does not restore the external link.
 - `pnpm run build:watch` does not contain a manually maintained project list.
+- `pnpm run build:watch` performs an initial development link before waiting for changes.
 - `pnpm run build:clean` removes build outputs and leaves install state untouched.
 - `pnpm run clean:all` removes install/build state from root and workspace packages.
 - CI typecheck still passes without global links.
