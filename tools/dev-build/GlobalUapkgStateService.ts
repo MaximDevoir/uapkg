@@ -1,7 +1,10 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { PathUtils } from './PathUtils';
 import type { ProcessRunner } from './ProcessRunner';
 import type { CurrentGlobalUapkgState } from './types';
+
+const CLI_PACKAGE_NAME = '@uapkg/cli';
 
 interface PnpmGlobalDependencyRecord {
   version?: string;
@@ -10,6 +13,10 @@ interface PnpmGlobalDependencyRecord {
 
 interface PnpmGlobalListRoot {
   dependencies?: Record<string, PnpmGlobalDependencyRecord>;
+}
+
+interface PnpmGlobalInstallManifest {
+  dependencies?: Record<string, string>;
 }
 
 export class GlobalUapkgStateService {
@@ -42,17 +49,17 @@ export class GlobalUapkgStateService {
     );
 
     const parsed = this.tryParseList(stdout);
-    const dependency = this.findGlobalUapkgDependency(parsed);
+    const dependency = this.findGlobalCliDependency(parsed);
     if (!dependency) {
       return { kind: 'none' };
     }
 
     const version = dependency.version ?? '';
-    if (version.startsWith('link:')) {
-      const fromVersion = version.slice('link:'.length);
+    const linkPath = this.findLinkPath(dependency, version);
+    if (linkPath) {
       return {
         kind: 'link',
-        path: this.pickLinkPath(dependency.path, fromVersion),
+        path: linkPath,
       };
     }
 
@@ -63,15 +70,15 @@ export class GlobalUapkgStateService {
   }
 
   removeGlobalUapkg(ignoreFailure = true) {
-    this.runner.runAndCapture('pnpm', ['remove', '--global', 'uapkg'], this.workspaceRoot, { ignoreFailure });
+    this.runner.runAndCapture('pnpm', ['remove', '--global', CLI_PACKAGE_NAME], this.workspaceRoot, { ignoreFailure });
   }
 
   installPublishedGlobal(version: string) {
-    this.runner.run('pnpm', ['add', '--global', `uapkg@${version}`], this.workspaceRoot);
+    this.runner.run('pnpm', ['add', '--global', `${CLI_PACKAGE_NAME}@${version}`], this.workspaceRoot);
   }
 
   linkCurrentWorkspaceCli() {
-    this.runner.run('pnpm', ['link', '--global'], this.getCliPackageDirectory());
+    this.runner.run('pnpm', ['add', '--global', '.'], this.getCliPackageDirectory());
   }
 
   private tryParseList(rawJson: string): PnpmGlobalListRoot[] {
@@ -87,15 +94,67 @@ export class GlobalUapkgStateService {
     }
   }
 
-  private findGlobalUapkgDependency(roots: PnpmGlobalListRoot[]) {
+  private findGlobalCliDependency(roots: PnpmGlobalListRoot[]) {
     for (const root of roots) {
-      const dependency = root.dependencies?.uapkg;
+      const dependency = root.dependencies?.[CLI_PACKAGE_NAME];
       if (dependency) {
         return dependency;
       }
     }
 
     return null;
+  }
+
+  private findLinkPath(dependency: PnpmGlobalDependencyRecord, version: string) {
+    if (version.startsWith('link:')) {
+      const fromVersion = version.slice('link:'.length);
+      return this.pickLinkPath(dependency.path, fromVersion);
+    }
+
+    return this.findIsolatedGlobalLinkPath(dependency.path);
+  }
+
+  private findIsolatedGlobalLinkPath(dependencyPath: string | undefined) {
+    if (!dependencyPath) {
+      return null;
+    }
+
+    let directory = path.dirname(dependencyPath);
+    for (let depth = 0; depth < 4; depth += 1) {
+      const manifestPath = path.join(directory, 'package.json');
+      const specifier = this.readGlobalInstallSpecifier(manifestPath);
+      if (specifier !== null) {
+        if (!specifier.startsWith('link:')) {
+          return null;
+        }
+
+        const linkPath = specifier.slice('link:'.length);
+        return path.resolve(directory, linkPath);
+      }
+
+      const parent = path.dirname(directory);
+      if (parent === directory) {
+        break;
+      }
+
+      directory = parent;
+    }
+
+    return null;
+  }
+
+  private readGlobalInstallSpecifier(manifestPath: string) {
+    if (!fs.existsSync(manifestPath)) {
+      return null;
+    }
+
+    try {
+      const raw = fs.readFileSync(manifestPath, 'utf8');
+      const manifest = JSON.parse(raw) as PnpmGlobalInstallManifest;
+      return manifest.dependencies?.[CLI_PACKAGE_NAME] ?? null;
+    } catch {
+      return null;
+    }
   }
 
   private pickLinkPath(dependencyPath: string | undefined, fromVersion: string) {

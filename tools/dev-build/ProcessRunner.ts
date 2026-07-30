@@ -18,8 +18,8 @@ export class ProcessRunner {
     this.throwIfFailed(command, args, result.error, result.status, options.ignoreFailure);
 
     return {
-      stdout: result.stdout ?? '',
-      stderr: result.stderr ?? '',
+      stdout: typeof result.stdout === 'string' ? result.stdout : (result.stdout?.toString('utf8') ?? ''),
+      stderr: typeof result.stderr === 'string' ? result.stderr : (result.stderr?.toString('utf8') ?? ''),
       status: result.status ?? 0,
     };
   }

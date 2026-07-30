@@ -82,19 +82,8 @@ export class GlobalCommandShimService {
     }
 
     const shimPaths = this.getShimPaths(globalBinDir);
-    if (process.platform === 'win32') {
-      if (fs.existsSync(shimPaths.cmdPath)) {
-        return shimPaths.cmdPath;
-      }
-
-      return null;
-    }
-
-    if (fs.existsSync(shimPaths.shPath)) {
-      return shimPaths.shPath;
-    }
-
-    return null;
+    const activeShimPath = process.platform === 'win32' ? shimPaths.cmdPath : shimPaths.shPath;
+    return this.isFileOwned(activeShimPath, this.getWorkspaceCliEntryPath()) ? activeShimPath : null;
   }
 
   resolveBinaryFromPath() {
@@ -131,18 +120,22 @@ export class GlobalCommandShimService {
   }
 
   private removeFileIfOwned(filePath: string, cliEntryPath: string) {
-    if (!fs.existsSync(filePath)) {
+    if (!this.isFileOwned(filePath, cliEntryPath)) {
       return;
+    }
+
+    fs.unlinkSync(filePath);
+  }
+
+  private isFileOwned(filePath: string, cliEntryPath: string) {
+    if (!fs.existsSync(filePath)) {
+      return false;
     }
 
     const contents = fs.readFileSync(filePath, 'utf8');
     const normalizedContents = contents.replaceAll('\\', '/').toLowerCase();
     const normalizedEntry = cliEntryPath.replaceAll('\\', '/').toLowerCase();
-    if (!normalizedContents.includes(normalizedEntry)) {
-      return;
-    }
-
-    fs.unlinkSync(filePath);
+    return normalizedContents.includes(normalizedEntry);
   }
 
   private removeFileIfContains(filePath: string, needle: string) {

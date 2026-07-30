@@ -41,7 +41,7 @@ export class GlobalUapkgSnapshotStore {
     const payload: GlobalUapkgSnapshot = {
       createdAt: new Date().toISOString(),
       workspaceRoot: this.workspaceRoot,
-      packageName: 'uapkg',
+      packageName: '@uapkg/cli',
       previous,
     };
 
@@ -62,6 +62,7 @@ export class GlobalUapkgSnapshotStore {
     }
 
     const snapshot = parsed as Record<string, unknown>;
-    return snapshot.packageName === 'uapkg' && typeof snapshot.workspaceRoot === 'string';
+    const hasKnownPackageName = snapshot.packageName === '@uapkg/cli' || snapshot.packageName === 'uapkg';
+    return hasKnownPackageName && typeof snapshot.workspaceRoot === 'string';
   }
 }

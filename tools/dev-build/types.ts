@@ -13,6 +13,6 @@ export type SavedGlobalUapkgState =
 export interface GlobalUapkgSnapshot {
   createdAt: string;
   workspaceRoot: string;
-  packageName: 'uapkg';
+  packageName: '@uapkg/cli' | 'uapkg';
   previous: SavedGlobalUapkgState;
 }

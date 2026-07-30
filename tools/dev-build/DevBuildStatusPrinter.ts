@@ -28,7 +28,7 @@ export class DevBuildStatusPrinter {
     console.log('[dev-build] External development links are not restored automatically.');
     console.log('[dev-build] Restore manually if needed:');
     console.log(`[dev-build]   cd ${path}`);
-    console.log('[dev-build]   pnpm link --global');
+    console.log('[dev-build]   pnpm add --global .');
   }
 
   printUnlinkRefusedWithoutForce() {
