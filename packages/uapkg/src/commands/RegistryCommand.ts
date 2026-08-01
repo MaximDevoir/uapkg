@@ -1,14 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { type ConfigInstance, createConfig } from '@uapkg/config';
+import type { ConfigInstance } from '@uapkg/config';
 import { createParseErrorDiagnostic, type Diagnostic } from '@uapkg/diagnostics';
 import Log from '@uapkg/log';
+import type { CompositionRoot } from '../app/CompositionRoot.js';
 import type { UAPKGConfigScope, UAPKGOutputFormat, UAPKGRegistryAction } from '../cli/UAPKGCommandLine.js';
-import { DiagnosticReporter } from '../reporting/DiagnosticReporter.js';
 import type { Command } from './Command.js';
 
 export interface RegistryCommandOptions {
-  cwd: string;
   action: UAPKGRegistryAction;
   name?: string;
   url?: string;
@@ -18,14 +17,27 @@ export interface RegistryCommandOptions {
   output: UAPKGOutputFormat;
 }
 
-export class RegistryCommand implements Command {
-  private readonly reporter = new DiagnosticReporter();
+export interface RegistryCommandRuntime {
+  isInteractiveTerminal(): boolean;
+}
 
-  constructor(private readonly options: RegistryCommandOptions) {}
+const processRuntime: RegistryCommandRuntime = {
+  isInteractiveTerminal: () => process.stdin.isTTY === true && process.stderr.isTTY === true,
+};
+
+export class RegistryCommand implements Command {
+  private configDiagnostics: readonly Diagnostic[] = [];
+
+  constructor(
+    private readonly root: CompositionRoot,
+    private readonly options: RegistryCommandOptions,
+    private readonly runtime: RegistryCommandRuntime = processRuntime,
+  ) {}
 
   public async execute(): Promise<number> {
-    const config = createConfig({ cwd: this.options.cwd });
-    this.reportIfText(config.getDiagnostics());
+    const config = this.root.config;
+    this.configDiagnostics = config.getDiagnostics();
+    this.reportIfText(this.configDiagnostics);
 
     switch (this.options.action) {
       case 'list':
@@ -36,6 +48,10 @@ export class RegistryCommand implements Command {
         return this.executeRemove(config);
       case 'use':
         return this.executeUse(config);
+      case 'auth':
+        return this.executeAuth(config);
+      case 'refresh':
+        return this.executeRefresh(config);
       default:
         return this.fail([
           createParseErrorDiagnostic(`Unsupported registry action: ${this.options.action satisfies never}`),
@@ -68,7 +84,7 @@ export class RegistryCommand implements Command {
     if (!setRef.ok) return this.fail(setRef.diagnostics);
     this.persistPlan(setRef.value.file, setRef.value.values);
 
-    config.reload({ cwd: this.options.cwd });
+    config.reload({ cwd: this.root.cwd });
     this.reportIfText(config.getDiagnostics());
     this.print({
       action: 'add',
@@ -90,7 +106,7 @@ export class RegistryCommand implements Command {
     if (!plan.ok) return this.fail(plan.diagnostics);
     this.persistPlan(plan.value.file, plan.value.values);
 
-    config.reload({ cwd: this.options.cwd });
+    config.reload({ cwd: this.root.cwd });
     this.reportIfText(config.getDiagnostics());
     this.print({ action: 'remove', name, scope: this.options.scope ?? 'auto' });
     return 0;
@@ -106,10 +122,105 @@ export class RegistryCommand implements Command {
     if (!plan.ok) return this.fail(plan.diagnostics);
     this.persistPlan(plan.value.file, plan.value.values);
 
-    config.reload({ cwd: this.options.cwd });
+    config.reload({ cwd: this.root.cwd });
     this.reportIfText(config.getDiagnostics());
     this.print({ action: 'use', name, scope: this.options.scope ?? 'auto' });
     return 0;
+  }
+
+  private async executeAuth(config: ConfigInstance): Promise<number> {
+    if (this.options.scope) {
+      return this.fail([createParseErrorDiagnostic('registry auth does not accept --global or --local.')]);
+    }
+
+    const name = this.resolveRegistryName(config);
+    if (!name) return 1;
+    const registryResult = this.root.registryCore.getOrCreateRegistry(name);
+    if (!registryResult.ok) return this.fail(registryResult.diagnostics);
+
+    let accessResult = await registryResult.value.probeAccess({ interactive: false });
+    let usedInteractivePrompt = false;
+    const hasTerminal = this.runtime.isInteractiveTerminal();
+    if (!accessResult.ok && hasTerminal) {
+      usedInteractivePrompt = true;
+      accessResult = await registryResult.value.probeAccess({ interactive: true });
+    }
+
+    if (!accessResult.ok) {
+      return this.fail(this.withAuthenticationGuidance(accessResult.diagnostics, name, hasTerminal));
+    }
+
+    this.succeedOperational(
+      'auth',
+      {
+        action: 'auth',
+        name,
+        accessible: true,
+        interactive: usedInteractivePrompt,
+      },
+      `Registry "${name}" is accessible with the current system Git credentials.`,
+      accessResult.diagnostics,
+    );
+    return 0;
+  }
+
+  private async executeRefresh(config: ConfigInstance): Promise<number> {
+    if (this.options.scope) {
+      return this.fail([createParseErrorDiagnostic('registry refresh does not accept --global or --local.')]);
+    }
+
+    const name = this.resolveRegistryName(config);
+    if (!name) return 1;
+    const registryResult = this.root.registryCore.getOrCreateRegistry(name);
+    if (!registryResult.ok) return this.fail(registryResult.diagnostics);
+
+    const refreshResult = await registryResult.value.ensureUpToDate({
+      bypassFreshnessCheck: true,
+      logicalRegistryName: name,
+    });
+    if (!refreshResult.ok) return this.fail(refreshResult.diagnostics);
+    if (refreshResult.value === 'Failed') {
+      const diagnostics =
+        refreshResult.diagnostics.length > 0
+          ? refreshResult.diagnostics
+          : [createParseErrorDiagnostic(`Registry "${name}" could not be refreshed.`)];
+      return this.fail(diagnostics);
+    }
+
+    this.succeedOperational(
+      'refresh',
+      { action: 'refresh', name, result: refreshResult.value },
+      `Registry "${name}" refreshed.`,
+      refreshResult.diagnostics,
+    );
+    return 0;
+  }
+
+  private resolveRegistryName(config: ConfigInstance): string | undefined {
+    const candidate = this.options.name ?? config.get('registry');
+    if (typeof candidate !== 'string' || candidate.trim().length === 0) {
+      this.fail([
+        createParseErrorDiagnostic(
+          `registry ${this.options.action} requires a registry alias or a selected default registry.`,
+        ),
+      ]);
+      return undefined;
+    }
+    return candidate.trim();
+  }
+
+  private withAuthenticationGuidance(
+    diagnostics: readonly Diagnostic[],
+    name: string,
+    interactiveTerminalAvailable: boolean,
+  ): readonly Diagnostic[] {
+    return diagnostics.map((diagnostic) => ({
+      ...diagnostic,
+      message: `Git could not access registry "${name}".`,
+      hint: interactiveTerminalAvailable
+        ? 'Configure access with a system Git credential helper, SSH key/agent, or deploy key, then retry.'
+        : `No interactive terminal is available. Configure a system Git credential helper, GIT_ASKPASS, SSH key/agent, or CI deploy key, then retry 'uapkg registry auth ${name}'.`,
+    }));
   }
 
   private resolveRef(): { type: 'branch' | 'tag' | 'rev'; value: string } {
@@ -128,14 +239,42 @@ export class RegistryCommand implements Command {
   }
 
   private fail(diagnostics: readonly Diagnostic[]): number {
-    this.reporter.reportAll(diagnostics);
+    if (this.options.output === 'json') {
+      this.root.json.emit({
+        status: 'error',
+        command: `registry ${this.options.action}`,
+        diagnostics: [...this.configDiagnostics, ...diagnostics],
+      });
+    } else {
+      this.root.diagnostics.reportAll(diagnostics);
+    }
     return 1;
   }
 
   private reportIfText(diagnostics: readonly Diagnostic[]): void {
     if (this.options.output === 'text') {
-      this.reporter.reportAll(diagnostics);
+      this.root.diagnostics.reportAll(diagnostics);
     }
+  }
+
+  private succeedOperational(
+    action: 'auth' | 'refresh',
+    data: Record<string, unknown>,
+    text: string,
+    diagnostics: readonly Diagnostic[],
+  ): void {
+    if (this.options.output === 'json') {
+      this.root.json.emit({
+        status: 'ok',
+        command: `registry ${action}`,
+        data,
+        diagnostics: [...this.configDiagnostics, ...diagnostics],
+      });
+      return;
+    }
+
+    this.root.diagnostics.reportAll(diagnostics);
+    process.stdout.write(`${text}\n`);
   }
 
   private print(value: unknown): void {

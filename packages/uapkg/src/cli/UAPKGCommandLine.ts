@@ -17,7 +17,7 @@ export type UAPKGCommandName =
   | 'publish'
   | 'requests';
 export type UAPKGConfigAction = 'get' | 'list' | 'set' | 'delete' | 'edit';
-export type UAPKGRegistryAction = 'add' | 'remove' | 'list' | 'use';
+export type UAPKGRegistryAction = 'add' | 'remove' | 'list' | 'use' | 'auth' | 'refresh';
 export type UAPKGRequestsAction = 'list' | 'status';
 export type UAPKGControlPlaneAuthMode = 'auto' | 'login' | 'gat' | 'oidc';
 export type UAPKGRegistryRequestStatus =

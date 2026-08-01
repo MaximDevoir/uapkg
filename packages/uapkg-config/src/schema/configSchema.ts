@@ -1,8 +1,14 @@
+import { RegistryURLSchema } from '@uapkg/common-schema';
 import { z } from 'zod';
+
+const INTERNAL_BUILD_MODE_ENV = 'UAPKG_INTERNAL_BUILD_MODE';
+const DEVELOPMENT_REGISTRY_URL = 'https://github.com/uapkg/registry-dev-tmp';
+const PRODUCTION_REGISTRY_URL = 'https://github.com/uapkg/registry';
 
 // Accepted postinstall policy values. The `prompt` value is intentionally
 // omitted — uapkg commands must remain non-interactive.
 const postInstallPolicySchema = z.enum(['allow', 'deny']);
+const registryUrlConfigSchema = RegistryURLSchema.transform((value): string => value);
 
 const registryRefSchema = z
   .object({
@@ -13,7 +19,7 @@ const registryRefSchema = z
 
 const registryConfigSchema = z
   .object({
-    url: z.string().min(1),
+    url: registryUrlConfigSchema,
     ref: registryRefSchema.default({
       type: 'branch',
       value: 'main',
@@ -37,7 +43,7 @@ const partialRegistryRefSchema = z
 
 const partialRegistryConfigSchema = z
   .object({
-    url: z.string().min(1).optional(),
+    url: registryUrlConfigSchema.optional(),
     ref: partialRegistryRefSchema.optional(),
     ttlSeconds: z.number().optional(),
     postInstallPolicy: postInstallPolicySchema.optional(),
@@ -171,11 +177,13 @@ function resolveShellDefault() {
 }
 
 export function getDefaultConfig(): ResolvedConfig {
+  const defaultRegistryUrl =
+    process.env[INTERNAL_BUILD_MODE_ENV] === 'development' ? DEVELOPMENT_REGISTRY_URL : PRODUCTION_REGISTRY_URL;
   const defaults: ResolvedConfig = {
     registry: 'default',
     registries: {
       default: {
-        url: 'https://github.com/uapkg/registry',
+        url: registryUrlConfigSchema.parse(defaultRegistryUrl),
         ref: {
           type: 'branch',
           value: 'main',

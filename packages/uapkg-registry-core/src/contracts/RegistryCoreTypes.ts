@@ -24,6 +24,11 @@ export interface RegistryUpdateOptions {
   readonly bypassFreshnessCheck?: boolean;
 }
 
+export interface RegistryAccessOptions {
+  /** Allow system Git and its configured credential helper to prompt. */
+  readonly interactive?: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // Registry metadata (registry.json in cache root)
 // ---------------------------------------------------------------------------

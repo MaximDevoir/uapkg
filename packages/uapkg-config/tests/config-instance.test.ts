@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createConfig } from '../src';
 import { INTERNAL_CONFIG_CACHE_HOME_ENV } from '../src/files/ConfigCacheHome.js';
 
+const INTERNAL_BUILD_MODE_ENV = 'UAPKG_INTERNAL_BUILD_MODE';
 const temporaryDirectories: string[] = [];
 
 function createTempRoot() {
@@ -21,6 +22,58 @@ afterEach(() => {
 });
 
 describe('createConfig', () => {
+  it.each([
+    [undefined, 'https://github.com/uapkg/registry'],
+    ['production', 'https://github.com/uapkg/registry'],
+    ['development', 'https://github.com/uapkg/registry-dev-tmp'],
+  ] as const)('selects the %s build-mode default registry', (mode, expectedUrl) => {
+    const root = createTempRoot();
+    const profile = path.join(root, 'profile');
+    vi.stubEnv(INTERNAL_CONFIG_CACHE_HOME_ENV, profile);
+    if (mode === undefined) {
+      vi.stubEnv(INTERNAL_BUILD_MODE_ENV, undefined);
+    } else {
+      vi.stubEnv(INTERNAL_BUILD_MODE_ENV, mode);
+    }
+
+    const config = createConfig({ cwd: root });
+
+    expect(config.get('registry')).toBe('default');
+    expect(config.get('registries.default.url')).toBe(expectedUrl);
+    expect(config.get('registries.default.ref')).toEqual({ type: 'branch', value: 'main' });
+    expect(fs.existsSync(profile)).toBe(false);
+  });
+
+  it('allows configured registry values to override the stamped build default', () => {
+    const root = createTempRoot();
+    const profile = path.join(root, 'profile');
+    const project = path.join(root, 'Project');
+    fs.mkdirSync(project, { recursive: true });
+    fs.writeFileSync(
+      path.join(project, 'uapkg.json'),
+      '{"name":"Project","type":"project","dependencies":[]}\n',
+      'utf8',
+    );
+    writeGlobalConfig(profile, {
+      registries: { default: { url: 'https://example.com/global' } },
+    });
+    writeLocalConfig(project, {
+      registries: { default: { url: 'https://example.com/local' } },
+    });
+    vi.stubEnv(INTERNAL_BUILD_MODE_ENV, 'development');
+    vi.stubEnv(INTERNAL_CONFIG_CACHE_HOME_ENV, profile);
+
+    const config = createConfig({ cwd: project });
+
+    expect(config.get('registries.default.url')).toBe('https://example.com/local');
+    expect(config.get('registries.default.ref')).toEqual({ type: 'branch', value: 'main' });
+    expect(config.trace('registries.default.url')).toEqual([
+      expect.objectContaining({ source: 'default', value: 'https://github.com/uapkg/registry-dev-tmp' }),
+      expect.objectContaining({ source: 'global', value: 'https://example.com/global' }),
+      expect.objectContaining({ source: 'local', value: 'https://example.com/local' }),
+    ]);
+  });
+
   it('resolves merged values from default -> intermediary -> local', () => {
     const root = createTempRoot();
     const project = path.join(root, 'Project');

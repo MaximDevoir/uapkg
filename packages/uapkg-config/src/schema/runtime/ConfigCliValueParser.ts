@@ -29,11 +29,12 @@ export class ConfigCliValueParser {
     const validation = resolved.schema.safeParse(coerced.value);
     if (!validation.success) {
       const issue = validation.error.issues[0];
+      const receivedValue = this.isRegistryUrlPath(pathToProperty) ? '' : ` "${rawValue}"`;
       return fail([
         createParseErrorDiagnostic(
           issue
-            ? `Invalid value "${rawValue}" for "${pathToProperty}": ${issue.message}.`
-            : `Invalid value "${rawValue}" for "${pathToProperty}".`,
+            ? `Invalid value${receivedValue} for "${pathToProperty}": ${issue.message}.`
+            : `Invalid value${receivedValue} for "${pathToProperty}".`,
         ),
       ]);
     }
@@ -67,5 +68,10 @@ export class ConfigCliValueParser {
     }
 
     return ok(parsed);
+  }
+
+  private isRegistryUrlPath(pathToProperty: string): boolean {
+    const segments = pathToProperty.split('.');
+    return segments.length === 3 && segments[0] === 'registries' && segments[2] === 'url';
   }
 }

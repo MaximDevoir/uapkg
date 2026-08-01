@@ -14,7 +14,7 @@ export class RegistryCommandModule implements UAPKGCommandModule {
         withScopeOptions(builder)
           .positional('action', {
             type: 'string',
-            choices: ['add', 'remove', 'list', 'use'] as const,
+            choices: ['add', 'remove', 'list', 'use', 'auth', 'refresh'] as const,
             describe: 'Registry action',
             demandOption: true,
           })
@@ -45,7 +45,22 @@ export class RegistryCommandModule implements UAPKGCommandModule {
           })
           .conflicts('branch', 'tag')
           .conflicts('branch', 'rev')
-          .conflicts('tag', 'rev'),
+          .conflicts('tag', 'rev')
+          .check((argv) => {
+            const action = String(argv.action);
+            if (action === 'auth' || action === 'refresh') {
+              if (argv.global || argv.local) {
+                throw new Error(`[uapkg] registry ${action} does not accept --global or --local`);
+              }
+              if (typeof argv.url === 'string') {
+                throw new Error(`[uapkg] registry ${action} accepts a configured alias only`);
+              }
+              if (typeof argv.branch === 'string' || typeof argv.tag === 'string' || typeof argv.rev === 'string') {
+                throw new Error(`[uapkg] registry ${action} does not accept --branch, --tag, or --rev`);
+              }
+            }
+            return true;
+          }),
       (argv) => {
         const scope = resolveScope(argv.global, argv.local);
         const output = argv.json ? 'json' : 'text';
@@ -98,6 +113,24 @@ export class RegistryCommandModule implements UAPKGCommandModule {
               this.factory.createRegistry('use', {
                 cwd: process.cwd(),
                 scope,
+                output,
+                name: typeof argv.name === 'string' ? argv.name : undefined,
+              }),
+            );
+            return;
+          case 'auth':
+            sink.set(
+              this.factory.createRegistry('auth', {
+                cwd: process.cwd(),
+                output,
+                name: typeof argv.name === 'string' ? argv.name : undefined,
+              }),
+            );
+            return;
+          case 'refresh':
+            sink.set(
+              this.factory.createRegistry('refresh', {
+                cwd: process.cwd(),
                 output,
                 name: typeof argv.name === 'string' ? argv.name : undefined,
               }),

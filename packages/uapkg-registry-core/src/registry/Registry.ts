@@ -8,6 +8,7 @@ import {
 } from '@uapkg/diagnostics';
 import type { PackageRegistryManifest } from '@uapkg/registry-schema';
 import type {
+  RegistryAccessOptions,
   RegistryDescriptor,
   RegistryUpdateOptions,
   RegistryUpdateResult,
@@ -20,6 +21,7 @@ import { RegistryMetadataReader } from './RegistryMetadataReader.js';
 import { RegistryPackageReader } from './RegistryPackageReader.js';
 import { evaluateSyncPolicy } from './RegistrySyncPolicy.js';
 import { RegistryUpdater } from './RegistryUpdater.js';
+import { redactRegistryUrlSecrets, sanitizeRegistryUrlForDisplay } from './RegistryUrlSanitizer.js';
 
 /**
  * Represents one configured local registry cache.
@@ -106,6 +108,11 @@ export class Registry {
     }
 
     return this.performUpdate(options?.logicalRegistryName, forced);
+  }
+
+  /** Check whether system Git can read the configured remote without changing the cache. */
+  async probeAccess(options: RegistryAccessOptions = {}): Promise<Result<void>> {
+    return this.updater.probeAccess(options.interactive ?? false);
   }
 
   /** Read a package registry manifest from the local cache. */
@@ -228,17 +235,26 @@ export class Registry {
     logicalRegistryName?: string,
   ) {
     const first = diagnostics[0];
-    const cause = first?.message ?? 'Registry update failed.';
+    const cause = redactRegistryUrlSecrets(first?.message ?? 'Registry update failed.', this.descriptor.url);
     const httpStatus = this.extractHttpStatus(cause);
+    const registryName = this.resolveDiagnosticRegistryName(logicalRegistryName);
+    const safeUrl = sanitizeRegistryUrlForDisplay(this.descriptor.url);
 
-    return createRegistryUnreachableDiagnostic({
-      registryName: this.resolveDiagnosticRegistryName(logicalRegistryName),
-      url: this.descriptor.url,
+    const diagnostic = createRegistryUnreachableDiagnostic({
+      registryName,
+      url: safeUrl,
       cause,
       initialized,
       httpStatus,
       level: initialized ? 'warning' : 'error',
     });
+    return {
+      ...diagnostic,
+      message: `Git could not access the "${registryName}" registry at ${safeUrl}.`,
+      hint: `Confirm that the repository, network, and configured ref are available.
+For a private registry, configure system Git credentials and run 'uapkg registry auth ${registryName}'.
+Repository hosts may intentionally report an authorization failure as a missing repository.`,
+    };
   }
 
   private extractHttpStatus(text: string): number | undefined {

@@ -32,7 +32,11 @@ export {
   type ProjectGetNameCommandOptions,
 } from './commands/ProjectGetNameCommand.js';
 export { PublishCommand, type PublishCommandOptions } from './commands/PublishCommand.js';
-export { RegistryCommand, type RegistryCommandOptions } from './commands/RegistryCommand.js';
+export {
+  RegistryCommand,
+  type RegistryCommandOptions,
+  type RegistryCommandRuntime,
+} from './commands/RegistryCommand.js';
 export { RemoveCommand, type RemoveCommandOptions } from './commands/RemoveCommand.js';
 export { RequestsCommand, type RequestsCommandOptions } from './commands/RequestsCommand.js';
 export { UpdateCommand, type UpdateCommandOptions } from './commands/UpdateCommand.js';

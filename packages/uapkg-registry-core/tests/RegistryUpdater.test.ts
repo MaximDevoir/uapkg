@@ -61,6 +61,27 @@ describe('RegistryUpdater initial clone', () => {
   });
 });
 
+describe('RegistryUpdater access probes', () => {
+  it.each([
+    { interactive: false, interaction: 'non-interactive', timeoutMs: 120_000 },
+    { interactive: true, interaction: 'interactive', timeoutMs: 300_000 },
+  ] as const)('checks HEAD without changing the cache ($interaction)', async (input) => {
+    const descriptor: RegistryDescriptor = {
+      type: 'git',
+      url: 'https://github.com/uapkg/private-registry.git',
+      ref: { type: 'branch', value: 'main' },
+    };
+    const runner = { run: vi.fn(async () => ok(undefined)) };
+    const updater = new RegistryUpdater('access-test', descriptor, 'git', runner);
+
+    await expect(updater.probeAccess(input.interactive)).resolves.toMatchObject({ ok: true });
+    expect(runner.run).toHaveBeenCalledWith(['ls-remote', descriptor.url, 'HEAD'], {
+      interaction: input.interaction,
+      timeoutMs: input.timeoutMs,
+    });
+  });
+});
+
 function createCloneHarness(ref: RegistryDescriptor['ref'], result: Result<void> = ok(undefined)) {
   const updater = new RegistryUpdater(
     'registry-updater-test',

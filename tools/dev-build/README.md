@@ -46,6 +46,18 @@ Snapshot file:
 
 The development banner is embedded in the built CLI rather than its global command shim. It is written to stderr so commands with machine-readable or `--json` stdout remain pipeable.
 
+The generated launcher also stamps the built-in `default` registry before it
+imports the CLI:
+
+- Production, unstamped, and unrecognized modes use branch `main` at
+  `https://github.com/uapkg/registry`.
+- Development mode uses branch `main` at the private
+  `https://github.com/uapkg/registry-dev-tmp` repository.
+
+The stamp overrides any inherited internal build-mode environment value. It is
+only the lowest-precedence default, so normal global and project configuration
+can replace it.
+
 ## Configuration and Registry Cache Profiles
 
 The stamped CLI launcher selects a persistent profile before loading the CLI:
@@ -56,6 +68,19 @@ The stamped CLI launcher selects a persistent profile before loading the CLI:
 Only the global configuration file and local Git registry cache use the selected profile. Project-local and intermediary `.uapkg/config.json` files are resolved from the working directory in exactly the same way for both builds. Authentication metadata, authentication locks, and OS credentials remain shared through the production `~/.uapkg` location.
 
 The development profile is created only when a command first needs to write configuration or cache state. Linking never copies or renames production state, and link, unlink, watch, force, build cleanup, and `clean:all` never delete or move either user profile.
+
+Registry clones are also lazy: build, installation, linking, and CLI startup do
+not access the network. The first package operation that needs registry content
+clones the selected repository, while `uapkg registry refresh [alias]` forces a
+clone/fetch regardless of TTL.
+
+Both built-in repositories are private during development; the production
+repository is temporary bootstrap state that will later be reset and linked
+through the UAPKG website. Run `uapkg registry auth [alias]` on an attended
+workstation to let system Git verify or obtain access. UAPKG stores no Git
+credential. Headless jobs must provision Git independently through
+`GIT_ASKPASS`, SSH/deploy keys, or another non-interactive credential helper.
+`uapkg login` remains exclusively for the UAPKG control plane.
 
 ## Running from Anywhere
 

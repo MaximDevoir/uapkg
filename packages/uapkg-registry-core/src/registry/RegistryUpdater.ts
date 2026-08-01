@@ -1,12 +1,9 @@
-import { execFile } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
-import { promisify } from 'node:util';
-import { createGitErrorDiagnostic, DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
+import { DiagnosticBag, type Result } from '@uapkg/diagnostics';
 import type { RegistryDescriptor } from '../contracts/RegistryCoreTypes.js';
 import { getRegistryRepoPath } from '../paths/RegistryPaths.js';
-
-const execFileAsync = promisify(execFile);
+import { type GitCommandRunner, GitRunner } from './GitRunner.js';
 
 /**
  * Handles git clone and git fetch/pull for a single registry.
@@ -15,7 +12,8 @@ export class RegistryUpdater {
   constructor(
     private readonly shortId: string,
     private readonly descriptor: RegistryDescriptor,
-    private readonly gitBinary: string,
+    gitBinary: string,
+    private readonly runner: GitCommandRunner = new GitRunner(gitBinary, [descriptor.url]),
   ) {}
 
   /** Clone or fetch the registry repo as needed. */
@@ -38,6 +36,14 @@ export class RegistryUpdater {
     }
 
     return bag.toResult(undefined);
+  }
+
+  /** Probe remote access without cloning or mutating the local registry cache. */
+  async probeAccess(interactive = false): Promise<Result<void>> {
+    return this.runner.run(['ls-remote', this.descriptor.url, 'HEAD'], {
+      interaction: interactive ? 'interactive' : 'non-interactive',
+      timeoutMs: interactive ? 300_000 : 120_000,
+    });
   }
 
   private async cloneRepo(repoPath: string): Promise<Result<void>> {
@@ -83,16 +89,6 @@ export class RegistryUpdater {
   }
 
   private async runGit(args: string[], cwd?: string): Promise<Result<void>> {
-    try {
-      await execFileAsync(this.gitBinary, args, { cwd, timeout: 120_000 });
-      return ok(undefined);
-    } catch (err) {
-      const stderr = (err as { stderr?: string }).stderr ?? String(err);
-      const exitCode = (err as { code?: number }).code ?? 1;
-      return {
-        ok: false,
-        diagnostics: [createGitErrorDiagnostic(`${this.gitBinary} ${args.join(' ')}`, stderr, exitCode)],
-      };
-    }
+    return this.runner.run(args, { cwd, interaction: 'non-interactive', timeoutMs: 120_000 });
   }
 }

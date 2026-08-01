@@ -103,8 +103,7 @@ export class UAPKGApplication {
         }).execute();
 
       case 'registry':
-        return new RegistryCommand({
-          cwd: commandLine.cwd,
+        return new RegistryCommand(root, {
           action: commandLine.action,
           name: commandLine.name,
           url: commandLine.url,

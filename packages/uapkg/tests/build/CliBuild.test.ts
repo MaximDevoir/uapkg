@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   createBuildMetadata,
   DEVELOPMENT_BANNER_TEXT,
+  INTERNAL_BUILD_MODE_ENV,
   INTERNAL_CONFIG_CACHE_HOME_ENV,
   parseBuildMode,
   renderCliLauncher,
@@ -37,6 +38,8 @@ if (process.argv.includes('--version')) {
   process.stdout.write('HELP OUTPUT\\n');
 } else if (process.argv.includes('--config-cache-home')) {
   process.stdout.write(\`\${process.env.${INTERNAL_CONFIG_CACHE_HOME_ENV} ?? ''}\\n\`);
+} else if (process.argv.includes('--build-mode')) {
+  process.stdout.write(\`\${process.env.${INTERNAL_BUILD_MODE_ENV} ?? ''}\\n\`);
 } else {
   process.stderr.write('COMMAND ERROR\\n');
   process.exitCode = 1;
@@ -94,9 +97,13 @@ describe('CLI build mode', () => {
   it('selects the stamped config and cache profile before importing the CLI', () => {
     const launcher = renderCliLauncher();
 
+    expect(launcher.indexOf(`process.env.${INTERNAL_BUILD_MODE_ENV}`)).toBeLessThan(
+      launcher.indexOf("await import('./cli-bootstrap.js')"),
+    );
     expect(launcher.indexOf(`process.env.${INTERNAL_CONFIG_CACHE_HOME_ENV}`)).toBeLessThan(
       launcher.indexOf("await import('./cli-bootstrap.js')"),
     );
+    expect(launcher).toContain(`process.env.${INTERNAL_BUILD_MODE_ENV} = UAPKG_BUILD_METADATA.mode`);
     expect(launcher).toContain("UAPKG_BUILD_METADATA.mode === 'development' ? '.uapkg-development' : '.uapkg'");
   });
 });
@@ -164,6 +171,25 @@ describe('stamped CLI artifacts', () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toBe(`${path.join(os.homedir(), profileDirectory)}\n`);
+    expect(result.stderr).toBe(mode === 'development' ? `${DEVELOPMENT_BANNER_TEXT}\n` : '');
+  });
+
+  it.each(['production', 'development'] as const)('overrides inherited build-mode state for a %s build', (mode) => {
+    const paths = createTemporaryPackage();
+    writeBuildArtifacts(paths, createBuildMetadata(mode, '2.3.4'));
+
+    const result = spawnSync(process.execPath, [paths.launcherPath, '--build-mode'], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        FORCE_COLOR: '0',
+        NO_COLOR: '1',
+        [INTERNAL_BUILD_MODE_ENV]: mode === 'development' ? 'production' : 'development',
+      },
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toBe(`${mode}\n`);
     expect(result.stderr).toBe(mode === 'development' ? `${DEVELOPMENT_BANNER_TEXT}\n` : '');
   });
 
