@@ -3,8 +3,9 @@ import type { CliBuildMode, DevBuildMode, DevBuildOptions } from './types';
 const BUILD_MODE_FLAGS = new Set(['--development', '--production']);
 
 export function parseDevBuildOptions(command: DevBuildMode, args: string[]): DevBuildOptions {
-  const hasDevelopment = args.includes('--development');
-  const hasProduction = args.includes('--production');
+  const optionArgs = args.filter((arg) => arg !== '--');
+  const hasDevelopment = optionArgs.includes('--development');
+  const hasProduction = optionArgs.includes('--production');
 
   if (hasDevelopment && hasProduction) {
     throw new Error('[dev-build] --development and --production cannot be used together.');
@@ -19,13 +20,13 @@ export function parseDevBuildOptions(command: DevBuildMode, args: string[]): Dev
   }
 
   const allowedFlags = getAllowedFlags(command);
-  const unsupportedFlag = args.find((arg) => !allowedFlags.has(arg));
+  const unsupportedFlag = optionArgs.find((arg) => !allowedFlags.has(arg));
   if (unsupportedFlag) {
     throw new Error(`[dev-build] Unsupported option for ${command}: ${unsupportedFlag}`);
   }
 
   return {
-    force: args.includes('--force'),
+    force: optionArgs.includes('--force'),
     buildMode: command === 'build' ? resolveBuildMode(hasDevelopment) : undefined,
   };
 }

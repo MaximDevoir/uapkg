@@ -19,6 +19,22 @@ describe('parseDevBuildOptions', () => {
     });
   });
 
+  it('accepts package-manager option separators', () => {
+    expect(parseDevBuildOptions('build', ['--', '--production'])).toEqual({
+      force: false,
+      buildMode: 'production',
+    });
+    expect(parseDevBuildOptions('link', ['--', '--force'])).toEqual({
+      force: true,
+      buildMode: undefined,
+    });
+    expect(parseDevBuildOptions('watch', ['--'])).toEqual({
+      force: false,
+      buildMode: undefined,
+    });
+    expect(() => parseDevBuildOptions('build', ['--', '--staging'])).toThrow('Unsupported option for build: --staging');
+  });
+
   it('rejects conflicting build modes', () => {
     expect(() => parseDevBuildOptions('build', ['--development', '--production'])).toThrow(
       '--development and --production cannot be used together',
