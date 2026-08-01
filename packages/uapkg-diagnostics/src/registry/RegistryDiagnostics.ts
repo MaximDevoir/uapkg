@@ -58,6 +58,25 @@ export type CacheReadErrorDiagnostic = DiagnosticBase<
   }
 >;
 
+/** Registry cache state is internally inconsistent or malformed. */
+export type CacheCorruptDiagnostic = DiagnosticBase<
+  'CACHE_CORRUPT',
+  {
+    readonly cachePath: string;
+    readonly reason: string;
+  }
+>;
+
+/** A shortened cache path belongs to a different full registry identifier. */
+export type CacheIdentifierCollisionDiagnostic = DiagnosticBase<
+  'CACHE_IDENTIFIER_COLLISION',
+  {
+    readonly cachePath: string;
+    readonly expectedIdentifier: string;
+    readonly actualIdentifier: string;
+  }
+>;
+
 /** Registry could not be reached, optionally with cached state available. */
 export type RegistryUnreachableDiagnostic = DiagnosticBase<
   'REGISTRY_UNREACHABLE',
@@ -78,6 +97,8 @@ export type RegistryDiagnostic =
   | RegistryNotFoundDiagnostic
   | LockAcquisitionFailedDiagnostic
   | CacheReadErrorDiagnostic
+  | CacheCorruptDiagnostic
+  | CacheIdentifierCollisionDiagnostic
   | RegistryUnreachableDiagnostic;
 
 // ---------------------------------------------------------------------------
@@ -150,6 +171,30 @@ export function createCacheReadErrorDiagnostic(cachePath: string, reason: string
     message: `Failed to read registry cache at "${cachePath}": ${reason}.`,
     hint: 'The cache may be corrupted. Try running `uapkg update` to refresh.',
     data: { cachePath, reason },
+  };
+}
+
+export function createCacheCorruptDiagnostic(cachePath: string, reason: string): CacheCorruptDiagnostic {
+  return {
+    level: 'error',
+    code: 'CACHE_CORRUPT',
+    message: `Registry cache at "${cachePath}" is corrupt: ${reason}.`,
+    hint: 'Remove this registry cache directory and retry. Registry caches contain only disposable local data.',
+    data: { cachePath, reason },
+  };
+}
+
+export function createCacheIdentifierCollisionDiagnostic(
+  cachePath: string,
+  expectedIdentifier: string,
+  actualIdentifier: string,
+): CacheIdentifierCollisionDiagnostic {
+  return {
+    level: 'error',
+    code: 'CACHE_IDENTIFIER_COLLISION',
+    message: `Registry cache identifier collision at "${cachePath}".`,
+    hint: 'Remove this registry cache directory and retry. If the collision recurs, report it to the uapkg maintainers.',
+    data: { cachePath, expectedIdentifier, actualIdentifier },
   };
 }
 

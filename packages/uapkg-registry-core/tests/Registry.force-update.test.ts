@@ -12,7 +12,7 @@ describe('Registry forced updates', () => {
     vi.spyOn(RegistryLock.prototype, 'acquire').mockResolvedValue(ok(true));
     vi.spyOn(RegistryLock.prototype, 'release').mockResolvedValue(ok(undefined));
 
-    const registryId = 'registry-identifier' as RegistryIdentifier;
+    const registryId = 'a'.repeat(64) as RegistryIdentifier;
     const registry = Registry.create(
       'official',
       {
@@ -27,25 +27,28 @@ describe('Registry forced updates', () => {
     );
     const update = vi.fn(async () => ok(undefined));
     const metadata = {
-      exists: () => true,
-      read: async () =>
-        ok({
-          lastRegistrySyncAt: Math.floor(Date.now() / 1000) as UnixTimestamp,
-          registryIdentifier: registryId,
-        }),
       write: async () => ok(undefined),
     };
+    const inspect = vi.fn(async () =>
+      ok({
+        initialized: true,
+        lastRegistrySyncAt: Math.floor(Date.now() / 1000) as UnixTimestamp,
+      }),
+    );
     const internals = registry as unknown as {
       metadataReader: typeof metadata;
+      cacheValidator: { inspect: typeof inspect };
       updater: { update: typeof update };
     };
     internals.metadataReader = metadata;
+    internals.cacheValidator = { inspect };
     internals.updater = { update };
 
     await expect(registry.ensureUpToDate({ bypassFreshnessCheck: true })).resolves.toMatchObject({
       ok: true,
       value: 'Updated',
     });
+    expect(inspect).toHaveBeenCalledTimes(2);
     expect(update).toHaveBeenCalledOnce();
   });
 });

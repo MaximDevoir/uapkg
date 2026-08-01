@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createCacheCorruptDiagnostic,
+  createCacheIdentifierCollisionDiagnostic,
   createIoErrorDiagnostic,
   createParseErrorDiagnostic,
   createUnknownErrorDiagnostic,
@@ -8,6 +10,25 @@ import {
   fromDiagnostics,
   ok,
 } from '../src/index';
+
+describe('Registry cache diagnostics', () => {
+  it('distinguishes corruption from a shortened identifier collision', () => {
+    expect(createCacheCorruptDiagnostic('/cache', 'bad metadata')).toMatchObject({
+      level: 'error',
+      code: 'CACHE_CORRUPT',
+      data: { cachePath: '/cache', reason: 'bad metadata' },
+    });
+    expect(createCacheIdentifierCollisionDiagnostic('/cache', 'expected', 'actual')).toMatchObject({
+      level: 'error',
+      code: 'CACHE_IDENTIFIER_COLLISION',
+      data: {
+        cachePath: '/cache',
+        expectedIdentifier: 'expected',
+        actualIdentifier: 'actual',
+      },
+    });
+  });
+});
 
 describe('Result', () => {
   it('ok wraps a value', () => {

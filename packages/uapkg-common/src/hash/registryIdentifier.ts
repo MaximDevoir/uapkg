@@ -18,16 +18,17 @@ export interface RegistryIdentityDescriptor {
  * `registries.<name>` config object.
  *
  * Steps:
- *   1. Normalize the `url` (remove trailing `/`, `.git` suffix, lowercase host).
- *   2. Deep-sort keys via stable JSON serialization.
- *   3. SHA-256 the resulting string.
+ *   1. Normalize the Git repository identity.
+ *   2. Trim the ref value while preserving its case.
+ *   3. Deep-sort keys via stable JSON serialization.
+ *   4. SHA-256 the resulting string.
  */
 export function computeRegistryIdentifier(descriptor: RegistryIdentityDescriptor): string {
   const normalized: RegistryIdentityDescriptor = {
     url: normalizeUrl(descriptor.url),
     ref: {
       type: descriptor.ref.type,
-      value: descriptor.ref.value,
+      value: descriptor.ref.value.trim(),
     },
   };
   return sha256(stableStringify(normalized));

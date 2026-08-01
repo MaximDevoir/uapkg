@@ -1,9 +1,17 @@
 import { createHash } from 'node:crypto';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
 import {
   canonicalizeRegistryGitOrigin,
   fingerprintRegistryGitOrigin,
+  RegistryTrustResolver,
 } from '../../src/control-plane/RegistryTrustResolver.js';
+
+const readFileMock = vi.hoisted(() => vi.fn());
+
+vi.mock('node:fs/promises', () => ({
+  readFile: readFileMock,
+}));
 
 describe('registry control-plane source identity', () => {
   it.each([
@@ -19,5 +27,52 @@ describe('registry control-plane source identity', () => {
     const expected = createHash('sha256').update(canonical).digest('hex');
 
     expect(fingerprintRegistryGitOrigin('git@github.com:UAPKG/Registry.git')).toBe(`sha256:${expected}`);
+  });
+
+  it.each([
+    ['metadata without an identifier', {}],
+    ['legacy metadata with an extra identifier', { identifier: 'legacy-service-generated-value' }],
+  ])('resolves %s using the UUID, display name, and Git origin', async (_label, legacyFields) => {
+    readFileMock.mockResolvedValue(
+      JSON.stringify({
+        schemaVersion: 1,
+        registry: {
+          id: '00000000-0000-4000-a000-000000000020',
+          name: 'Official',
+          ...legacyFields,
+        },
+        sourceOfTruth: {
+          type: 'uapkg-service',
+          apiBaseUrl: 'https://untrusted.example.invalid',
+        },
+      }),
+    );
+    const registry = {
+      shortId: 'cache-short-id',
+      descriptor: {
+        url: 'git@github.com:UAPKG/Registry.git',
+      },
+      ensureUpToDate: vi.fn().mockResolvedValue({ ok: true, value: 'Updated', diagnostics: [] }),
+    };
+    const root = {
+      config: {
+        get: vi.fn().mockReturnValue('official'),
+      },
+      registryCore: {
+        getOrCreateRegistry: vi.fn().mockReturnValue({ ok: true, value: registry }),
+      },
+    } as unknown as CompositionRoot;
+
+    const trust = await new RegistryTrustResolver(root).resolve();
+
+    expect(trust).toMatchObject({
+      alias: 'official',
+      registryId: '00000000-0000-4000-a000-000000000020',
+      registryName: 'Official',
+      repositoryUrl: 'https://github.com/uapkg/registry.git',
+      repositoryFingerprint: fingerprintRegistryGitOrigin('https://github.com/uapkg/registry.git'),
+      apiBaseUrl: 'https://api.uapkg.dev',
+    });
+    expect(trust).not.toHaveProperty('registryIdentifier');
   });
 });

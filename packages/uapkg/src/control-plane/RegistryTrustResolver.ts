@@ -18,7 +18,6 @@ const registryMetaSchema = z
     registry: z.object({
       id: z.uuid(),
       name: z.string().min(1),
-      identifier: z.string().min(1),
     }),
     sourceOfTruth: z.object({
       type: z.literal('uapkg-service'),
@@ -74,7 +73,6 @@ export class RegistryTrustResolver {
       alias,
       registryId: parsed.data.registry.id,
       registryName: parsed.data.registry.name,
-      registryIdentifier: parsed.data.registry.identifier,
       repositoryUrl,
       repositoryFingerprint: fingerprintRegistryGitOrigin(repositoryUrl),
       issuer: UAPKG_AUTHORIZATION_ISSUER,

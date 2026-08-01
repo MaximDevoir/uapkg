@@ -1,6 +1,22 @@
+import os from 'node:os';
+import path from 'node:path';
 import type { CurrentGlobalUapkgState, GlobalUapkgSnapshot } from './types';
 
+export interface UapkgProfileRoots {
+  production: string;
+  development: string;
+}
+
+export function resolveUapkgProfileRoots(homeDirectory = os.homedir()): UapkgProfileRoots {
+  return {
+    production: path.join(homeDirectory, '.uapkg'),
+    development: path.join(homeDirectory, '.uapkg-development'),
+  };
+}
+
 export class DevBuildStatusPrinter {
+  constructor(private readonly profileRoots = resolveUapkgProfileRoots()) {}
+
   printLinkStart(force: boolean) {
     console.log(`[dev-build] build:link started${force ? ' (force)' : ''}`);
   }
@@ -61,6 +77,8 @@ export class DevBuildStatusPrinter {
   }) {
     const devMode = args.isLinkedToWorkspace ? 'ACTIVE' : 'INACTIVE';
     console.log(`Dev Mode: ${devMode}`);
+    console.log(`Production Profile Root: ${this.profileRoots.production}`);
+    console.log(`Development Profile Root: ${this.profileRoots.development}`);
     console.log(`Snapshot: ${args.snapshot ? args.snapshotPath : 'none'}`);
     console.log(`Current: ${this.describeCurrent(args.current)}`);
 

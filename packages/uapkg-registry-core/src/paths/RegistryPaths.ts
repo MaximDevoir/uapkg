@@ -1,25 +1,26 @@
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 /**
  * Pure path helpers for registry cache layout.
  *
  * Layout:
- *   ~/.uapkg/registry/{shortId}/
+ *   {config-cache-home}/registry/{shortId}/
  *     registry.json
  *     registry/          ← cloned registry repo
- *     packages/           ← cached tgz files
+ *     packages/           ← reserved for future persistent package archives
  */
 
 const UAPKG_DIR = '.uapkg';
 const REGISTRY_DIR = 'registry';
+const INTERNAL_CONFIG_CACHE_HOME_ENV = 'UAPKG_INTERNAL_CONFIG_CACHE_HOME';
 
-/** Root of all registry caches: `~/.uapkg/registry` */
+/** Root of all registry caches in the profile selected by the CLI launcher. */
 export function getRegistryRoot(): string {
-  return join(homedir(), UAPKG_DIR, REGISTRY_DIR);
+  return join(getConfigCacheHome(), REGISTRY_DIR);
 }
 
-/** Cache root for a specific registry: `~/.uapkg/registry/{shortId}` */
+/** Cache root for a specific registry: `{config-cache-home}/registry/{shortId}` */
 export function getRegistryCachePath(shortId: string): string {
   return join(getRegistryRoot(), shortId);
 }
@@ -29,7 +30,7 @@ export function getRegistryRepoPath(shortId: string): string {
   return join(getRegistryCachePath(shortId), REGISTRY_DIR);
 }
 
-/** Path to the cached packages directory. */
+/** Path reserved for future persistent package archive caching. */
 export function getRegistryPackagesPath(shortId: string): string {
   return join(getRegistryCachePath(shortId), 'packages');
 }
@@ -42,4 +43,13 @@ export function getRegistryMetadataPath(shortId: string): string {
 /** Path to the lock file used during updates. */
 export function getRegistryLockPath(shortId: string): string {
   return join(getRegistryCachePath(shortId), '.lock');
+}
+
+function getConfigCacheHome(): string {
+  const selectedHome = process.env[INTERNAL_CONFIG_CACHE_HOME_ENV];
+  if (selectedHome && selectedHome.trim().length > 0) {
+    return resolve(selectedHome);
+  }
+
+  return join(homedir(), UAPKG_DIR);
 }

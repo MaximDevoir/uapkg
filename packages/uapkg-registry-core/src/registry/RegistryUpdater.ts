@@ -46,13 +46,21 @@ export class RegistryUpdater {
       await mkdir(parentDir, { recursive: true });
     }
 
-    const args = ['clone', '--single-branch'];
-    if (this.descriptor.ref.type === 'branch') {
-      args.push('--branch', this.descriptor.ref.value);
+    const refValue = this.descriptor.ref.value.trim();
+    const args = ['clone'];
+    if (this.descriptor.ref.type === 'branch' || this.descriptor.ref.type === 'tag') {
+      args.push('--single-branch', '--branch', refValue);
+    } else {
+      args.push('--no-checkout');
     }
     args.push(this.descriptor.url, repoPath);
 
-    return this.runGit(args);
+    const cloneResult = await this.runGit(args);
+    if (!cloneResult.ok || this.descriptor.ref.type !== 'rev') {
+      return cloneResult;
+    }
+
+    return this.runGit(['reset', '--hard', refValue], repoPath);
   }
 
   private async fetchRepo(repoPath: string): Promise<Result<void>> {
@@ -66,11 +74,11 @@ export class RegistryUpdater {
   private resolveRefSpec(): string {
     switch (this.descriptor.ref.type) {
       case 'branch':
-        return `origin/${this.descriptor.ref.value}`;
+        return `origin/${this.descriptor.ref.value.trim()}`;
       case 'tag':
-        return `tags/${this.descriptor.ref.value}`;
+        return `tags/${this.descriptor.ref.value.trim()}`;
       case 'rev':
-        return this.descriptor.ref.value;
+        return this.descriptor.ref.value.trim();
     }
   }
 

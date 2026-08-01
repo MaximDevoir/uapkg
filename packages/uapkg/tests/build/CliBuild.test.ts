@@ -1,11 +1,12 @@
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   createBuildMetadata,
   DEVELOPMENT_BANNER_TEXT,
+  INTERNAL_CONFIG_CACHE_HOME_ENV,
   parseBuildMode,
   renderCliLauncher,
   resolveCliBuildPaths,
@@ -17,7 +18,7 @@ import {
 const temporaryDirectories: string[] = [];
 
 function createTemporaryPackage() {
-  const packageRoot = mkdtempSync(path.join(tmpdir(), 'uapkg-cli-build-'));
+  const packageRoot = mkdtempSync(path.join(os.tmpdir(), 'uapkg-cli-build-'));
   temporaryDirectories.push(packageRoot);
   writeFileSync(
     path.join(packageRoot, 'package.json'),
@@ -34,6 +35,8 @@ if (process.argv.includes('--version')) {
   process.stdout.write(\`\${UAPKG_BUILD_METADATA.displayVersion}\\n\`);
 } else if (process.argv.includes('--help')) {
   process.stdout.write('HELP OUTPUT\\n');
+} else if (process.argv.includes('--config-cache-home')) {
+  process.stdout.write(\`\${process.env.${INTERNAL_CONFIG_CACHE_HOME_ENV} ?? ''}\\n\`);
 } else {
   process.stderr.write('COMMAND ERROR\\n');
   process.exitCode = 1;
@@ -87,6 +90,15 @@ describe('CLI build mode', () => {
     expect(launcher).toContain('\\u001B[44m\\u001B[37mDEVELOPMENT BUILD\\u001B[0m');
     expect(launcher).toContain('process.stderr.write');
   });
+
+  it('selects the stamped config and cache profile before importing the CLI', () => {
+    const launcher = renderCliLauncher();
+
+    expect(launcher.indexOf(`process.env.${INTERNAL_CONFIG_CACHE_HOME_ENV}`)).toBeLessThan(
+      launcher.indexOf("await import('./cli-bootstrap.js')"),
+    );
+    expect(launcher).toContain("UAPKG_BUILD_METADATA.mode === 'development' ? '.uapkg-development' : '.uapkg'");
+  });
 });
 
 describe('stamped CLI artifacts', () => {
@@ -131,6 +143,28 @@ describe('stamped CLI artifacts', () => {
     expect(helpResult.status).toBe(0);
     expect(helpResult.stdout).toBe('HELP OUTPUT\n');
     expect(helpResult.stderr).toBe(`${DEVELOPMENT_BANNER_TEXT}\n`);
+  });
+
+  it.each([
+    ['production', '.uapkg'],
+    ['development', '.uapkg-development'],
+  ] as const)('overrides inherited profile state for a %s build', (mode, profileDirectory) => {
+    const paths = createTemporaryPackage();
+    writeBuildArtifacts(paths, createBuildMetadata(mode, '2.3.4'));
+
+    const result = spawnSync(process.execPath, [paths.launcherPath, '--config-cache-home'], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        FORCE_COLOR: '0',
+        NO_COLOR: '1',
+        [INTERNAL_CONFIG_CACHE_HOME_ENV]: path.join(os.homedir(), 'wrong-profile'),
+      },
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toBe(`${path.join(os.homedir(), profileDirectory)}\n`);
+    expect(result.stderr).toBe(mode === 'development' ? `${DEVELOPMENT_BANNER_TEXT}\n` : '');
   });
 
   it('rejects a development artifact when production verification is required', async () => {

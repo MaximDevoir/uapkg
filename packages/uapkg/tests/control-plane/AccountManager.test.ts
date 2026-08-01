@@ -19,7 +19,6 @@ const trust: RegistryTrust = {
   alias: 'official',
   registryId: '00000000-0000-4000-a000-000000000020',
   registryName: 'Official',
-  registryIdentifier: 'identifier',
   repositoryUrl: 'https://github.com/uapkg/registry.git',
   repositoryFingerprint: `sha256:${'a'.repeat(64)}`,
   issuer: 'https://account.uapkg.dev/oauth',

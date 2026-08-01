@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { UAPKGBuildMetadata, UAPKGBuildMode } from '../src/build/BuildMetadata.js';
 
 export const DEVELOPMENT_BANNER_TEXT = 'DEVELOPMENT BUILD';
+export const INTERNAL_CONFIG_CACHE_HOME_ENV = 'UAPKG_INTERNAL_CONFIG_CACHE_HOME';
 
 interface PackageJson {
   readonly version: string;
@@ -80,7 +81,14 @@ export function renderBuildMetadataModule(metadata: UAPKGBuildMetadata): string 
 
 export function renderCliLauncher(): string {
   return `#!/usr/bin/env node
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { UAPKG_BUILD_METADATA } from './build/BuildMetadata.js';
+
+process.env.${INTERNAL_CONFIG_CACHE_HOME_ENV} = join(
+  homedir(),
+  UAPKG_BUILD_METADATA.mode === 'development' ? '.uapkg-development' : '.uapkg',
+);
 
 if (UAPKG_BUILD_METADATA.mode === 'development') {
   const colorDisabled =

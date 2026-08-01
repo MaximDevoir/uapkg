@@ -126,6 +126,8 @@ export {
 } from './postinstall/PostinstallDiagnostics.js';
 // --- Registry family ---
 export type {
+  CacheCorruptDiagnostic,
+  CacheIdentifierCollisionDiagnostic,
   CacheReadErrorDiagnostic,
   GitErrorDiagnostic,
   LockAcquisitionFailedDiagnostic,
@@ -136,6 +138,8 @@ export type {
   SchemaInvalidDiagnostic,
 } from './registry/RegistryDiagnostics.js';
 export {
+  createCacheCorruptDiagnostic,
+  createCacheIdentifierCollisionDiagnostic,
   createCacheReadErrorDiagnostic,
   createGitErrorDiagnostic,
   createLockAcquisitionFailedDiagnostic,

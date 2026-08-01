@@ -64,7 +64,6 @@ function registryTrust(): RegistryTrust {
     alias: 'official',
     registryId,
     registryName: 'Official',
-    registryIdentifier: 'official',
     repositoryUrl: 'https://github.com/uapkg/registry.git',
     repositoryFingerprint: `sha256:${'a'.repeat(64)}`,
     issuer: 'https://account.uapkg.dev/oauth',

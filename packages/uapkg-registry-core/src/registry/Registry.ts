@@ -14,6 +14,7 @@ import type {
 } from '../contracts/RegistryCoreTypes.js';
 import { getRegistryLockPath } from '../paths/RegistryPaths.js';
 import { type ResolvedVersion, resolveVersion } from '../resolution/PackageResolver.js';
+import { RegistryCacheValidator } from './RegistryCacheValidator.js';
 import { RegistryLock } from './RegistryLock.js';
 import { RegistryMetadataReader } from './RegistryMetadataReader.js';
 import { RegistryPackageReader } from './RegistryPackageReader.js';
@@ -35,6 +36,7 @@ export class Registry {
   private initPromise?: Promise<Result<void>>;
 
   private readonly metadataReader: RegistryMetadataReader;
+  private readonly cacheValidator: RegistryCacheValidator;
   private readonly updater: RegistryUpdater;
   private readonly packageReader: RegistryPackageReader;
   private ttlSeconds: number;
@@ -53,6 +55,7 @@ export class Registry {
     this.shortId = shortId;
     this.ttlSeconds = ttlSeconds;
     this.metadataReader = new RegistryMetadataReader(shortId);
+    this.cacheValidator = new RegistryCacheValidator(shortId, id, this.metadataReader);
     this.updater = new RegistryUpdater(shortId, descriptor, gitBinary);
     this.packageReader = new RegistryPackageReader(shortId);
   }
@@ -86,13 +89,14 @@ export class Registry {
     options?: RegistryUpdateOptions & { readonly logicalRegistryName?: string },
   ): Promise<Result<RegistryUpdateResult>> {
     const forced = options?.bypassFreshnessCheck ?? false;
-    const lastSyncAt = await this.getLastSyncTimestamp();
-    const initialized = this.metadataReader.exists();
+    const cacheStateResult = await this.cacheValidator.inspect();
+    if (!cacheStateResult.ok) return cacheStateResult;
+    const cacheState = cacheStateResult.value;
 
     const decision = evaluateSyncPolicy({
-      lastSyncAt,
+      lastSyncAt: cacheState.lastRegistrySyncAt,
       ttlSeconds: this.ttlSeconds,
-      hasUpdatedWithinProcessLifetime: this.hasUpdatedThisProcess,
+      hasUpdatedWithinProcessLifetime: cacheState.initialized && this.hasUpdatedThisProcess,
       forced,
     });
 
@@ -101,7 +105,7 @@ export class Registry {
       return ok(reason);
     }
 
-    return this.performUpdate(initialized, options?.logicalRegistryName, forced);
+    return this.performUpdate(options?.logicalRegistryName, forced);
   }
 
   /** Read a package registry manifest from the local cache. */
@@ -157,11 +161,7 @@ export class Registry {
     return this.initPromise;
   }
 
-  private async performUpdate(
-    initialized: boolean,
-    logicalRegistryName?: string,
-    forced = false,
-  ): Promise<Result<RegistryUpdateResult>> {
+  private async performUpdate(logicalRegistryName?: string, forced = false): Promise<Result<RegistryUpdateResult>> {
     const bag = new DiagnosticBag();
     const lock = new RegistryLock(getRegistryLockPath(this.shortId));
 
@@ -172,10 +172,14 @@ export class Registry {
     }
 
     try {
-      // Re-check freshness after acquiring lock (another process may have updated)
-      const lastSync = await this.getLastSyncTimestamp();
+      // Revalidate both freshness and the full identifier after acquiring the
+      // lock. Another process may have populated this shortened cache path.
+      const cacheStateResult = await this.cacheValidator.inspect();
+      if (!cacheStateResult.ok) return cacheStateResult;
+      const cacheState = cacheStateResult.value;
+
       const recheck = evaluateSyncPolicy({
-        lastSyncAt: lastSync,
+        lastSyncAt: cacheState.lastRegistrySyncAt,
         ttlSeconds: this.ttlSeconds,
         hasUpdatedWithinProcessLifetime: false,
         // Preserve an explicit force request across the lock boundary.  The
@@ -193,10 +197,10 @@ export class Registry {
       if (!updateResult.ok) {
         const unreachable = this.toRegistryUnreachableDiagnostic(
           updateResult.diagnostics,
-          initialized,
+          cacheState.initialized,
           logicalRegistryName,
         );
-        if (initialized) {
+        if (cacheState.initialized) {
           this.hasUpdatedThisProcess = true;
           return ok('Failed', [unreachable]);
         }
@@ -204,7 +208,8 @@ export class Registry {
         return bag.toFailure();
       }
 
-      await this.writeMetadata();
+      const metadataResult = await this.writeMetadata();
+      if (!metadataResult.ok) return metadataResult;
       this.hasUpdatedThisProcess = true;
       return ok('Updated');
     } finally {
@@ -212,15 +217,9 @@ export class Registry {
     }
   }
 
-  private async getLastSyncTimestamp(): Promise<UnixTimestamp | undefined> {
-    const result = await this.metadataReader.read();
-    if (!result.ok) return undefined;
-    return result.value.lastRegistrySyncAt;
-  }
-
-  private async writeMetadata(): Promise<void> {
+  private async writeMetadata(): Promise<Result<void>> {
     const now = Math.floor(Date.now() / 1000) as UnixTimestamp;
-    await this.metadataReader.write({ lastRegistrySyncAt: now, registryIdentifier: this.id });
+    return this.metadataReader.write({ lastRegistrySyncAt: now, registryIdentifier: this.id });
   }
 
   private toRegistryUnreachableDiagnostic(

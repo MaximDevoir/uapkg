@@ -17,7 +17,6 @@ export interface RegistryTrust {
   readonly alias: string;
   readonly registryId: string;
   readonly registryName: string;
-  readonly registryIdentifier: string;
   readonly repositoryUrl: string;
   readonly repositoryFingerprint: string;
   readonly issuer: string;
