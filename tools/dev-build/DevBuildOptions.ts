@@ -1,4 +1,5 @@
-import type { CliBuildMode, DevBuildMode, DevBuildOptions } from './types';
+import type { UAPKGBuildMode } from '@uapkg/common';
+import type { DevBuildMode, DevBuildOptions } from './types';
 
 const BUILD_MODE_FLAGS = new Set(['--development', '--production']);
 
@@ -43,6 +44,6 @@ function getAllowedFlags(command: DevBuildMode) {
   return new Set<string>();
 }
 
-function resolveBuildMode(hasDevelopment: boolean): CliBuildMode {
+function resolveBuildMode(hasDevelopment: boolean): UAPKGBuildMode {
   return hasDevelopment ? 'development' : 'production';
 }

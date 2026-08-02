@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { resolveActiveUapkgProfileRoot } from '@uapkg/common';
 import type { ConfigPaths } from '../contracts/ConfigTypes.js';
-import { resolveConfigCacheHome } from './ConfigCacheHome.js';
 
 export class ConfigPathResolver {
-  constructor(private readonly configCacheHome = resolveConfigCacheHome()) {}
+  constructor(private readonly profileRoot = resolveActiveUapkgProfileRoot()) {}
 
   resolve(cwd: string): ConfigPaths {
     const normalizedCwd = path.resolve(cwd);
@@ -13,7 +13,7 @@ export class ConfigPathResolver {
     return {
       cwd: normalizedCwd,
       manifestRoot,
-      globalFile: path.join(this.configCacheHome, 'config.json'),
+      globalFile: path.join(this.profileRoot, 'config.json'),
       intermediaryFiles: this.findIntermediaryFiles(manifestRoot, normalizedCwd),
       localFile: path.join(normalizedCwd, '.uapkg', 'config.json'),
     };

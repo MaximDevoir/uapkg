@@ -3,11 +3,10 @@ import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import type { UAPKGBuildMetadata, UAPKGBuildMode } from '../src/build/BuildMetadata.js';
+import type { UAPKGBuildMode } from '@uapkg/common';
+import type { UAPKGBuildMetadata } from '../src/build/BuildMetadata.js';
 
 export const DEVELOPMENT_BANNER_TEXT = 'DEVELOPMENT BUILD';
-export const INTERNAL_BUILD_MODE_ENV = 'UAPKG_INTERNAL_BUILD_MODE';
-export const INTERNAL_CONFIG_CACHE_HOME_ENV = 'UAPKG_INTERNAL_CONFIG_CACHE_HOME';
 
 interface PackageJson {
   readonly version: string;
@@ -82,15 +81,15 @@ export function renderBuildMetadataModule(metadata: UAPKGBuildMetadata): string 
 
 export function renderCliLauncher(): string {
   return `#!/usr/bin/env node
-import { homedir } from 'node:os';
-import { join } from 'node:path';
+import {
+  INTERNAL_BUILD_MODE_ENV,
+  INTERNAL_PROFILE_HOME_ENV,
+  resolveUapkgProfileRoot,
+} from '@uapkg/common';
 import { UAPKG_BUILD_METADATA } from './build/BuildMetadata.js';
 
-process.env.${INTERNAL_BUILD_MODE_ENV} = UAPKG_BUILD_METADATA.mode;
-process.env.${INTERNAL_CONFIG_CACHE_HOME_ENV} = join(
-  homedir(),
-  UAPKG_BUILD_METADATA.mode === 'development' ? '.uapkg-development' : '.uapkg',
-);
+process.env[INTERNAL_BUILD_MODE_ENV] = UAPKG_BUILD_METADATA.mode;
+process.env[INTERNAL_PROFILE_HOME_ENV] = resolveUapkgProfileRoot(UAPKG_BUILD_METADATA.mode);
 
 if (UAPKG_BUILD_METADATA.mode === 'development') {
   const colorDisabled =

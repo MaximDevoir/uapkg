@@ -1,13 +1,12 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { INTERNAL_BUILD_MODE_ENV, INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   createBuildMetadata,
   DEVELOPMENT_BANNER_TEXT,
-  INTERNAL_BUILD_MODE_ENV,
-  INTERNAL_CONFIG_CACHE_HOME_ENV,
   parseBuildMode,
   renderCliLauncher,
   resolveCliBuildPaths,
@@ -23,8 +22,21 @@ function createTemporaryPackage() {
   temporaryDirectories.push(packageRoot);
   writeFileSync(
     path.join(packageRoot, 'package.json'),
-    JSON.stringify({ name: '@uapkg/cli-build-test', private: true, type: 'module', version: '2.3.4' }),
+    JSON.stringify({
+      name: '@uapkg/cli-build-test',
+      private: true,
+      type: 'module',
+      version: '2.3.4',
+      dependencies: { '@uapkg/common': 'workspace:^' },
+    }),
     'utf8',
+  );
+  const commonLink = path.join(packageRoot, 'node_modules', '@uapkg', 'common');
+  mkdirSync(path.dirname(commonLink), { recursive: true });
+  symlinkSync(
+    path.resolve(resolveCliBuildPaths().packageRoot, '..', 'uapkg-common'),
+    commonLink,
+    process.platform === 'win32' ? 'junction' : 'dir',
   );
 
   const paths = resolveCliBuildPaths(packageRoot);
@@ -36,10 +48,10 @@ if (process.argv.includes('--version')) {
   process.stdout.write(\`\${UAPKG_BUILD_METADATA.displayVersion}\\n\`);
 } else if (process.argv.includes('--help')) {
   process.stdout.write('HELP OUTPUT\\n');
-} else if (process.argv.includes('--config-cache-home')) {
-  process.stdout.write(\`\${process.env.${INTERNAL_CONFIG_CACHE_HOME_ENV} ?? ''}\\n\`);
+} else if (process.argv.includes('--profile-home')) {
+  process.stdout.write(\`\${process.env[${JSON.stringify(INTERNAL_PROFILE_HOME_ENV)}] ?? ''}\\n\`);
 } else if (process.argv.includes('--build-mode')) {
-  process.stdout.write(\`\${process.env.${INTERNAL_BUILD_MODE_ENV} ?? ''}\\n\`);
+  process.stdout.write(\`\${process.env[${JSON.stringify(INTERNAL_BUILD_MODE_ENV)}] ?? ''}\\n\`);
 } else {
   process.stderr.write('COMMAND ERROR\\n');
   process.exitCode = 1;
@@ -94,17 +106,19 @@ describe('CLI build mode', () => {
     expect(launcher).toContain('process.stderr.write');
   });
 
-  it('selects the stamped config and cache profile before importing the CLI', () => {
+  it('selects the stamped global profile before importing the CLI', () => {
     const launcher = renderCliLauncher();
 
-    expect(launcher.indexOf(`process.env.${INTERNAL_BUILD_MODE_ENV}`)).toBeLessThan(
+    expect(launcher.indexOf('process.env[INTERNAL_BUILD_MODE_ENV]')).toBeLessThan(
       launcher.indexOf("await import('./cli-bootstrap.js')"),
     );
-    expect(launcher.indexOf(`process.env.${INTERNAL_CONFIG_CACHE_HOME_ENV}`)).toBeLessThan(
+    expect(launcher.indexOf('process.env[INTERNAL_PROFILE_HOME_ENV]')).toBeLessThan(
       launcher.indexOf("await import('./cli-bootstrap.js')"),
     );
-    expect(launcher).toContain(`process.env.${INTERNAL_BUILD_MODE_ENV} = UAPKG_BUILD_METADATA.mode`);
-    expect(launcher).toContain("UAPKG_BUILD_METADATA.mode === 'development' ? '.uapkg-development' : '.uapkg'");
+    expect(launcher).toContain('process.env[INTERNAL_BUILD_MODE_ENV] = UAPKG_BUILD_METADATA.mode');
+    expect(launcher).toContain(
+      'process.env[INTERNAL_PROFILE_HOME_ENV] = resolveUapkgProfileRoot(UAPKG_BUILD_METADATA.mode)',
+    );
   });
 });
 
@@ -159,13 +173,13 @@ describe('stamped CLI artifacts', () => {
     const paths = createTemporaryPackage();
     writeBuildArtifacts(paths, createBuildMetadata(mode, '2.3.4'));
 
-    const result = spawnSync(process.execPath, [paths.launcherPath, '--config-cache-home'], {
+    const result = spawnSync(process.execPath, [paths.launcherPath, '--profile-home'], {
       encoding: 'utf8',
       env: {
         ...process.env,
         FORCE_COLOR: '0',
         NO_COLOR: '1',
-        [INTERNAL_CONFIG_CACHE_HOME_ENV]: path.join(os.homedir(), 'wrong-profile'),
+        [INTERNAL_PROFILE_HOME_ENV]: path.join(os.homedir(), 'wrong-profile'),
       },
     });
 

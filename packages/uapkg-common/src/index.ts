@@ -18,5 +18,14 @@ export { stableStringify } from './json/stableStringify.js';
 export { normalizeUrl } from './normalize/normalizeUrl.js';
 // Paths
 export { normalizePath, toForwardSlash } from './paths/forwardSlash.js';
+// Runtime profile
+export {
+  INTERNAL_BUILD_MODE_ENV,
+  INTERNAL_PROFILE_HOME_ENV,
+  resolveActiveUapkgProfileRoot,
+  resolveUapkgBuildMode,
+  resolveUapkgProfileRoot,
+  type UAPKGBuildMode,
+} from './runtime/UapkgRuntimeProfile.js';
 // Package spec parsing (CLI "@org/name@range")
 export { formatPackageSpec, parsePackageSpec } from './spec/parsePackageSpec.js';

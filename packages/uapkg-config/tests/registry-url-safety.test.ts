@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { INTERNAL_CONFIG_CACHE_HOME_ENV } from '../src/files/ConfigCacheHome.js';
 import { createConfig } from '../src/index.js';
 import { configSchema } from '../src/schema/configSchema.js';
 import { ConfigCliValueParser } from '../src/schema/runtime/ConfigCliValueParser.js';
@@ -58,7 +58,7 @@ describe('registry URL safety', () => {
       JSON.stringify({ registries: { private: { url: 'https://user:super-secret@example.test/registry' } } }),
       'utf8',
     );
-    vi.stubEnv(INTERNAL_CONFIG_CACHE_HOME_ENV, profile);
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, profile);
 
     const config = createConfig({ cwd: root });
     const serialized = JSON.stringify(config.getDiagnostics());
@@ -83,6 +83,6 @@ describe('registry URL safety', () => {
 function createIsolatedConfig() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'uapkg-config-url-test-'));
   temporaryDirectories.push(root);
-  vi.stubEnv(INTERNAL_CONFIG_CACHE_HOME_ENV, path.join(root, 'profile'));
+  vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, path.join(root, 'profile'));
   return createConfig({ cwd: root });
 }

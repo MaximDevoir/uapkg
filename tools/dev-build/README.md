@@ -22,7 +22,7 @@ This folder contains local development tooling executed directly with `tsx`.
 - `build:link`: build `uapkg` in development mode, globally register only `packages/uapkg` as `@uapkg/cli`, and write global command shims in `pnpm bin --global` so `uapkg` works from any terminal.
 - `build:watch`: immediately run `build:link`, then watch only `uapkg` with `--includeDependentProjects` and relink a development build on changes.
 - `build:unlink`: remove the active global dev link and restore only safe previous state.
-- `build:status`: inspect snapshot state, current global state, both config/cache profile roots, global-bin/path health, and binary resolution.
+- `build:status`: inspect snapshot state, current global state, both persistent profile roots, global-bin/path health, and binary resolution.
 - `build:clean`: remove build artifacts (`dist`, `build`, `coverage`, Nx cache/workspace-data, `*.tsbuildinfo`) across root and workspace packages.
 - `clean:all`: run unlink with force, then run `build:clean`, remove workspace `node_modules`, remove workspace `.pnpm-store` directories, and prune pnpm store metadata. User profile state is retained.
 
@@ -54,9 +54,10 @@ imports the CLI:
 - Development mode uses branch `main` at the private
   `https://github.com/uapkg/registry-dev-tmp` repository.
 
-The stamp overrides any inherited internal build-mode environment value. It is
-only the lowest-precedence default, so normal global and project configuration
-can replace it.
+The launcher overrides inherited internal build-mode and profile-root values
+before loading the CLI. The build-mode stamp is only the lowest-precedence
+registry default, so normal global and project configuration can replace that
+registry selection.
 
 The same immutable build metadata pins authenticated control-plane traffic to
 one environment-specific endpoint pair:
@@ -69,19 +70,31 @@ one environment-specific endpoint pair:
 Global, project, and registry metadata cannot override these authentication
 endpoints. Registry OAuth audiences are derived from the pinned API origin, so
 a development CLI cannot reuse a production grant or send one to development.
-Authentication metadata remains shared in `~/.uapkg/auth.json`; grants coexist
-because they are keyed by issuer and registry ID.
+Authentication metadata and filesystem locks follow the selected persistent
+profile. Secrets remain in the protected operating-system credential store;
+their opaque references include the issuer, so production and development
+credentials remain logically isolated.
 
-## Configuration and Registry Cache Profiles
+## Persistent Profiles
 
 The stamped CLI launcher selects a persistent profile before loading the CLI:
 
 - Production builds use `~/.uapkg`.
 - Development builds use `~/.uapkg-development`.
 
-Only the global configuration file and local Git registry cache use the selected profile. Project-local and intermediary `.uapkg/config.json` files are resolved from the working directory in exactly the same way for both builds. Authentication metadata, authentication locks, and OS credentials remain shared through the production `~/.uapkg` location.
+All global file-backed state uses the selected profile. This includes the global
+configuration file, local Git registry cache, `auth.json`, `auth-locks`, and
+their transient sibling files. Project-local and intermediary
+`.uapkg/config.json` files are resolved from the working directory in exactly
+the same way for both builds. OS credentials are not profile files and remain
+in the protected credential store with issuer-scoped references.
 
-The development profile is created only when a command first needs to write configuration or cache state. Linking never copies or renames production state, and link, unlink, watch, force, build cleanup, and `clean:all` never delete or move either user profile.
+The development profile is created only when a command first needs to write
+persistent state. Linking never copies or renames production state, and link,
+unlink, watch, force, build cleanup, and `clean:all` never delete or move either
+user profile. There is no cross-profile authentication migration or fallback;
+developers with an older development grant in `~/.uapkg/auth.json` must log in
+once with the development CLI again.
 
 Registry clones are also lazy: build, installation, linking, and CLI startup do
 not access the network. The first package operation that needs registry content

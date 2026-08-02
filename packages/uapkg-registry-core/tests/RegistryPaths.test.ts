@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { INTERNAL_BUILD_MODE_ENV, INTERNAL_PROFILE_HOME_ENV, resolveUapkgProfileRoot } from '@uapkg/common';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   getRegistryCachePath,
@@ -11,22 +12,21 @@ import {
   getRegistryRoot,
 } from '../src/index.js';
 
-const INTERNAL_CONFIG_CACHE_HOME_ENV = 'UAPKG_INTERNAL_CONFIG_CACHE_HOME';
-
 afterEach(() => {
   vi.unstubAllEnvs();
 });
 
 describe('registry cache profile paths', () => {
   it('uses the production profile when no launcher-selected home is present', () => {
-    vi.stubEnv(INTERNAL_CONFIG_CACHE_HOME_ENV, '');
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, '');
+    vi.stubEnv(INTERNAL_BUILD_MODE_ENV, undefined);
 
-    expect(getRegistryRoot()).toBe(path.join(os.homedir(), '.uapkg', 'registry'));
+    expect(getRegistryRoot()).toBe(path.join(resolveUapkgProfileRoot('production'), 'registry'));
   });
 
   it('uses the launcher-selected profile for every registry cache path without creating it', () => {
     const profile = path.join(os.tmpdir(), `uapkg-profile-path-${process.pid}-${Date.now()}`);
-    vi.stubEnv(INTERNAL_CONFIG_CACHE_HOME_ENV, profile);
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, profile);
 
     expect(getRegistryRoot()).toBe(path.join(profile, 'registry'));
     expect(getRegistryCachePath('0123456789abcdef')).toBe(path.join(profile, 'registry', '0123456789abcdef'));

@@ -1,7 +1,7 @@
+import { resolveUapkgBuildMode } from '@uapkg/common';
 import { RegistryURLSchema } from '@uapkg/common-schema';
 import { z } from 'zod';
 
-const INTERNAL_BUILD_MODE_ENV = 'UAPKG_INTERNAL_BUILD_MODE';
 const DEVELOPMENT_REGISTRY_URL = 'https://github.com/uapkg/registry-dev-tmp';
 const PRODUCTION_REGISTRY_URL = 'https://github.com/uapkg/registry';
 
@@ -178,7 +178,7 @@ function resolveShellDefault() {
 
 export function getDefaultConfig(): ResolvedConfig {
   const defaultRegistryUrl =
-    process.env[INTERNAL_BUILD_MODE_ENV] === 'development' ? DEVELOPMENT_REGISTRY_URL : PRODUCTION_REGISTRY_URL;
+    resolveUapkgBuildMode() === 'development' ? DEVELOPMENT_REGISTRY_URL : PRODUCTION_REGISTRY_URL;
   const defaults: ResolvedConfig = {
     registry: 'default',
     registries: {

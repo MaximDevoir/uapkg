@@ -1,7 +1,8 @@
-import { mkdtemp, readFile } from 'node:fs/promises';
+import { access, mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AuthMetadataStore } from '../../src/control-plane/AuthMetadataStore.js';
 import type { RegistryGrantMetadata } from '../../src/control-plane/ControlPlaneTypes.js';
 
@@ -31,10 +32,37 @@ const otherGrant: RegistryGrantMetadata = {
   repositoryFingerprint: `sha256:${'b'.repeat(64)}`,
 };
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe('AuthMetadataStore', () => {
+  it('keeps default auth metadata and lock artifacts inside the selected profile', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'uapkg-auth-profile-'));
+    const profileRoot = join(directory, 'selected-profile');
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, profileRoot);
+
+    try {
+      const store = new AuthMetadataStore();
+      expect(store.path).toBe(join(profileRoot, 'auth.json'));
+
+      await store.upsert(grant);
+
+      expect((await readdir(profileRoot)).sort()).toEqual(['auth-locks', 'auth.json']);
+      await expect(readdir(join(profileRoot, 'auth-locks'))).resolves.toEqual([]);
+      await expect(readFile(join(profileRoot, 'auth.json'), 'utf8')).resolves.toContain(
+        '"refreshTokenReference": "grant:opaque"',
+      );
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it('persists only non-secret grant metadata and keys it by issuer plus registry id', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'uapkg-auth-metadata-'));
     const path = join(directory, 'auth.json');
+    const unselectedProfileRoot = join(directory, 'unselected-profile');
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, unselectedProfileRoot);
     const store = new AuthMetadataStore(path);
 
     await store.upsert(grant);
@@ -48,6 +76,8 @@ describe('AuthMetadataStore', () => {
 
     await store.remove(grant.issuer, grant.registryId);
     await expect(store.find(grant.issuer, grant.registryId)).resolves.toBeUndefined();
+    await expect(readdir(join(directory, 'auth-locks'))).resolves.toEqual([]);
+    await expect(access(unselectedProfileRoot)).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
   it('preserves concurrent updates from independent instances for different registries', async () => {

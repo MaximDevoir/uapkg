@@ -1,28 +1,28 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
 import type { RegistryIdentifier, UnixTimestamp } from '@uapkg/common-schema';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { getRegistryCachePath, getRegistryMetadataPath, getRegistryRepoPath } from '../src/paths/RegistryPaths.js';
 import { RegistryCacheValidator } from '../src/registry/RegistryCacheValidator.js';
 import { RegistryMetadataReader } from '../src/registry/RegistryMetadataReader.js';
 
-const PROFILE_HOME_ENV = 'UAPKG_INTERNAL_CONFIG_CACHE_HOME';
 const shortId = '0123456789abcdef';
 const expectedIdentifier = 'a'.repeat(64) as RegistryIdentifier;
-const previousProfileHome = process.env[PROFILE_HOME_ENV];
+const previousProfileHome = process.env[INTERNAL_PROFILE_HOME_ENV];
 let profileHome: string;
 
 beforeEach(async () => {
   profileHome = await mkdtemp(join(tmpdir(), 'uapkg-cache-validator-'));
-  process.env[PROFILE_HOME_ENV] = profileHome;
+  process.env[INTERNAL_PROFILE_HOME_ENV] = profileHome;
 });
 
 afterEach(async () => {
   if (previousProfileHome === undefined) {
-    delete process.env[PROFILE_HOME_ENV];
+    delete process.env[INTERNAL_PROFILE_HOME_ENV];
   } else {
-    process.env[PROFILE_HOME_ENV] = previousProfileHome;
+    process.env[INTERNAL_PROFILE_HOME_ENV] = previousProfileHome;
   }
   await rm(profileHome, { recursive: true, force: true });
 });

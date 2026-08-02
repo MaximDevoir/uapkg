@@ -1,10 +1,10 @@
-export type DevBuildMode = 'build' | 'link' | 'watch' | 'unlink' | 'status' | 'clean' | 'cleanAll';
+import type { UAPKGBuildMode } from '@uapkg/common';
 
-export type CliBuildMode = 'development' | 'production';
+export type DevBuildMode = 'build' | 'link' | 'watch' | 'unlink' | 'status' | 'clean' | 'cleanAll';
 
 export interface DevBuildOptions {
   force: boolean;
-  buildMode?: CliBuildMode;
+  buildMode?: UAPKGBuildMode;
 }
 
 export type CurrentGlobalUapkgState =

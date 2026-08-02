@@ -1,8 +1,9 @@
 import { webcrypto } from 'node:crypto';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { access, mkdtemp, readdir, rm } from 'node:fs/promises';
 import { request as httpRequest } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
 import * as oauth from 'oauth4webapi';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -40,10 +41,49 @@ const immediateGrantLock: RegistryGrantLock = {
 };
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
 
 describe('AccountManager', () => {
+  it('uses the selected profile for its default grant lock when metadata is duck-typed', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'uapkg-account-profile-'));
+    const profileRoot = join(directory, 'selected-profile');
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, profileRoot);
+    const metadata = { find: vi.fn(async () => undefined) };
+
+    try {
+      const manager = new AccountManager(metadata as unknown as AuthMetadataStore);
+
+      await expect(manager.logout(trust, true)).resolves.toBe('not-logged-in');
+      expect(metadata.find).toHaveBeenCalledWith(trust.issuer, trust.registryId);
+      await expect(readdir(join(profileRoot, 'auth-locks'))).resolves.toEqual([]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps the default grant lock beside a custom metadata path', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'uapkg-account-custom-auth-'));
+    const profileRoot = join(directory, 'unselected-profile');
+    const customDirectory = join(directory, 'custom-auth');
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, profileRoot);
+    const metadata = {
+      path: join(customDirectory, 'credentials.json'),
+      find: vi.fn(async () => undefined),
+    };
+
+    try {
+      const manager = new AccountManager(metadata as unknown as AuthMetadataStore);
+
+      await expect(manager.logout(trust, true)).resolves.toBe('not-logged-in');
+      await expect(readdir(join(customDirectory, 'auth-locks'))).resolves.toEqual([]);
+      await expect(access(profileRoot)).rejects.toMatchObject({ code: 'ENOENT' });
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it('adds relogin guidance only to saved-login authentication failures', () => {
     expect(
       describeControlPlaneError(new ControlPlaneError('DPOP_PROOF_INVALID', 'The DPoP proof was rejected.', 401)),

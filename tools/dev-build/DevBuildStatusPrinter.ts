@@ -1,16 +1,12 @@
-import os from 'node:os';
-import path from 'node:path';
+import { resolveUapkgProfileRoot, type UAPKGBuildMode } from '@uapkg/common';
 import type { CurrentGlobalUapkgState, GlobalUapkgSnapshot } from './types';
 
-export interface UapkgProfileRoots {
-  production: string;
-  development: string;
-}
+export type UapkgProfileRoots = Readonly<Record<UAPKGBuildMode, string>>;
 
-export function resolveUapkgProfileRoots(homeDirectory = os.homedir()): UapkgProfileRoots {
+export function resolveUapkgProfileRoots(homeDirectory?: string): UapkgProfileRoots {
   return {
-    production: path.join(homeDirectory, '.uapkg'),
-    development: path.join(homeDirectory, '.uapkg-development'),
+    production: resolveUapkgProfileRoot('production', homeDirectory),
+    development: resolveUapkgProfileRoot('development', homeDirectory),
   };
 }
 

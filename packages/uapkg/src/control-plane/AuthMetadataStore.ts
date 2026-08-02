@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { z } from 'zod';
+import { resolveAuthStoragePaths } from './AuthStoragePaths.js';
 import type { AuthMetadataFile, RegistryGrantMetadata } from './ControlPlaneTypes.js';
 import { FileRegistryGrantLock, type RegistryGrantLock } from './RegistryGrantLock.js';
 
@@ -48,10 +48,10 @@ export class AuthMetadataStore {
   private readonly mutationLock: RegistryGrantLock;
 
   public constructor(
-    private readonly filePath = join(homedir(), '.uapkg', 'auth.json'),
+    private readonly filePath = resolveAuthStoragePaths().metadataFile,
     mutationLock?: RegistryGrantLock,
   ) {
-    this.mutationLock = mutationLock ?? new FileRegistryGrantLock(join(dirname(filePath), 'auth-locks'));
+    this.mutationLock = mutationLock ?? new FileRegistryGrantLock(resolveAuthStoragePaths(filePath).locksDirectory);
   }
 
   public get path(): string {

@@ -1,4 +1,5 @@
-import { UAPKG_BUILD_METADATA, type UAPKGBuildMode } from '../build/BuildMetadata.js';
+import type { UAPKGBuildMode } from '@uapkg/common';
+import { UAPKG_BUILD_METADATA } from '../build/BuildMetadata.js';
 
 export interface UAPKGControlPlaneEndpoints {
   readonly issuer: string;

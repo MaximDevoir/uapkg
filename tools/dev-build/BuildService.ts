@@ -1,5 +1,5 @@
+import type { UAPKGBuildMode } from '@uapkg/common';
 import type { ProcessRunner } from './ProcessRunner';
-import type { CliBuildMode } from './types';
 
 export class BuildService {
   constructor(
@@ -7,7 +7,7 @@ export class BuildService {
     private readonly workspaceRoot: string,
   ) {}
 
-  buildAll(mode: CliBuildMode) {
+  buildAll(mode: UAPKGBuildMode) {
     this.runner.run('pnpm', ['nx', 'run-many', '-t', 'build', '--all', `--configuration=${mode}`], this.workspaceRoot);
   }
 

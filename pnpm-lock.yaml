@@ -156,6 +156,9 @@ importers:
 
   packages/uapkg-config:
     dependencies:
+      '@uapkg/common':
+        specifier: workspace:^
+        version: link:../uapkg-common
       '@uapkg/common-schema':
         specifier: workspace:^
         version: link:../uapkg-common-schema

@@ -1,6 +1,5 @@
 import { createRequire } from 'node:module';
-
-export type UAPKGBuildMode = 'development' | 'production';
+import type { UAPKGBuildMode } from '@uapkg/common';
 
 export interface UAPKGBuildMetadata {
   readonly mode: UAPKGBuildMode;

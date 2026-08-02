@@ -1,3 +1,4 @@
+import type { UAPKGBuildMode } from '@uapkg/common';
 import { BuildService } from './BuildService';
 import { CleanupService } from './CleanupService';
 import { DevBuildStatusPrinter } from './DevBuildStatusPrinter';
@@ -6,7 +7,6 @@ import { GlobalUapkgDevModeService } from './GlobalUapkgDevModeService';
 import { GlobalUapkgSnapshotStore } from './GlobalUapkgSnapshotStore';
 import { GlobalUapkgStateService } from './GlobalUapkgStateService';
 import { ProcessRunner } from './ProcessRunner';
-import type { CliBuildMode } from './types';
 
 export class DevBuildOrchestrator {
   private readonly buildService: BuildService;
@@ -31,7 +31,7 @@ export class DevBuildOrchestrator {
     );
   }
 
-  buildAll(mode: CliBuildMode) {
+  buildAll(mode: UAPKGBuildMode) {
     this.buildService.buildAll(mode);
   }
 

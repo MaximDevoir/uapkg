@@ -1,11 +1,10 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { INTERNAL_BUILD_MODE_ENV, INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createConfig } from '../src';
-import { INTERNAL_CONFIG_CACHE_HOME_ENV } from '../src/files/ConfigCacheHome.js';
 
-const INTERNAL_BUILD_MODE_ENV = 'UAPKG_INTERNAL_BUILD_MODE';
 const temporaryDirectories: string[] = [];
 
 function createTempRoot() {
@@ -25,11 +24,12 @@ describe('createConfig', () => {
   it.each([
     [undefined, 'https://github.com/uapkg/registry'],
     ['production', 'https://github.com/uapkg/registry'],
+    ['unexpected', 'https://github.com/uapkg/registry'],
     ['development', 'https://github.com/uapkg/registry-dev-tmp'],
   ] as const)('selects the %s build-mode default registry', (mode, expectedUrl) => {
     const root = createTempRoot();
     const profile = path.join(root, 'profile');
-    vi.stubEnv(INTERNAL_CONFIG_CACHE_HOME_ENV, profile);
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, profile);
     if (mode === undefined) {
       vi.stubEnv(INTERNAL_BUILD_MODE_ENV, undefined);
     } else {
@@ -61,7 +61,7 @@ describe('createConfig', () => {
       registries: { default: { url: 'https://example.com/local' } },
     });
     vi.stubEnv(INTERNAL_BUILD_MODE_ENV, 'development');
-    vi.stubEnv(INTERNAL_CONFIG_CACHE_HOME_ENV, profile);
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, profile);
 
     const config = createConfig({ cwd: project });
 
@@ -131,7 +131,7 @@ describe('createConfig', () => {
     writeLocalConfig(project, { network: { retries: 4 } });
     writeLocalConfig(team, { network: { retries: 5 } });
     writeLocalConfig(plugin, { network: { retries: 6 } });
-    vi.stubEnv(INTERNAL_CONFIG_CACHE_HOME_ENV, profile);
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, profile);
 
     const config = createConfig({ cwd: plugin });
 
@@ -186,10 +186,10 @@ describe('createConfig', () => {
     writeGlobalConfig(productionProfile, { term: { quiet: true } });
     writeGlobalConfig(developmentProfile, { term: { quiet: false } });
 
-    vi.stubEnv(INTERNAL_CONFIG_CACHE_HOME_ENV, productionProfile);
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, productionProfile);
     const production = createConfig({ cwd: project });
 
-    vi.stubEnv(INTERNAL_CONFIG_CACHE_HOME_ENV, developmentProfile);
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, developmentProfile);
     const development = createConfig({ cwd: project });
 
     expect(production.get('term.quiet')).toBe(true);
@@ -205,7 +205,7 @@ describe('createConfig', () => {
   it('does not create a selected profile merely by reading configuration', () => {
     const root = createTempRoot();
     const profile = path.join(root, 'not-created');
-    vi.stubEnv(INTERNAL_CONFIG_CACHE_HOME_ENV, profile);
+    vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, profile);
 
     createConfig({ cwd: root });
 

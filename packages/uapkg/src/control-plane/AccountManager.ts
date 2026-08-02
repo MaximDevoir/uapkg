@@ -1,10 +1,10 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
-import { homedir, hostname } from 'node:os';
-import { dirname, join } from 'node:path';
+import { hostname } from 'node:os';
 import type { ControlPlaneDiagnostic, LoginDiagnosticCode } from '@uapkg/diagnostics';
 import isCI from 'is-ci';
 import * as oauth from 'oauth4webapi';
 import { AuthMetadataStore } from './AuthMetadataStore.js';
+import { resolveAuthStoragePaths } from './AuthStoragePaths.js';
 import { ControlPlaneClient, type ControlPlaneCredential } from './ControlPlaneClient.js';
 import {
   ControlPlaneError,
@@ -88,8 +88,8 @@ export class AccountManager {
     private readonly interactiveLoginFinalizationTimeoutMs = INTERACTIVE_LOGIN_FINALIZATION_TIMEOUT_MS,
   ) {
     this.keyStore = new DPoPKeyStore(credentials);
-    const metadataPath = typeof metadata.path === 'string' ? metadata.path : join(homedir(), '.uapkg', 'auth.json');
-    this.grantLock = grantLock ?? new FileRegistryGrantLock(join(dirname(metadataPath), 'auth-locks'));
+    const metadataPath = typeof metadata.path === 'string' ? metadata.path : undefined;
+    this.grantLock = grantLock ?? new FileRegistryGrantLock(resolveAuthStoragePaths(metadataPath).locksDirectory);
   }
 
   public async hasGrant(trust: RegistryTrust): Promise<boolean> {
