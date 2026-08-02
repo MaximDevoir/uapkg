@@ -3,6 +3,8 @@ import * as oauth from 'oauth4webapi';
 import { z } from 'zod';
 import {
   type AccountSelf,
+  type ActivatedCliLoginGrant,
+  type CliLoginConfirmation,
   ControlPlaneError,
   type RegistryRequestStatus,
   type RegistryRequestSubmission,
@@ -37,18 +39,35 @@ const accountSchema = z.object({
   email: z.string().optional(),
 });
 
+const accountGrantSchema = z.object({
+  id: z.uuid(),
+  deviceName: z.string().min(1),
+  idleExpiresAt: z.iso.datetime(),
+  absoluteExpiresAt: z.iso.datetime(),
+  scopes: z.array(z.string()),
+});
+
 const accountResponseSchema = z.object({
   ok: z.literal(true),
   account: accountSchema,
   registry: z.object({
     id: z.uuid(),
   }),
+  grant: accountGrantSchema,
+});
+
+const cliLoginConfirmationResponseSchema = accountResponseSchema.extend({
+  grant: accountGrantSchema.extend({
+    status: z.enum(['pending', 'active']),
+    activationExpiresAt: z.iso.datetime(),
+  }),
+});
+
+const activatedCliLoginResponseSchema = z.object({
+  ok: z.literal(true),
   grant: z.object({
     id: z.uuid(),
-    deviceName: z.string().min(1),
-    idleExpiresAt: z.iso.datetime(),
-    absoluteExpiresAt: z.iso.datetime(),
-    scopes: z.array(z.string()),
+    status: z.literal('active'),
   }),
 });
 
@@ -103,6 +122,40 @@ export class ControlPlaneClient {
       registry: parsed.data.registry,
       grant: parsed.data.grant,
     };
+  }
+
+  public async getCliLoginConfirmation(
+    credential: ControlPlaneCredential,
+    signal?: AbortSignal,
+  ): Promise<CliLoginConfirmation> {
+    const value = await this.requestJson(credential, 'GET', '/v1/account/cli-login/confirmation', { signal });
+    const parsed = cliLoginConfirmationResponseSchema.safeParse(value);
+    if (!parsed.success) {
+      throw new ControlPlaneError(
+        'CLI_LOGIN_CONFIRMATION_RESPONSE_INVALID',
+        'The CLI login confirmation response was invalid.',
+      );
+    }
+    return {
+      account: parsed.data.account,
+      registry: parsed.data.registry,
+      grant: parsed.data.grant,
+    };
+  }
+
+  public async confirmCliLogin(
+    credential: ControlPlaneCredential,
+    signal?: AbortSignal,
+  ): Promise<ActivatedCliLoginGrant> {
+    const value = await this.requestJson(credential, 'POST', '/v1/account/cli-login/confirmation', { signal });
+    const parsed = activatedCliLoginResponseSchema.safeParse(value);
+    if (!parsed.success) {
+      throw new ControlPlaneError(
+        'CLI_LOGIN_CONFIRMATION_RESPONSE_INVALID',
+        'The CLI login confirmation response was invalid.',
+      );
+    }
+    return parsed.data.grant;
   }
 
   public async submitRegistryRequest(

@@ -29,6 +29,8 @@ describe('LoginCommand', () => {
       options.onProgress?.({ type: 'opening-browser' });
       options.onProgress?.({ type: 'waiting-for-decision' });
       options.onProgress?.({ type: 'approval-received' });
+      options.onProgress?.({ type: 'saving-local-credentials' });
+      options.onProgress?.({ type: 'confirming-with-service' });
       return { grant: savedGrant(), warnings: ['The previous remote grant could not be revoked.'] };
     });
     const root = createRoot(login, jsonLines);
@@ -66,7 +68,9 @@ describe('LoginCommand', () => {
         'Preparing browser authorization for "default"…',
         'Opening the UAPKG account page…',
         'Waiting for you to approve or deny access in the browser…',
-        'Approval received. Verifying the account and saving the login…',
+        'Approval received. Verifying the account…',
+        "Saving credentials in this device's protected credential store…",
+        'Local credentials saved. Confirming the login with UAPKG…',
         'Warning: The previous remote grant could not be revoked.',
         '',
       ].join('\n'),

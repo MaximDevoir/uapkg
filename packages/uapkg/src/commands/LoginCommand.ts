@@ -78,7 +78,13 @@ export class LoginCommand implements Command {
         process.stderr.write('Waiting for you to approve or deny access in the browser…\n');
         break;
       case 'approval-received':
-        process.stderr.write('Approval received. Verifying the account and saving the login…\n');
+        process.stderr.write('Approval received. Verifying the account…\n');
+        break;
+      case 'saving-local-credentials':
+        process.stderr.write("Saving credentials in this device's protected credential store…\n");
+        break;
+      case 'confirming-with-service':
+        process.stderr.write('Local credentials saved. Confirming the login with UAPKG…\n');
         break;
       default:
         event satisfies never;

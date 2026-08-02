@@ -23,6 +23,7 @@ import { FileRegistryGrantLock, type RegistryGrantLock } from './RegistryGrantLo
 
 const INTERACTIVE_LOGIN_TIMEOUT_MS = 3 * 60 * 1000;
 const INTERACTIVE_LOGIN_FINALIZATION_TIMEOUT_MS = 60 * 1000;
+const CLI_LOGIN_RECONCILIATION_TIMEOUT_MS = 5 * 1000;
 const OAUTH_BACKCHANNEL_TIMEOUT_MS = 30 * 1000;
 const LOOPBACK_CALLBACK_PATH = '/callback';
 const ACCOUNT_COMPLETION_PATH = '/cli-login/complete';
@@ -39,9 +40,16 @@ export type LoginProgressEvent =
   | { readonly type: 'opening-browser' }
   | { readonly type: 'browser-open-failed'; readonly authorizationUrl: string }
   | { readonly type: 'waiting-for-decision' }
-  | { readonly type: 'approval-received' };
+  | { readonly type: 'approval-received' }
+  | { readonly type: 'saving-local-credentials' }
+  | { readonly type: 'confirming-with-service' };
 
 type LoginCompletionOutcome = 'success' | 'denied' | 'failed';
+
+type CliLoginActivationOutcome =
+  | { readonly kind: 'active' }
+  | { readonly kind: 'rejected'; readonly error: unknown }
+  | { readonly kind: 'ambiguous'; readonly error: LoginError };
 
 export class LoginError extends Error {
   public constructor(
@@ -127,6 +135,7 @@ export class AccountManager {
     const receiver = await LoopbackAuthorizationReceiver.listen(issuer);
     let issuedRefreshToken: string | undefined;
     let retainedIssuedGrant = false;
+    let preserveIssuedGrant = false;
     let callbackReceipt: LoopbackAuthorizationReceipt | undefined;
     let finalizationController: AbortController | undefined;
     let finalizationTimeout: NodeJS.Timeout | undefined;
@@ -232,14 +241,13 @@ export class AccountManager {
       const refreshToken = tokens.refresh_token;
       issuedRefreshToken = refreshToken;
 
-      const self = await new ControlPlaneClient(trust.apiBaseUrl).getSelf(
-        {
-          kind: 'dpop',
-          accessToken: tokens.access_token,
-          dpop,
-        },
-        finalizationSignal,
-      );
+      const controlPlane = new ControlPlaneClient(trust.apiBaseUrl);
+      const issuedCredential: ControlPlaneCredential = {
+        kind: 'dpop',
+        accessToken: tokens.access_token,
+        dpop,
+      };
+      const self = await controlPlane.getCliLoginConfirmation(issuedCredential, finalizationSignal);
       finalizationSignal.throwIfAborted();
       if (self.registry.id !== trust.registryId) {
         throw new Error('The authorization server returned a registry grant for an unexpected registry.');
@@ -247,6 +255,15 @@ export class AccountManager {
       const missingScopes = UAPKG_CLI_SCOPES.filter((scope) => !self.grant.scopes.includes(scope));
       if (missingScopes.length > 0) {
         throw new Error(`The authorization server omitted required CLI capabilities: ${missingScopes.join(', ')}.`);
+      }
+      if (
+        self.grant.status === 'pending' &&
+        timestampFromIso(self.grant.activationExpiresAt) <= Math.floor(Date.now() / 1000)
+      ) {
+        throw new LoginError(
+          'LOGIN_AUTHORIZATION_TIMEOUT',
+          `Login approval expired before this device could confirm it. Run \`uapkg login --registry ${trust.alias}\` to try again.`,
+        );
       }
       const grantId = self.grant.id;
       const keyReference = this.credentials.createReference('dpop-key', trust.issuer, trust.registryId, grantId);
@@ -268,22 +285,55 @@ export class AccountManager {
         expiresAt: timestampFromIso(self.grant.absoluteExpiresAt),
       };
 
-      const warnings = await this.serializeGrantOperation(trust, async () => {
+      let previousForCleanup: RegistryGrantMetadata | undefined;
+      await this.serializeGrantOperation(trust, async () => {
         const currentPrevious = await this.metadata.find(trust.issuer, trust.registryId);
         if (currentPrevious && !options.reauthorize) {
           throw new Error(
             `This device already has a saved login for "${trust.alias}". Use \`uapkg login --registry ${trust.alias} --reauthorize\` to replace it.`,
           );
         }
-        return this.persistIssuedGrant(metadata, keyPair, refreshToken, currentPrevious, finalizationSignal, () => {
-          retainedIssuedGrant = true;
-          if (finalizationTimeout) {
-            clearTimeout(finalizationTimeout);
-            finalizationTimeout = undefined;
+        emitLoginProgress(options.onProgress, { type: 'saving-local-credentials' });
+        await this.persistPreparedGrant(metadata, keyPair, refreshToken, currentPrevious, finalizationSignal);
+        if (self.grant.status === 'pending') {
+          emitLoginProgress(options.onProgress, { type: 'confirming-with-service' });
+          const activation = await this.activatePreparedGrant(
+            controlPlane,
+            issuedCredential,
+            metadata.grantId,
+            finalizationSignal,
+            trust.alias,
+          );
+          if (activation.kind === 'rejected') {
+            await this.rollbackPreparedGrant(metadata, currentPrevious);
+            throw activation.error;
           }
-        });
+          if (activation.kind === 'ambiguous') {
+            preserveIssuedGrant = true;
+            throw activation.error;
+          }
+        }
+
+        retainedIssuedGrant = true;
+        if (finalizationTimeout) {
+          clearTimeout(finalizationTimeout);
+          finalizationTimeout = undefined;
+        }
+        previousForCleanup = currentPrevious;
       });
       await callbackReceipt.complete('success');
+      let warnings: readonly string[] = [];
+      if (previousForCleanup) {
+        try {
+          warnings = await this.serializeGrantOperation(trust, () =>
+            this.cleanupPreviousGrant(metadata, previousForCleanup),
+          );
+        } catch {
+          warnings = [
+            'The new login is active, but UAPKG could not finish cleaning up the previous login. Revoke the old grant from the UAPKG account website.',
+          ];
+        }
+      }
       return { grant: metadata, warnings };
     } catch (error) {
       if (finalizationTimeout) {
@@ -296,7 +346,7 @@ export class AccountManager {
           : finalizationController?.signal.aborted && finalizationController.signal.reason instanceof LoginError
             ? finalizationController.signal.reason
             : error;
-      if (issuedRefreshToken && !retainedIssuedGrant) {
+      if (issuedRefreshToken && !retainedIssuedGrant && !preserveIssuedGrant) {
         await this.revokeToken(as, client, issuedRefreshToken, dpop).catch(() => undefined);
       }
       const loginError = normalizeLoginError(failure);
@@ -467,14 +517,71 @@ export class AccountManager {
     await this.revokeToken(as, this.client(), refreshToken, dpop);
   }
 
-  private async persistIssuedGrant(
+  private async activatePreparedGrant(
+    controlPlane: ControlPlaneClient,
+    credential: ControlPlaneCredential,
+    expectedGrantId: string,
+    signal: AbortSignal,
+    registryAlias: string,
+  ): Promise<CliLoginActivationOutcome> {
+    try {
+      const confirmed = await controlPlane.confirmCliLogin(credential, signal);
+      if (confirmed.id === expectedGrantId) return { kind: 'active' };
+      return this.reconcilePreparedGrant(controlPlane, credential, expectedGrantId, registryAlias);
+    } catch (error) {
+      if (isDefinitiveCliLoginConfirmationRejection(error)) return { kind: 'rejected', error };
+      return this.reconcilePreparedGrant(controlPlane, credential, expectedGrantId, registryAlias);
+    }
+  }
+
+  private async reconcilePreparedGrant(
+    controlPlane: ControlPlaneClient,
+    credential: ControlPlaneCredential,
+    expectedGrantId: string,
+    registryAlias: string,
+  ): Promise<CliLoginActivationOutcome> {
+    const signal = AbortSignal.timeout(CLI_LOGIN_RECONCILIATION_TIMEOUT_MS);
+    let retryActivation = true;
+    try {
+      const observed = await controlPlane.getCliLoginConfirmation(credential, signal);
+      if (observed.grant.id !== expectedGrantId) {
+        retryActivation = false;
+      } else if (observed.grant.status === 'active') {
+        return { kind: 'active' };
+      }
+    } catch {
+      // An idempotent activation retry can still resolve a failed status read.
+    }
+
+    if (retryActivation) {
+      try {
+        const confirmed = await controlPlane.confirmCliLogin(credential, signal);
+        if (confirmed.id === expectedGrantId) return { kind: 'active' };
+      } catch {
+        // Once the first activation outcome is ambiguous, even a later 4xx
+        // cannot prove that the original request did not commit.
+      }
+    }
+
+    try {
+      const observed = await controlPlane.getCliLoginConfirmation(credential, signal);
+      if (observed.grant.id === expectedGrantId && observed.grant.status === 'active') {
+        return { kind: 'active' };
+      }
+    } catch {
+      // Fall through to the explicit ambiguous outcome below.
+    }
+
+    return { kind: 'ambiguous', error: loginConfirmationAmbiguousError(registryAlias) };
+  }
+
+  private async persistPreparedGrant(
     metadata: RegistryGrantMetadata,
     keyPair: oauth.CryptoKeyPair,
     refreshToken: string,
     previous?: RegistryGrantMetadata,
     signal?: AbortSignal,
-    onPersisted?: () => void,
-  ): Promise<readonly string[]> {
+  ): Promise<void> {
     let metadataWriteAttempted = false;
     try {
       signal?.throwIfAborted();
@@ -485,7 +592,6 @@ export class AccountManager {
       metadataWriteAttempted = true;
       await this.metadata.upsert(metadata);
       signal?.throwIfAborted();
-      onPersisted?.();
     } catch (error) {
       const cleanup: Promise<unknown>[] = [
         this.keyStore.delete(metadata.keyReference),
@@ -507,7 +613,29 @@ export class AccountManager {
       }
       throw error;
     }
+  }
 
+  private async rollbackPreparedGrant(
+    metadata: RegistryGrantMetadata,
+    previous?: RegistryGrantMetadata,
+  ): Promise<void> {
+    const cleanupResults = await Promise.allSettled([
+      this.keyStore.delete(metadata.keyReference),
+      this.credentials.delete(metadata.refreshTokenReference),
+      previous ? this.metadata.upsert(previous) : this.metadata.remove(metadata.issuer, metadata.registryId),
+    ]);
+    if (cleanupResults.some(({ status }) => status === 'rejected')) {
+      throw new LoginError(
+        'LOGIN_FAILED',
+        'Login confirmation failed, and UAPKG could not roll back the local login safely. Check `uapkg whoami --json` before retrying.',
+      );
+    }
+  }
+
+  private async cleanupPreviousGrant(
+    metadata: RegistryGrantMetadata,
+    previous?: RegistryGrantMetadata,
+  ): Promise<readonly string[]> {
     if (!previous) return [];
     if (
       previous.grantId === metadata.grantId ||
@@ -906,6 +1034,23 @@ function loginFinalizationTimeoutError(registryAlias: string): LoginError {
     'LOGIN_AUTHORIZATION_TIMEOUT',
     `Login timed out while verifying and saving browser authorization. No new login was saved. Run \`uapkg login --registry ${registryAlias}\` to try again.`,
   );
+}
+
+function loginConfirmationAmbiguousError(registryAlias: string): LoginError {
+  return new LoginError(
+    'LOGIN_FAILED',
+    [
+      'UAPKG could not determine whether the service activated this login.',
+      'The locally saved credentials were kept to avoid orphaning a possibly active grant.',
+      `Run \`uapkg whoami --registry ${registryAlias}\` to check the login before retrying.`,
+    ].join(' '),
+  );
+}
+
+function isDefinitiveCliLoginConfirmationRejection(error: unknown): boolean {
+  if (!(error instanceof ControlPlaneError) || error.status === undefined) return false;
+  if (error.status < 400 || error.status >= 500) return false;
+  return ![408, 409, 425, 429].includes(error.status);
 }
 
 function emitLoginProgress(onProgress: LoginOptions['onProgress'], event: LoginProgressEvent): void {

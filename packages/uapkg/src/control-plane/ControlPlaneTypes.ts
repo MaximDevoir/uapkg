@@ -48,6 +48,18 @@ export interface AccountSelf {
   };
 }
 
+export interface CliLoginConfirmation extends AccountSelf {
+  readonly grant: AccountSelf['grant'] & {
+    readonly status: 'pending' | 'active';
+    readonly activationExpiresAt: string;
+  };
+}
+
+export interface ActivatedCliLoginGrant {
+  readonly id: string;
+  readonly status: 'active';
+}
+
 export interface RegistryGrantMetadata {
   readonly issuer: string;
   readonly registryId: string;
