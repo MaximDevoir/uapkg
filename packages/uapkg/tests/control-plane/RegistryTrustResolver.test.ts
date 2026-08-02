@@ -45,6 +45,10 @@ describe('registry control-plane source identity', () => {
           type: 'uapkg-service',
           apiBaseUrl: 'https://untrusted.example.invalid',
         },
+        authorization: {
+          issuer: 'https://untrusted.example.invalid/oauth',
+          apiBaseUrl: 'https://untrusted.example.invalid',
+        },
       }),
     );
     const registry = {
@@ -71,8 +75,11 @@ describe('registry control-plane source identity', () => {
       registryName: 'Official',
       repositoryUrl: 'https://github.com/uapkg/registry.git',
       repositoryFingerprint: fingerprintRegistryGitOrigin('https://github.com/uapkg/registry.git'),
+      issuer: 'https://account.uapkg.dev/oauth',
       apiBaseUrl: 'https://api.uapkg.dev',
+      resource: 'https://api.uapkg.dev/v1/registries/00000000-0000-4000-a000-000000000020',
     });
+    expect(JSON.stringify(trust)).not.toContain('untrusted.example.invalid');
     expect(trust).not.toHaveProperty('registryIdentifier');
   });
 });

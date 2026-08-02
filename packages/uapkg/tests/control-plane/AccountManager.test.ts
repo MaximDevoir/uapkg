@@ -70,6 +70,68 @@ describe('AccountManager', () => {
     expect(opener).not.toHaveBeenCalled();
   });
 
+  it('rejects project- or registry-supplied control-plane endpoints before using credentials or the network', async () => {
+    const memory = memoryCredentials();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const manager = new AccountManager(
+      new MemoryMetadataStore() as unknown as AuthMetadataStore,
+      memory.store,
+      vi.fn(),
+      () => true,
+      immediateGrantLock,
+    );
+
+    await expect(
+      manager.login({
+        ...trust,
+        issuer: 'https://untrusted.example.invalid/oauth',
+        apiBaseUrl: 'https://untrusted.example.invalid',
+        resource: `https://untrusted.example.invalid/v1/registries/${trust.registryId}`,
+      }),
+    ).rejects.toThrow('does not accept project-configured authorization issuers or API URLs');
+    expect(memory.loadKeyring).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('reports the pinned issuer, discovery URL, and status without including the response body', async () => {
+    const memory = memoryCredentials();
+    const fetchMock = vi.fn(
+      async () =>
+        new Response('refresh_token=do-not-report-this-value', {
+          status: 502,
+          headers: { 'content-type': 'text/plain' },
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const manager = new AccountManager(
+      new MemoryMetadataStore() as unknown as AuthMetadataStore,
+      memory.store,
+      vi.fn(),
+      () => true,
+      immediateGrantLock,
+    );
+
+    let loginError: unknown;
+    try {
+      await manager.login(trust);
+    } catch (error) {
+      loginError = error;
+    }
+
+    expect(loginError).toBeInstanceOf(Error);
+    const message = (loginError as Error).message;
+    expect(message).toContain('build-pinned issuer "https://account.uapkg.dev/oauth"');
+    expect(message).toContain('discovery URL "https://account.uapkg.dev/oauth/.well-known/openid-configuration"');
+    expect(message).toContain('HTTP 502');
+    expect(message).not.toContain('do-not-report-this-value');
+    expect((loginError as Error).cause).toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://account.uapkg.dev/oauth/.well-known/openid-configuration',
+      expect.objectContaining({ method: 'GET', redirect: 'manual' }),
+    );
+  });
+
   it('closes the login attempt and fails clearly when the browser opener fails', async () => {
     const metadata = new MemoryMetadataStore();
     const memory = memoryCredentials();

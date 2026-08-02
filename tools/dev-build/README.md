@@ -58,6 +58,20 @@ The stamp overrides any inherited internal build-mode environment value. It is
 only the lowest-precedence default, so normal global and project configuration
 can replace it.
 
+The same immutable build metadata pins authenticated control-plane traffic to
+one environment-specific endpoint pair:
+
+- Production and source execution use issuer `https://account.uapkg.dev/oauth`
+  and API origin `https://api.uapkg.dev`.
+- Development builds use issuer `https://account-dev.uapkg.dev/oauth` and API
+  origin `https://api-dev.uapkg.dev`.
+
+Global, project, and registry metadata cannot override these authentication
+endpoints. Registry OAuth audiences are derived from the pinned API origin, so
+a development CLI cannot reuse a production grant or send one to development.
+Authentication metadata remains shared in `~/.uapkg/auth.json`; grants coexist
+because they are keyed by issuer and registry ID.
+
 ## Configuration and Registry Cache Profiles
 
 The stamped CLI launcher selects a persistent profile before loading the CLI:

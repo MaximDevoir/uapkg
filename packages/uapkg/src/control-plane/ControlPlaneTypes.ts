@@ -1,5 +1,7 @@
-export const UAPKG_AUTHORIZATION_ISSUER = 'https://account.uapkg.dev/oauth';
-export const UAPKG_CONTROL_PLANE_API = 'https://api.uapkg.dev';
+import { UAPKG_CONTROL_PLANE_ENDPOINTS } from './ControlPlaneEndpoints.js';
+
+export const UAPKG_AUTHORIZATION_ISSUER = UAPKG_CONTROL_PLANE_ENDPOINTS.issuer;
+export const UAPKG_CONTROL_PLANE_API = UAPKG_CONTROL_PLANE_ENDPOINTS.apiBaseUrl;
 export const UAPKG_CLI_CLIENT_ID = 'uapkg-cli';
 export const UAPKG_GITHUB_OIDC_AUDIENCE = 'uapkg';
 

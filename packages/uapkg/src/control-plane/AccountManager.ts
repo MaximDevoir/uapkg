@@ -452,8 +452,23 @@ export class AccountManager {
   }
 
   private async discover(issuer: URL): Promise<oauth.AuthorizationServer> {
-    const response = await oauth.discoveryRequest(issuer);
-    return oauth.processDiscoveryResponse(issuer, response);
+    const discoveryUrl = oidcDiscoveryUrl(issuer);
+    let response: Response;
+    try {
+      response = await oauth.discoveryRequest(issuer, { algorithm: 'oidc' });
+    } catch {
+      throw new Error(
+        `Unable to retrieve OAuth metadata for build-pinned issuer "${issuer.href}" from discovery URL "${discoveryUrl.href}".`,
+      );
+    }
+
+    try {
+      return await oauth.processDiscoveryResponse(issuer, response);
+    } catch {
+      throw new Error(
+        `Invalid OAuth metadata for build-pinned issuer "${issuer.href}" from discovery URL "${discoveryUrl.href}" (HTTP ${response.status}).`,
+      );
+    }
   }
 
   private validateAuthorizationServer(as: oauth.AuthorizationServer): void {
@@ -642,6 +657,12 @@ class LoopbackAuthorizationReceiver {
 function normalizeDeviceName(value?: string): string {
   const candidate = value?.trim() || hostname().trim() || 'UAPKG CLI';
   return candidate.slice(0, 80);
+}
+
+function oidcDiscoveryUrl(issuer: URL): URL {
+  const discoveryUrl = new URL(issuer);
+  discoveryUrl.pathname = `${discoveryUrl.pathname.replace(/\/+$/, '')}/.well-known/openid-configuration`;
+  return discoveryUrl;
 }
 
 function timestampFromIso(value: string): number {
