@@ -26,6 +26,18 @@ export {
   createConfigUnknownKeyDiagnostic,
   createConfigUnresolvedDefaultRegistryDiagnostic,
 } from './config/ConfigDiagnostics.js';
+// --- Control-plane family ---
+export type {
+  ControlPlaneDiagnostic,
+  LoginAccessDeniedDiagnostic,
+  LoginAuthorizationResponseInvalidDiagnostic,
+  LoginAuthorizationTimeoutDiagnostic,
+  LoginDiagnosticByCode,
+  LoginDiagnosticCode,
+  LoginDiagnosticData,
+  LoginFailedDiagnostic,
+  LoginOAuthErrorDiagnostic,
+} from './controlPlane/ControlPlaneDiagnostics.js';
 // --- General family ---
 export type {
   GeneralDiagnostic,

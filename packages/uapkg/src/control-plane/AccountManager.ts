@@ -1,6 +1,7 @@
-import { createServer, type Server } from 'node:http';
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { homedir, hostname } from 'node:os';
 import { dirname, join } from 'node:path';
+import type { ControlPlaneDiagnostic, LoginDiagnosticCode } from '@uapkg/diagnostics';
 import isCI from 'is-ci';
 import * as oauth from 'oauth4webapi';
 import { AuthMetadataStore } from './AuthMetadataStore.js';
@@ -21,11 +22,36 @@ import { DPoPKeyStore } from './DPoPKeyStore.js';
 import { FileRegistryGrantLock, type RegistryGrantLock } from './RegistryGrantLock.js';
 
 const INTERACTIVE_LOGIN_TIMEOUT_MS = 3 * 60 * 1000;
+const INTERACTIVE_LOGIN_FINALIZATION_TIMEOUT_MS = 60 * 1000;
+const OAUTH_BACKCHANNEL_TIMEOUT_MS = 30 * 1000;
+const LOOPBACK_CALLBACK_PATH = '/callback';
+const ACCOUNT_COMPLETION_PATH = '/cli-login/complete';
 const ALLOWED_CLI_SCOPES = new Set<string>(UAPKG_CLI_SCOPES);
 
 export interface LoginOptions {
   readonly deviceName?: string;
   readonly reauthorize?: boolean;
+  readonly onProgress?: (event: LoginProgressEvent) => void;
+}
+
+export type LoginProgressEvent =
+  | { readonly type: 'preparing'; readonly registryAlias: string }
+  | { readonly type: 'opening-browser' }
+  | { readonly type: 'browser-open-failed'; readonly authorizationUrl: string }
+  | { readonly type: 'waiting-for-decision' }
+  | { readonly type: 'approval-received' };
+
+type LoginCompletionOutcome = 'success' | 'denied' | 'failed';
+
+export class LoginError extends Error {
+  public constructor(
+    public readonly code: LoginDiagnosticCode,
+    message: string,
+    public readonly oauthError?: string,
+  ) {
+    super(message);
+    this.name = 'LoginError';
+  }
 }
 
 export interface LoginResult {
@@ -58,6 +84,8 @@ export class AccountManager {
     },
     private readonly isInteractiveLogin = () => Boolean(process.stdin.isTTY && process.stdout.isTTY && !isCI),
     grantLock?: RegistryGrantLock,
+    private readonly interactiveLoginTimeoutMs = INTERACTIVE_LOGIN_TIMEOUT_MS,
+    private readonly interactiveLoginFinalizationTimeoutMs = INTERACTIVE_LOGIN_FINALIZATION_TIMEOUT_MS,
   ) {
     this.keyStore = new DPoPKeyStore(credentials);
     const metadataPath = typeof metadata.path === 'string' ? metadata.path : join(homedir(), '.uapkg', 'auth.json');
@@ -88,6 +116,7 @@ export class AccountManager {
       );
     }
 
+    emitLoginProgress(options.onProgress, { type: 'preparing', registryAlias: trust.alias });
     const issuer = new URL(trust.issuer);
     const as = await this.discover(issuer);
     this.validateAuthorizationServer(as);
@@ -95,9 +124,12 @@ export class AccountManager {
     const keyPair = await this.keyStore.generate();
     const dpop = oauth.DPoP(client, keyPair);
     const publicKeyThumbprint = await dpop.calculateThumbprint();
-    const receiver = await LoopbackAuthorizationReceiver.listen();
+    const receiver = await LoopbackAuthorizationReceiver.listen(issuer);
     let issuedRefreshToken: string | undefined;
     let retainedIssuedGrant = false;
+    let callbackReceipt: LoopbackAuthorizationReceipt | undefined;
+    let finalizationController: AbortController | undefined;
+    let finalizationTimeout: NodeJS.Timeout | undefined;
 
     try {
       const codeVerifier = oauth.generateRandomCodeVerifier();
@@ -125,7 +157,11 @@ export class AccountManager {
       });
 
       const pushed = await this.withDPoPNonceRetry(
-        () => oauth.pushedAuthorizationRequest(as, client, oauth.None(), parameters, { DPoP: dpop }),
+        () =>
+          oauth.pushedAuthorizationRequest(as, client, oauth.None(), parameters, {
+            DPoP: dpop,
+            signal: () => AbortSignal.timeout(OAUTH_BACKCHANNEL_TIMEOUT_MS),
+          }),
         (response) => oauth.processPushedAuthorizationResponse(as, client, response),
       );
 
@@ -136,13 +172,37 @@ export class AccountManager {
       authorizationUrl.searchParams.set('client_id', client.client_id);
       authorizationUrl.searchParams.set('request_uri', pushed.request_uri);
 
-      await this.openBrowser(authorizationUrl.href);
-      const callbackUrl = await receiver.waitForCallback(INTERACTIVE_LOGIN_TIMEOUT_MS);
+      emitLoginProgress(options.onProgress, { type: 'opening-browser' });
+      try {
+        await this.openBrowser(authorizationUrl.href);
+      } catch {
+        emitLoginProgress(options.onProgress, {
+          type: 'browser-open-failed',
+          authorizationUrl: authorizationUrl.href,
+        });
+      }
+      emitLoginProgress(options.onProgress, { type: 'waiting-for-decision' });
+      callbackReceipt = await receiver.waitForCallback(this.interactiveLoginTimeoutMs, trust.alias);
+      finalizationController = new AbortController();
+      finalizationTimeout = setTimeout(() => {
+        finalizationController?.abort(loginFinalizationTimeoutError(trust.alias));
+      }, this.interactiveLoginFinalizationTimeoutMs);
+      const finalizationSignal = finalizationController.signal;
+      const callbackUrl = callbackReceipt.url;
       if (callbackUrl.searchParams.get('iss') !== trust.issuer) {
-        throw new Error('The browser authorization response came from an unexpected issuer.');
+        throw new LoginError(
+          'LOGIN_AUTHORIZATION_RESPONSE_INVALID',
+          'The browser authorization response came from an unexpected issuer. Run `uapkg login` again.',
+        );
       }
 
-      const callbackParameters = oauth.validateAuthResponse(as, client, callbackUrl, state);
+      let callbackParameters: URLSearchParams;
+      try {
+        callbackParameters = oauth.validateAuthResponse(as, client, callbackUrl, state);
+      } catch (error) {
+        throw authorizationResponseLoginError(error);
+      }
+      emitLoginProgress(options.onProgress, { type: 'approval-received' });
       const tokens = await this.withDPoPNonceRetry(
         () =>
           oauth.authorizationCodeGrantRequest(
@@ -152,7 +212,7 @@ export class AccountManager {
             callbackParameters,
             receiver.redirectUri,
             codeVerifier,
-            { DPoP: dpop },
+            { DPoP: dpop, signal: finalizationSignal },
           ),
         (response) =>
           oauth.processAuthorizationCodeResponse(as, client, response, {
@@ -161,6 +221,7 @@ export class AccountManager {
             requireIdToken: true,
           }),
       );
+      finalizationSignal.throwIfAborted();
 
       if (tokens.token_type !== 'dpop') {
         throw new Error('The authorization server did not issue a DPoP-bound access token.');
@@ -171,11 +232,15 @@ export class AccountManager {
       const refreshToken = tokens.refresh_token;
       issuedRefreshToken = refreshToken;
 
-      const self = await new ControlPlaneClient(trust.apiBaseUrl).getSelf({
-        kind: 'dpop',
-        accessToken: tokens.access_token,
-        dpop,
-      });
+      const self = await new ControlPlaneClient(trust.apiBaseUrl).getSelf(
+        {
+          kind: 'dpop',
+          accessToken: tokens.access_token,
+          dpop,
+        },
+        finalizationSignal,
+      );
+      finalizationSignal.throwIfAborted();
       if (self.registry.id !== trust.registryId) {
         throw new Error('The authorization server returned a registry grant for an unexpected registry.');
       }
@@ -210,16 +275,38 @@ export class AccountManager {
             `This device already has a saved login for "${trust.alias}". Use \`uapkg login --registry ${trust.alias} --reauthorize\` to replace it.`,
           );
         }
-        return this.persistIssuedGrant(metadata, keyPair, refreshToken, currentPrevious);
+        return this.persistIssuedGrant(metadata, keyPair, refreshToken, currentPrevious, finalizationSignal, () => {
+          retainedIssuedGrant = true;
+          if (finalizationTimeout) {
+            clearTimeout(finalizationTimeout);
+            finalizationTimeout = undefined;
+          }
+        });
       });
-      retainedIssuedGrant = true;
+      await callbackReceipt.complete('success');
       return { grant: metadata, warnings };
     } catch (error) {
+      if (finalizationTimeout) {
+        clearTimeout(finalizationTimeout);
+        finalizationTimeout = undefined;
+      }
+      const failure =
+        error instanceof LoginError
+          ? error
+          : finalizationController?.signal.aborted && finalizationController.signal.reason instanceof LoginError
+            ? finalizationController.signal.reason
+            : error;
       if (issuedRefreshToken && !retainedIssuedGrant) {
         await this.revokeToken(as, client, issuedRefreshToken, dpop).catch(() => undefined);
       }
-      throw error;
+      const loginError = normalizeLoginError(failure);
+      if (callbackReceipt) {
+        const outcome = loginError.code === 'LOGIN_ACCESS_DENIED' ? 'denied' : 'failed';
+        await callbackReceipt.complete(outcome).catch(() => undefined);
+      }
+      throw loginError;
     } finally {
+      if (finalizationTimeout) clearTimeout(finalizationTimeout);
       receiver.close();
     }
   }
@@ -385,16 +472,39 @@ export class AccountManager {
     keyPair: oauth.CryptoKeyPair,
     refreshToken: string,
     previous?: RegistryGrantMetadata,
+    signal?: AbortSignal,
+    onPersisted?: () => void,
   ): Promise<readonly string[]> {
+    let metadataWriteAttempted = false;
     try {
+      signal?.throwIfAborted();
       await this.keyStore.save(metadata.keyReference, keyPair);
+      signal?.throwIfAborted();
       await this.credentials.set(metadata.refreshTokenReference, refreshToken);
+      signal?.throwIfAborted();
+      metadataWriteAttempted = true;
       await this.metadata.upsert(metadata);
+      signal?.throwIfAborted();
+      onPersisted?.();
     } catch (error) {
-      await Promise.allSettled([
+      const cleanup: Promise<unknown>[] = [
         this.keyStore.delete(metadata.keyReference),
         this.credentials.delete(metadata.refreshTokenReference),
-      ]);
+      ];
+      let metadataRollbackIndex: number | undefined;
+      if (metadataWriteAttempted) {
+        metadataRollbackIndex = cleanup.length;
+        cleanup.push(
+          previous ? this.metadata.upsert(previous) : this.metadata.remove(metadata.issuer, metadata.registryId),
+        );
+      }
+      const cleanupResults = await Promise.allSettled(cleanup);
+      if (metadataRollbackIndex !== undefined && cleanupResults[metadataRollbackIndex]?.status === 'rejected') {
+        throw new LoginError(
+          'LOGIN_FAILED',
+          'Login failed, and UAPKG could not roll back the local login metadata safely. Check `uapkg whoami --json` before retrying.',
+        );
+      }
       throw error;
     }
 
@@ -438,6 +548,7 @@ export class AccountManager {
       () =>
         oauth.revocationRequest(as, client, oauth.None(), refreshToken, {
           additionalParameters: { token_type_hint: 'refresh_token' },
+          signal: AbortSignal.timeout(OAUTH_BACKCHANNEL_TIMEOUT_MS),
           [oauth.customFetch]: async (url, options) => {
             const endpoint = new URL(url);
             const headers = new Headers(options.headers);
@@ -455,7 +566,10 @@ export class AccountManager {
     const discoveryUrl = oidcDiscoveryUrl(issuer);
     let response: Response;
     try {
-      response = await oauth.discoveryRequest(issuer, { algorithm: 'oidc' });
+      response = await oauth.discoveryRequest(issuer, {
+        algorithm: 'oidc',
+        signal: AbortSignal.timeout(OAUTH_BACKCHANNEL_TIMEOUT_MS),
+      });
     } catch {
       throw new Error(
         `Unable to retrieve OAuth metadata for build-pinned issuer "${issuer.href}" from discovery URL "${discoveryUrl.href}".`,
@@ -566,27 +680,41 @@ function signingDPoPHandle(handle: oauth.DPoPHandle): SigningDPoPHandle {
   return signer;
 }
 
-class LoopbackAuthorizationReceiver {
-  private callback?: (url: URL) => void;
-  private receivedUrl?: URL;
+export interface LoopbackAuthorizationReceipt {
+  readonly url: URL;
+  complete(outcome: LoginCompletionOutcome): Promise<void>;
+}
+
+type LoopbackReceiverState = 'listening' | 'callback-accepted' | 'closed';
+
+export class LoopbackAuthorizationReceiver {
+  private callbackPromise?: Promise<LoopbackAuthorizationReceipt>;
+  private callbackResolve?: (receipt: LoopbackAuthorizationReceipt) => void;
+  private callbackReject?: (error: LoginError) => void;
+  private receivedReceipt?: LoopbackAuthorizationReceipt;
   private timeout?: NodeJS.Timeout;
-  private settled = false;
+  private state: LoopbackReceiverState = 'listening';
+  private terminalError?: LoginError;
+  private pendingResponse?: ServerResponse;
+  private completion?: Promise<void>;
 
   private constructor(
     private readonly server: Server,
     private readonly callbackPath: string,
+    private readonly expectedHost: string,
+    private readonly completionUrl: URL,
     public readonly redirectUri: string,
   ) {}
 
-  public static async listen(): Promise<LoopbackAuthorizationReceiver> {
-    const callbackPath = '/callback';
+  public static async listen(issuer: URL): Promise<LoopbackAuthorizationReceiver> {
+    const callbackPath = LOOPBACK_CALLBACK_PATH;
     let receiver: LoopbackAuthorizationReceiver | undefined;
     const server = createServer((request, response) => {
       if (!receiver) {
         response.writeHead(503).end();
         return;
       }
-      receiver.receive(request.url, response);
+      receiver.receive(request, response);
     });
 
     await new Promise<void>((resolve, reject) => {
@@ -598,60 +726,147 @@ class LoopbackAuthorizationReceiver {
       server.close();
       throw new Error('Unable to determine the interactive login callback address.');
     }
+    const expectedHost = `127.0.0.1:${address.port}`;
     receiver = new LoopbackAuthorizationReceiver(
       server,
       callbackPath,
-      `http://127.0.0.1:${address.port}${callbackPath}`,
+      expectedHost,
+      new URL(ACCOUNT_COMPLETION_PATH, issuer.origin),
+      `http://${expectedHost}${callbackPath}`,
     );
     return receiver;
   }
 
-  public async waitForCallback(timeoutMs: number): Promise<URL> {
-    if (this.receivedUrl) return this.receivedUrl;
-    return new Promise<URL>((resolve, reject) => {
-      this.callback = resolve;
+  public async waitForCallback(timeoutMs: number, registryAlias?: string): Promise<LoopbackAuthorizationReceipt> {
+    if (this.receivedReceipt) return this.receivedReceipt;
+    if (this.state === 'closed') {
+      throw this.terminalError ?? new LoginError('LOGIN_FAILED', 'The browser authorization listener was closed.');
+    }
+    if (this.callbackPromise) return this.callbackPromise;
+    this.callbackPromise = new Promise<LoopbackAuthorizationReceipt>((resolve, reject) => {
+      this.callbackResolve = resolve;
+      this.callbackReject = reject;
       this.timeout = setTimeout(() => {
-        if (this.settled) return;
-        this.settled = true;
-        reject(new Error('Timed out waiting for browser authorization.'));
-        this.close();
+        if (this.state !== 'listening') return;
+        this.terminate(
+          new LoginError(
+            'LOGIN_AUTHORIZATION_TIMEOUT',
+            registryAlias
+              ? `Login timed out while waiting for browser authorization. Run \`uapkg login --registry ${registryAlias}\` to try again.`
+              : 'Login timed out while waiting for browser authorization. Run `uapkg login` to try again.',
+          ),
+        );
       }, timeoutMs);
     });
+    return this.callbackPromise;
   }
 
   public close(): void {
+    this.terminate(new LoginError('LOGIN_FAILED', 'The browser authorization listener was closed.'));
+  }
+
+  private receive(request: IncomingMessage, response: ServerResponse): void {
+    if (
+      this.state !== 'listening' ||
+      request.method !== 'GET' ||
+      request.headers.host !== this.expectedHost ||
+      (request.url !== this.callbackPath && !request.url?.startsWith(`${this.callbackPath}?`))
+    ) {
+      rejectLoopbackRequest(response);
+      return;
+    }
+
+    let url: URL;
+    try {
+      url = new URL(request.url, this.redirectUri);
+    } catch {
+      rejectLoopbackRequest(response);
+      return;
+    }
+    if (url.origin !== new URL(this.redirectUri).origin || url.pathname !== this.callbackPath) {
+      rejectLoopbackRequest(response);
+      return;
+    }
+
+    this.state = 'callback-accepted';
     if (this.timeout) clearTimeout(this.timeout);
+    this.timeout = undefined;
+    this.pendingResponse = response;
+    const receipt: LoopbackAuthorizationReceipt = {
+      url,
+      complete: (outcome) => this.complete(response, outcome),
+    };
+    this.receivedReceipt = receipt;
+    this.callbackResolve?.(receipt);
+    this.callbackResolve = undefined;
+    this.callbackReject = undefined;
+  }
+
+  private complete(response: ServerResponse, outcome: LoginCompletionOutcome): Promise<void> {
+    if (this.completion) return this.completion;
+    this.completion = new Promise<void>((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        this.pendingResponse = undefined;
+        this.close();
+        resolve();
+      };
+      response.once('finish', finish);
+      response.once('close', finish);
+      response.once('error', finish);
+
+      if (response.destroyed || response.writableEnded) {
+        finish();
+        return;
+      }
+
+      const location = new URL(this.completionUrl);
+      location.hash = new URLSearchParams({ result: outcome }).toString();
+      try {
+        response
+          .writeHead(303, {
+            location: location.href,
+            'cache-control': 'no-store',
+            'referrer-policy': 'no-referrer',
+            'content-length': '0',
+            'x-content-type-options': 'nosniff',
+            connection: 'close',
+          })
+          .end();
+      } catch {
+        finish();
+      }
+    });
+    return this.completion;
+  }
+
+  private terminate(error: LoginError): void {
+    if (this.state === 'closed') return;
+    this.state = 'closed';
+    this.terminalError = error;
+    if (this.timeout) clearTimeout(this.timeout);
+    this.timeout = undefined;
+    this.callbackReject?.(error);
+    this.callbackResolve = undefined;
+    this.callbackReject = undefined;
+    if (this.pendingResponse && !this.pendingResponse.writableEnded) {
+      this.pendingResponse.destroy();
+    }
+    this.pendingResponse = undefined;
     this.server.close();
   }
+}
 
-  private receive(requestUrl: string | undefined, response: import('node:http').ServerResponse): void {
-    if (this.settled || !requestUrl) {
-      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }).end('Not found.');
-      return;
-    }
-    const url = new URL(requestUrl, this.redirectUri);
-    if (url.pathname !== this.callbackPath) {
-      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }).end('Not found.');
-      return;
-    }
-
-    this.settled = true;
-    this.receivedUrl = url;
-    response
-      .writeHead(200, {
-        'content-type': 'text/html; charset=utf-8',
-        'cache-control': 'no-store',
-        'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'",
-        'x-content-type-options': 'nosniff',
-      })
-      .end(
-        '<!doctype html><meta charset="utf-8"><title>UAPKG authorization complete</title>' +
-          '<style>body{font:16px system-ui;margin:4rem;max-width:42rem}h1{font-size:1.5rem}</style>' +
-          '<h1>Authorization complete</h1><p>You can close this tab and return to UAPKG.</p>',
-      );
-    this.callback?.(url);
-    this.close();
-  }
+function rejectLoopbackRequest(response: ServerResponse): void {
+  response
+    .writeHead(404, {
+      'cache-control': 'no-store',
+      'content-type': 'text/plain; charset=utf-8',
+      'x-content-type-options': 'nosniff',
+    })
+    .end('Not found.');
 }
 
 function normalizeDeviceName(value?: string): string {
@@ -686,7 +901,101 @@ function missingKeyError(trust: RegistryTrust): Error {
   );
 }
 
+function loginFinalizationTimeoutError(registryAlias: string): LoginError {
+  return new LoginError(
+    'LOGIN_AUTHORIZATION_TIMEOUT',
+    `Login timed out while verifying and saving browser authorization. No new login was saved. Run \`uapkg login --registry ${registryAlias}\` to try again.`,
+  );
+}
+
+function emitLoginProgress(onProgress: LoginOptions['onProgress'], event: LoginProgressEvent): void {
+  try {
+    onProgress?.(event);
+  } catch {
+    // Reporting must never change the authorization outcome.
+  }
+}
+
+function authorizationResponseLoginError(error: unknown): LoginError {
+  if (error instanceof oauth.AuthorizationResponseError) {
+    const oauthError = sanitizeOAuthErrorIdentifier(error.error);
+    const description = sanitizeOAuthErrorDescription(error.error_description);
+    if (oauthError === 'access_denied') {
+      return new LoginError(
+        'LOGIN_ACCESS_DENIED',
+        `Login denied: ${description ?? 'The user denied the registry grant.'} (access_denied)`,
+        oauthError,
+      );
+    }
+    return new LoginError(
+      'LOGIN_OAUTH_ERROR',
+      `Login failed: ${description ?? 'The authorization server rejected the request.'}${oauthError ? ` (${oauthError})` : ''}`,
+      oauthError,
+    );
+  }
+  return new LoginError(
+    'LOGIN_AUTHORIZATION_RESPONSE_INVALID',
+    'The browser authorization response was invalid. Run `uapkg login` again.',
+  );
+}
+
+function normalizeLoginError(error: unknown): LoginError {
+  if (error instanceof LoginError) return error;
+  if (error instanceof oauth.AuthorizationResponseError) return authorizationResponseLoginError(error);
+  if (error instanceof oauth.ResponseBodyError) {
+    const oauthError = sanitizeOAuthErrorIdentifier(error.error);
+    const description = sanitizeOAuthErrorDescription(error.error_description);
+    return new LoginError(
+      'LOGIN_OAUTH_ERROR',
+      `Login failed: ${description ?? 'The authorization server rejected the request.'}${oauthError ? ` (${oauthError})` : ''}`,
+      oauthError,
+    );
+  }
+  return new LoginError('LOGIN_FAILED', describeControlPlaneError(error));
+}
+
+function sanitizeOAuthErrorIdentifier(value: string | undefined): string | undefined {
+  return value && /^[a-z][a-z0-9._~-]{0,63}$/i.test(value) ? value : undefined;
+}
+
+function sanitizeOAuthErrorDescription(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const sanitized = Array.from(value, (character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return isUnsafeOAuthDescriptionCodePoint(codePoint) ? ' ' : character;
+  })
+    .join('')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return sanitized ? Array.from(sanitized).slice(0, 300).join('') : undefined;
+}
+
+function isUnsafeOAuthDescriptionCodePoint(codePoint: number): boolean {
+  return (
+    codePoint <= 0x1f ||
+    (codePoint >= 0x7f && codePoint <= 0x9f) ||
+    codePoint === 0x061c ||
+    codePoint === 0x200e ||
+    codePoint === 0x200f ||
+    (codePoint >= 0x202a && codePoint <= 0x202e) ||
+    codePoint === 0x2028 ||
+    codePoint === 0x2029 ||
+    (codePoint >= 0x2066 && codePoint <= 0x2069)
+  );
+}
+
+export function loginDiagnosticForError(error: unknown): ControlPlaneDiagnostic {
+  const loginError = normalizeLoginError(error);
+  return {
+    level: 'error',
+    code: loginError.code,
+    message: loginError.message,
+    data: loginError.oauthError ? { oauthError: loginError.oauthError } : {},
+  } as ControlPlaneDiagnostic;
+}
+
 export function describeControlPlaneError(error: unknown): string {
+  if (error instanceof LoginError) return error.message;
   if (error instanceof ControlPlaneError) {
     if (error.status === 401 && requiresSavedLoginRenewal(error.code)) {
       return `${error.message}\n\nRun \`uapkg login\` to authenticate again.`;

@@ -92,8 +92,8 @@ export class ControlPlaneClient {
     this.apiBaseUrl = normalized;
   }
 
-  public async getSelf(credential: ControlPlaneCredential): Promise<AccountSelf> {
-    const value = await this.requestJson(credential, 'GET', '/v1/account/self');
+  public async getSelf(credential: ControlPlaneCredential, signal?: AbortSignal): Promise<AccountSelf> {
+    const value = await this.requestJson(credential, 'GET', '/v1/account/self', { signal });
     const parsed = accountResponseSchema.safeParse(value);
     if (!parsed.success) {
       throw new ControlPlaneError('ACCOUNT_SELF_RESPONSE_INVALID', 'The account identity response was invalid.');
@@ -172,7 +172,11 @@ export class ControlPlaneClient {
     credential: ControlPlaneCredential,
     method: string,
     path: string,
-    init: { readonly headers?: Readonly<Record<string, string>>; readonly body?: string } = {},
+    init: {
+      readonly headers?: Readonly<Record<string, string>>;
+      readonly body?: string;
+      readonly signal?: AbortSignal;
+    } = {},
   ): Promise<unknown> {
     const url = new URL(path, this.apiBaseUrl);
     const headers = new Headers(init.headers);
@@ -183,7 +187,7 @@ export class ControlPlaneClient {
         response = await this.withDPoPNonceRetry(() =>
           oauth.protectedResourceRequest(credential.accessToken, method, url, headers, init.body, {
             DPoP: credential.dpop,
-            signal: AbortSignal.timeout(30_000),
+            signal: boundedRequestSignal(init.signal),
           }),
         );
       } catch (error) {
@@ -205,7 +209,7 @@ export class ControlPlaneClient {
         headers,
         body: init.body,
         redirect: 'error',
-        signal: AbortSignal.timeout(30_000),
+        signal: boundedRequestSignal(init.signal),
       });
     }
 
@@ -237,6 +241,11 @@ export class ControlPlaneClient {
       return operation();
     }
   }
+}
+
+function boundedRequestSignal(signal?: AbortSignal): AbortSignal {
+  const timeout = AbortSignal.timeout(30_000);
+  return signal ? AbortSignal.any([signal, timeout]) : timeout;
 }
 
 async function readJson(response: Response): Promise<unknown> {

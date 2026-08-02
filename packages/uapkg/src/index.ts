@@ -48,8 +48,11 @@ export {
   AccountManager,
   type BrowserOpener,
   describeControlPlaneError,
+  LoginError,
   type LoginOptions,
+  type LoginProgressEvent,
   type LoginResult,
+  loginDiagnosticForError,
 } from './control-plane/AccountManager.js';
 export { AuthMetadataStore } from './control-plane/AuthMetadataStore.js';
 export {

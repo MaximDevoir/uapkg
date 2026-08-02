@@ -1,4 +1,5 @@
 import type { ConfigDiagnostic } from './config/ConfigDiagnostics.js';
+import type { ControlPlaneDiagnostic } from './controlPlane/ControlPlaneDiagnostics.js';
 import type { GeneralDiagnostic } from './general/GeneralDiagnostics.js';
 import type { InstallerDiagnostic } from './installer/InstallerDiagnostics.js';
 import type { ManifestDiagnostic } from './manifest/ManifestDiagnostics.js';
@@ -21,6 +22,7 @@ import type { SpecParseDiagnostic } from './spec/SpecDiagnostics.js';
  */
 export type Diagnostic =
   | ResolverDiagnostic
+  | ControlPlaneDiagnostic
   | ConfigDiagnostic
   | RegistryDiagnostic
   | RegistryToolsDiagnostic
