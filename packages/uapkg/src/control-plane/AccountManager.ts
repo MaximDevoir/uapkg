@@ -164,6 +164,10 @@ export class AccountManager {
         device_name: deviceName,
         max_age: '300',
       });
+      const expectedPredecessorGrantId = options.reauthorize && previous ? previous.grantId : null;
+      if (expectedPredecessorGrantId) {
+        parameters.set('replace_grant_id', expectedPredecessorGrantId);
+      }
 
       const pushed = await this.withDPoPNonceRetry(
         () =>
@@ -249,6 +253,9 @@ export class AccountManager {
       };
       const self = await controlPlane.getCliLoginConfirmation(issuedCredential, finalizationSignal);
       finalizationSignal.throwIfAborted();
+      if (self.grant.replacesGrantId !== expectedPredecessorGrantId) {
+        throw loginReplacementBindingError(trust.alias);
+      }
       if (self.registry.id !== trust.registryId) {
         throw new Error('The authorization server returned a registry grant for an unexpected registry.');
       }
@@ -288,6 +295,14 @@ export class AccountManager {
       let previousForCleanup: RegistryGrantMetadata | undefined;
       await this.serializeGrantOperation(trust, async () => {
         const currentPrevious = await this.metadata.find(trust.issuer, trust.registryId);
+        if (!isSameRegistryGrant(previous, currentPrevious)) {
+          if (options.reauthorize) {
+            throw loginReauthorizationConflictError(trust.alias);
+          }
+          throw new Error(
+            `This device already has a saved login for "${trust.alias}". Use \`uapkg login --registry ${trust.alias} --reauthorize\` to replace it.`,
+          );
+        }
         if (currentPrevious && !options.reauthorize) {
           throw new Error(
             `This device already has a saved login for "${trust.alias}". Use \`uapkg login --registry ${trust.alias} --reauthorize\` to replace it.`,
@@ -301,6 +316,7 @@ export class AccountManager {
             controlPlane,
             issuedCredential,
             metadata.grantId,
+            expectedPredecessorGrantId,
             finalizationSignal,
             trust.alias,
           );
@@ -315,6 +331,7 @@ export class AccountManager {
         }
 
         retainedIssuedGrant = true;
+        this.invalidateAccessCredentials(trust);
         if (finalizationTimeout) {
           clearTimeout(finalizationTimeout);
           finalizationTimeout = undefined;
@@ -326,11 +343,11 @@ export class AccountManager {
       if (previousForCleanup) {
         try {
           warnings = await this.serializeGrantOperation(trust, () =>
-            this.cleanupPreviousGrant(metadata, previousForCleanup),
+            this.cleanupPreviousLocalCredentials(metadata, previousForCleanup),
           );
         } catch {
           warnings = [
-            'The new login is active, but UAPKG could not finish cleaning up the previous login. Revoke the old grant from the UAPKG account website.',
+            'The new login is active, but UAPKG could not remove one or more old protected credential entries. Remove the stale UAPKG entries from the operating-system credential store.',
           ];
         }
       }
@@ -521,16 +538,34 @@ export class AccountManager {
     controlPlane: ControlPlaneClient,
     credential: ControlPlaneCredential,
     expectedGrantId: string,
+    expectedPredecessorGrantId: string | null,
     signal: AbortSignal,
     registryAlias: string,
   ): Promise<CliLoginActivationOutcome> {
     try {
       const confirmed = await controlPlane.confirmCliLogin(credential, signal);
-      if (confirmed.id === expectedGrantId) return { kind: 'active' };
-      return this.reconcilePreparedGrant(controlPlane, credential, expectedGrantId, registryAlias);
+      if (confirmed.id === expectedGrantId && confirmed.replacesGrantId === expectedPredecessorGrantId) {
+        return { kind: 'active' };
+      }
+      return this.reconcilePreparedGrant(
+        controlPlane,
+        credential,
+        expectedGrantId,
+        expectedPredecessorGrantId,
+        registryAlias,
+      );
     } catch (error) {
+      if (isCliLoginReauthorizationConflict(error)) {
+        return { kind: 'rejected', error: reauthorizationConflictLoginError(error) };
+      }
       if (isDefinitiveCliLoginConfirmationRejection(error)) return { kind: 'rejected', error };
-      return this.reconcilePreparedGrant(controlPlane, credential, expectedGrantId, registryAlias);
+      return this.reconcilePreparedGrant(
+        controlPlane,
+        credential,
+        expectedGrantId,
+        expectedPredecessorGrantId,
+        registryAlias,
+      );
     }
   }
 
@@ -538,13 +573,14 @@ export class AccountManager {
     controlPlane: ControlPlaneClient,
     credential: ControlPlaneCredential,
     expectedGrantId: string,
+    expectedPredecessorGrantId: string | null,
     registryAlias: string,
   ): Promise<CliLoginActivationOutcome> {
     const signal = AbortSignal.timeout(CLI_LOGIN_RECONCILIATION_TIMEOUT_MS);
     let retryActivation = true;
     try {
       const observed = await controlPlane.getCliLoginConfirmation(credential, signal);
-      if (observed.grant.id !== expectedGrantId) {
+      if (observed.grant.id !== expectedGrantId || observed.grant.replacesGrantId !== expectedPredecessorGrantId) {
         retryActivation = false;
       } else if (observed.grant.status === 'active') {
         return { kind: 'active' };
@@ -556,7 +592,9 @@ export class AccountManager {
     if (retryActivation) {
       try {
         const confirmed = await controlPlane.confirmCliLogin(credential, signal);
-        if (confirmed.id === expectedGrantId) return { kind: 'active' };
+        if (confirmed.id === expectedGrantId && confirmed.replacesGrantId === expectedPredecessorGrantId) {
+          return { kind: 'active' };
+        }
       } catch {
         // Once the first activation outcome is ambiguous, even a later 4xx
         // cannot prove that the original request did not commit.
@@ -565,7 +603,11 @@ export class AccountManager {
 
     try {
       const observed = await controlPlane.getCliLoginConfirmation(credential, signal);
-      if (observed.grant.id === expectedGrantId && observed.grant.status === 'active') {
+      if (
+        observed.grant.id === expectedGrantId &&
+        observed.grant.replacesGrantId === expectedPredecessorGrantId &&
+        observed.grant.status === 'active'
+      ) {
         return { kind: 'active' };
       }
     } catch {
@@ -632,7 +674,7 @@ export class AccountManager {
     }
   }
 
-  private async cleanupPreviousGrant(
+  private async cleanupPreviousLocalCredentials(
     metadata: RegistryGrantMetadata,
     previous?: RegistryGrantMetadata,
   ): Promise<readonly string[]> {
@@ -645,18 +687,11 @@ export class AccountManager {
       return [];
     }
 
-    const warnings: string[] = [];
-    try {
-      await this.revokeSavedGrant(previous);
-    } catch {
-      warnings.push(
-        `The previous registry grant could not be revoked from this device. The new login is active, but you should revoke the inaccessible old grant from the UAPKG account website.`,
-      );
-    }
     const cleanupResults = await Promise.allSettled([
       this.keyStore.delete(previous.keyReference),
       this.credentials.delete(previous.refreshTokenReference),
     ]);
+    const warnings: string[] = [];
     if (cleanupResults.some(({ status }) => status === 'rejected')) {
       warnings.push(
         'The previous registry grant was replaced, but one or more old protected credential entries could not be removed. Remove the stale UAPKG entries from the operating-system credential store.',
@@ -1047,6 +1082,40 @@ function loginConfirmationAmbiguousError(registryAlias: string): LoginError {
   );
 }
 
+function loginReauthorizationConflictError(registryAlias: string): LoginError {
+  return new LoginError(
+    'LOGIN_REAUTHORIZATION_CONFLICT',
+    `The saved login for "${registryAlias}" changed while reauthorization was in progress. The newer local login was preserved. Run \`uapkg login --registry ${registryAlias} --reauthorize\` again if you still want to replace it.`,
+  );
+}
+
+function loginReplacementBindingError(registryAlias: string): LoginError {
+  return new LoginError(
+    'LOGIN_REAUTHORIZATION_CONFLICT',
+    `The authorization service did not bind this login to the expected saved grant for "${registryAlias}". No new local login was saved. Run \`uapkg login --registry ${registryAlias} --reauthorize\` to try again.`,
+  );
+}
+
+function reauthorizationConflictLoginError(error: ControlPlaneError): LoginError {
+  return new LoginError('LOGIN_REAUTHORIZATION_CONFLICT', error.message);
+}
+
+function isCliLoginReauthorizationConflict(error: unknown): error is ControlPlaneError {
+  return error instanceof ControlPlaneError && error.code === 'CLI_LOGIN_REAUTHORIZATION_CONFLICT';
+}
+
+function isSameRegistryGrant(
+  expected: RegistryGrantMetadata | undefined,
+  current: RegistryGrantMetadata | undefined,
+): boolean {
+  if (!expected || !current) return expected === current;
+  return (
+    expected.grantId === current.grantId &&
+    expected.keyReference === current.keyReference &&
+    expected.refreshTokenReference === current.refreshTokenReference
+  );
+}
+
 function isDefinitiveCliLoginConfirmationRejection(error: unknown): boolean {
   if (!(error instanceof ControlPlaneError) || error.status === undefined) return false;
   if (error.status < 400 || error.status >= 500) return false;
@@ -1086,6 +1155,7 @@ function authorizationResponseLoginError(error: unknown): LoginError {
 
 function normalizeLoginError(error: unknown): LoginError {
   if (error instanceof LoginError) return error;
+  if (isCliLoginReauthorizationConflict(error)) return reauthorizationConflictLoginError(error);
   if (error instanceof oauth.AuthorizationResponseError) return authorizationResponseLoginError(error);
   if (error instanceof oauth.ResponseBodyError) {
     const oauthError = sanitizeOAuthErrorIdentifier(error.error);

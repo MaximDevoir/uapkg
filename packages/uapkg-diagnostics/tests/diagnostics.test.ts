@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import type {
+  Diagnostic,
+  DiagnosticByCode,
+  LoginDiagnosticCode,
+  LoginReauthorizationConflictDiagnostic,
+} from '../src/index';
 import {
   createCacheCorruptDiagnostic,
   createCacheIdentifierCollisionDiagnostic,
+  createDiagnostic,
   createIoErrorDiagnostic,
   createParseErrorDiagnostic,
   createUnknownErrorDiagnostic,
@@ -10,6 +17,23 @@ import {
   fromDiagnostics,
   ok,
 } from '../src/index';
+
+describe('Control-plane diagnostics', () => {
+  it('exposes reauthorization conflicts through the login and unified diagnostic unions', () => {
+    const code: LoginDiagnosticCode = 'LOGIN_REAUTHORIZATION_CONFLICT';
+    const diagnostic: LoginReauthorizationConflictDiagnostic = createDiagnostic(
+      code,
+      'error',
+      'The saved login changed while reauthorization was in progress.',
+      {},
+    );
+    const unified: Diagnostic = diagnostic;
+    const byCode: DiagnosticByCode<'LOGIN_REAUTHORIZATION_CONFLICT'> = diagnostic;
+
+    expect(unified.code).toBe('LOGIN_REAUTHORIZATION_CONFLICT');
+    expect(byCode.data).toEqual({});
+  });
+});
 
 describe('Registry cache diagnostics', () => {
   it('distinguishes corruption from a shortened identifier collision', () => {

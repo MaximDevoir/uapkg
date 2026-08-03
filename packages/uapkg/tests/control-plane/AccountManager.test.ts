@@ -192,6 +192,7 @@ describe('AccountManager', () => {
       }
       const body = init?.body;
       expect(body).toBeInstanceOf(URLSearchParams);
+      expect((body as URLSearchParams).get('replace_grant_id')).toBeNull();
       const redirectUri = new URL((body as URLSearchParams).get('redirect_uri') ?? '');
       expect(redirectUri.hostname).toBe('127.0.0.1');
       expect(Number(redirectUri.port)).toBeGreaterThan(0);
@@ -215,7 +216,9 @@ describe('AccountManager', () => {
       20,
     );
 
-    await expect(manager.login(trust, { onProgress: (event) => progress.push(event) })).rejects.toMatchObject({
+    await expect(
+      manager.login(trust, { reauthorize: true, onProgress: (event) => progress.push(event) }),
+    ).rejects.toMatchObject({
       code: 'LOGIN_AUTHORIZATION_TIMEOUT',
       message:
         'Login timed out while waiting for browser authorization. Run `uapkg login --registry official` to try again.',
@@ -250,6 +253,7 @@ describe('AccountManager', () => {
       }
       const body = init?.body;
       expect(body).toBeInstanceOf(URLSearchParams);
+      expect((body as URLSearchParams).get('replace_grant_id')).toBe(previous.grantId);
       redirectUri = (body as URLSearchParams).get('redirect_uri') ?? '';
       state = (body as URLSearchParams).get('state') ?? '';
       return Response.json(
@@ -419,6 +423,7 @@ describe('AccountManager', () => {
         redirectUri = body.get('redirect_uri') ?? '';
         state = body.get('state') ?? '';
         nonce = body.get('nonce') ?? '';
+        expect(body.get('replace_grant_id')).toBeNull();
         return Response.json(
           { request_uri: 'urn:ietf:params:oauth:request_uri:successful-login', expires_in: 90 },
           { status: 201 },
@@ -439,7 +444,7 @@ describe('AccountManager', () => {
         expect(metadata.value?.grantId).toBe(grantId);
         await expect(memory.store.get(metadata.value?.refreshTokenReference ?? '')).resolves.toBe('new-refresh-token');
         await expect(new DPoPKeyStore(memory.store).load(metadata.value?.keyReference ?? '')).resolves.toBeDefined();
-        return Response.json({ ok: true, grant: { id: grantId, status: 'active' } });
+        return Response.json({ ok: true, grant: { id: grantId, status: 'active', replacesGrantId: null } });
       }
       throw new Error(`Unexpected request: ${url}`);
     });
@@ -500,6 +505,7 @@ describe('AccountManager', () => {
         redirectUri = body.get('redirect_uri') ?? '';
         state = body.get('state') ?? '';
         nonce = body.get('nonce') ?? '';
+        expect(body.get('replace_grant_id')).toBeNull();
         return Response.json(
           { request_uri: 'urn:ietf:params:oauth:request_uri:lost-confirmation-response', expires_in: 90 },
           { status: 201 },
@@ -556,7 +562,52 @@ describe('AccountManager', () => {
     });
   });
 
-  it('reports browser success before cleaning up the previous confirmed grant', async () => {
+  it('does not accept active confirmation responses bound to a different predecessor', async () => {
+    const expectedGrantId = '55555555-5555-4555-8555-555555555555';
+    const expectedPredecessorGrantId = '11111111-1111-4111-8111-111111111111';
+    const controlPlane = {
+      confirmCliLogin: vi.fn(async () => ({
+        id: expectedGrantId,
+        status: 'active' as const,
+        replacesGrantId: null,
+      })),
+      getCliLoginConfirmation: vi.fn(async () => ({
+        grant: { id: expectedGrantId, status: 'active' as const, replacesGrantId: null },
+      })),
+    };
+    const manager = new AccountManager(
+      new MemoryMetadataStore() as unknown as AuthMetadataStore,
+      memoryCredentials().store,
+      vi.fn(),
+      () => true,
+      immediateGrantLock,
+    );
+    const activation = manager as unknown as {
+      activatePreparedGrant(
+        client: typeof controlPlane,
+        credential: unknown,
+        grantId: string,
+        predecessorGrantId: string | null,
+        signal: AbortSignal,
+        registryAlias: string,
+      ): Promise<{ readonly kind: string }>;
+    };
+
+    await expect(
+      activation.activatePreparedGrant(
+        controlPlane,
+        { kind: 'bearer', accessToken: 'unused' },
+        expectedGrantId,
+        expectedPredecessorGrantId,
+        new AbortController().signal,
+        trust.alias,
+      ),
+    ).resolves.toMatchObject({ kind: 'ambiguous' });
+    expect(controlPlane.confirmCliLogin).toHaveBeenCalledOnce();
+    expect(controlPlane.getCliLoginConfirmation).toHaveBeenCalledTimes(2);
+  });
+
+  it('atomically replaces a saved grant without sending an old-token revocation request', async () => {
     const memory = memoryCredentials();
     const previousPair = await new DPoPKeyStore(memory.store).generate();
     const previous = savedGrant({
@@ -569,14 +620,7 @@ describe('AccountManager', () => {
     let state = '';
     let nonce = '';
     let callbackResponse: Promise<LoopbackHttpResponse> | undefined;
-    let releaseRevocation: (() => void) | undefined;
-    const revocationGate = new Promise<void>((resolve) => {
-      releaseRevocation = resolve;
-    });
-    let markRevocationStarted: (() => void) | undefined;
-    const revocationStarted = new Promise<void>((resolve) => {
-      markRevocationStarted = resolve;
-    });
+    const revokedTokens: string[] = [];
     const grantId = '77777777-7777-4777-8777-777777777777';
     const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const url = String(input);
@@ -588,6 +632,8 @@ describe('AccountManager', () => {
         redirectUri = body.get('redirect_uri') ?? '';
         state = body.get('state') ?? '';
         nonce = body.get('nonce') ?? '';
+        expect(body.get('replace_grant_id')).toBe(previous.grantId);
+        expect(body.get('device_name')).toBe('renamed workstation');
         return Response.json(
           { request_uri: 'urn:ietf:params:oauth:request_uri:cleanup-after-success', expires_in: 90 },
           { status: 201 },
@@ -603,12 +649,116 @@ describe('AccountManager', () => {
         });
       }
       if (url === `${trust.apiBaseUrl}/v1/account/cli-login/confirmation`) {
-        if (init?.method === 'GET') return cliLoginConfirmationResponse(grantId);
-        return Response.json({ ok: true, grant: { id: grantId, status: 'active' } });
+        if (init?.method === 'GET') {
+          return cliLoginConfirmationResponse(grantId, 'pending', previous.grantId);
+        }
+        await expect(memory.store.get(previous.refreshTokenReference)).resolves.toBe('old-refresh-token');
+        await expect(new DPoPKeyStore(memory.store).load(previous.keyReference)).resolves.toBeDefined();
+        return Response.json({
+          ok: true,
+          grant: { id: grantId, status: 'active', replacesGrantId: previous.grantId },
+        });
       }
       if (url === `${trust.issuer}/revocation`) {
-        markRevocationStarted?.();
-        await revocationGate;
+        revokedTokens.push((init?.body as URLSearchParams).get('token') ?? '');
+        return new Response(null, { status: 200 });
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const manager = new AccountManager(
+      metadata as unknown as AuthMetadataStore,
+      memory.store,
+      async () => {
+        const callback = new URL(redirectUri);
+        callback.searchParams.set('code', 'authorization-code');
+        callback.searchParams.set('state', state);
+        callback.searchParams.set('iss', trust.issuer);
+        callbackResponse = requestLoopback(callback);
+      },
+      () => true,
+      immediateGrantLock,
+      2_000,
+      2_000,
+    );
+    const accessTokenCache = (manager as unknown as { accessTokenCache: Map<string, unknown> }).accessTokenCache;
+    accessTokenCache.set(`${trust.issuer}|${trust.registryId}|${previous.grantId}|identity.self.read`, {});
+
+    const result = await manager.login(trust, { deviceName: 'renamed workstation', reauthorize: true });
+
+    expect(result).toMatchObject({ grant: { grantId }, warnings: [] });
+    await expect(callbackResponse).resolves.toMatchObject({
+      status: 303,
+      headers: expect.objectContaining({
+        location: 'https://account.uapkg.dev/cli-login/complete#result=success',
+      }),
+    });
+    expect(metadata.value).toEqual(result.grant);
+    await expect(memory.store.get(previous.refreshTokenReference)).resolves.toBeUndefined();
+    await expect(new DPoPKeyStore(memory.store).load(previous.keyReference)).resolves.toBeUndefined();
+    await expect(memory.store.get(result.grant.refreshTokenReference)).resolves.toBe('new-refresh-token');
+    await expect(new DPoPKeyStore(memory.store).load(result.grant.keyReference)).resolves.toBeDefined();
+    expect(accessTokenCache.size).toBe(0);
+    expect(revokedTokens).toEqual([]);
+  });
+
+  it('preserves a newer local slot when it changes while reauthorization is in progress', async () => {
+    const previous = savedGrant();
+    const metadata = new MemoryMetadataStore(previous);
+    const memory = memoryCredentials();
+    await memory.store.set(previous.refreshTokenReference, 'old-refresh-token');
+    const keyStore = new DPoPKeyStore(memory.store);
+    const newerPair = await keyStore.generate();
+    const newer = savedGrant({
+      grantId: '99999999-9999-4999-8999-999999999999',
+      keyReference: 'dpop-key:99999999-9999-4999-8999-999999999999',
+      refreshTokenReference: 'grant:99999999-9999-4999-8999-999999999999',
+      publicKeyThumbprint: await oauth.DPoP({}, newerPair).calculateThumbprint(),
+    });
+    await keyStore.save(newer.keyReference, newerPair);
+    await memory.store.set(newer.refreshTokenReference, 'newer-refresh-token');
+    let redirectUri = '';
+    let state = '';
+    let nonce = '';
+    let callbackResponse: Promise<LoopbackHttpResponse> | undefined;
+    let confirmationPosts = 0;
+    const revokedTokens: string[] = [];
+    const pendingGrantId = '88888888-8888-4888-8888-888888888888';
+    const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith('/.well-known/openid-configuration')) {
+        return Response.json(authorizationServerMetadata());
+      }
+      if (url === `${trust.issuer}/request`) {
+        const body = init?.body as URLSearchParams;
+        redirectUri = body.get('redirect_uri') ?? '';
+        state = body.get('state') ?? '';
+        nonce = body.get('nonce') ?? '';
+        expect(body.get('replace_grant_id')).toBe(previous.grantId);
+        return Response.json(
+          { request_uri: 'urn:ietf:params:oauth:request_uri:local-slot-conflict', expires_in: 90 },
+          { status: 201 },
+        );
+      }
+      if (url === `${trust.issuer}/token`) {
+        return Response.json({
+          access_token: 'pending-access-token',
+          refresh_token: 'pending-refresh-token',
+          token_type: 'DPoP',
+          expires_in: 300,
+          id_token: testIdToken(nonce),
+        });
+      }
+      if (url === `${trust.apiBaseUrl}/v1/account/cli-login/confirmation`) {
+        if (init?.method === 'POST') {
+          confirmationPosts += 1;
+          throw new Error('The conflicting login must not be confirmed.');
+        }
+        metadata.value = newer;
+        return cliLoginConfirmationResponse(pendingGrantId, 'pending', previous.grantId);
+      }
+      if (url === `${trust.issuer}/revocation`) {
+        revokedTokens.push((init?.body as URLSearchParams).get('token') ?? '');
         return new Response(null, { status: 200 });
       }
       throw new Error(`Unexpected request: ${url}`);
@@ -630,20 +780,22 @@ describe('AccountManager', () => {
       2_000,
     );
 
-    const login = manager.login(trust, { reauthorize: true });
-    try {
-      await revocationStarted;
-      await expect(callbackResponse).resolves.toMatchObject({
-        status: 303,
-        headers: expect.objectContaining({
-          location: 'https://account.uapkg.dev/cli-login/complete#result=success',
-        }),
-      });
-    } finally {
-      releaseRevocation?.();
-    }
+    await expect(manager.login(trust, { reauthorize: true })).rejects.toMatchObject({
+      code: 'LOGIN_REAUTHORIZATION_CONFLICT',
+      message: expect.stringContaining('newer local login was preserved'),
+    });
 
-    await expect(login).resolves.toMatchObject({ grant: { grantId }, warnings: [] });
+    expect(confirmationPosts).toBe(0);
+    expect(metadata.value).toEqual(newer);
+    await expect(memory.store.get(newer.refreshTokenReference)).resolves.toBe('newer-refresh-token');
+    await expect(keyStore.load(newer.keyReference)).resolves.toBeDefined();
+    expect(revokedTokens).toEqual(['pending-refresh-token']);
+    await expect(callbackResponse).resolves.toMatchObject({
+      status: 303,
+      headers: expect.objectContaining({
+        location: 'https://account.uapkg.dev/cli-login/complete#result=failed',
+      }),
+    });
   });
 
   it('keeps staged credentials when activation remains ambiguous after reconciliation', async () => {
@@ -741,7 +893,7 @@ describe('AccountManager', () => {
     });
   });
 
-  it('rolls back prepared credentials when the service definitively rejects confirmation', async () => {
+  it('rolls back prepared credentials when the service reports a reauthorization race', async () => {
     const previous = savedGrant();
     const metadata = new MemoryMetadataStore(previous);
     const memory = memoryCredentials();
@@ -764,6 +916,7 @@ describe('AccountManager', () => {
         redirectUri = body.get('redirect_uri') ?? '';
         state = body.get('state') ?? '';
         nonce = body.get('nonce') ?? '';
+        expect(body.get('replace_grant_id')).toBe(previous.grantId);
         return Response.json(
           { request_uri: 'urn:ietf:params:oauth:request_uri:confirmation-failure', expires_in: 90 },
           { status: 201 },
@@ -779,7 +932,9 @@ describe('AccountManager', () => {
         });
       }
       if (url === `${trust.apiBaseUrl}/v1/account/cli-login/confirmation`) {
-        if (init?.method === 'GET') return cliLoginConfirmationResponse(grantId);
+        if (init?.method === 'GET') {
+          return cliLoginConfirmationResponse(grantId, 'pending', previous.grantId);
+        }
         expect(init?.method).toBe('POST');
         expect(metadata.value?.grantId).toBe(grantId);
         preparedGrant = metadata.value;
@@ -789,11 +944,11 @@ describe('AccountManager', () => {
           {
             ok: false,
             error: {
-              code: 'CLI_LOGIN_CONFIRMATION_REJECTED',
-              message: 'The CLI login confirmation was rejected.',
+              code: 'CLI_LOGIN_REAUTHORIZATION_CONFLICT',
+              message: 'Another reauthorization already replaced this login.',
             },
           },
-          { status: 403 },
+          { status: 409 },
         );
       }
       if (url === `${trust.issuer}/revocation`) {
@@ -822,8 +977,8 @@ describe('AccountManager', () => {
     await expect(
       manager.login(trust, { reauthorize: true, onProgress: (event) => progress.push(event) }),
     ).rejects.toMatchObject({
-      code: 'LOGIN_FAILED',
-      message: expect.stringContaining('The CLI login confirmation was rejected.'),
+      code: 'LOGIN_REAUTHORIZATION_CONFLICT',
+      message: 'Another reauthorization already replaced this login.',
     });
     await expect(callbackResponse).resolves.toMatchObject({
       status: 303,
@@ -871,6 +1026,7 @@ describe('AccountManager', () => {
         redirectUri = body.get('redirect_uri') ?? '';
         state = body.get('state') ?? '';
         nonce = body.get('nonce') ?? '';
+        expect(body.get('replace_grant_id')).toBe(previous.grantId);
         return Response.json(
           { request_uri: 'urn:ietf:params:oauth:request_uri:failed-reauthorization', expires_in: 90 },
           { status: 201 },
@@ -886,7 +1042,7 @@ describe('AccountManager', () => {
         });
       }
       if (url === `${trust.apiBaseUrl}/v1/account/cli-login/confirmation`) {
-        return cliLoginConfirmationResponse('33333333-3333-4333-8333-333333333333');
+        return cliLoginConfirmationResponse('33333333-3333-4333-8333-333333333333', 'pending', previous.grantId);
       }
       if (url === `${trust.issuer}/revocation`) {
         revokedTokens.push((init?.body as URLSearchParams).get('token') ?? '');
@@ -1295,7 +1451,7 @@ describe('AccountManager', () => {
     await expect(keyStore.load(grant.keyReference)).resolves.toBeUndefined();
   });
 
-  it('keeps a replacement login when the inaccessible previous DPoP grant cannot be revoked', async () => {
+  it('cleans up a replaced grant locally even when its old DPoP key is missing', async () => {
     const previous = savedGrant({
       grantId: 'old-grant',
       keyReference: 'dpop-key:missing-old-key',
@@ -1326,18 +1482,20 @@ describe('AccountManager', () => {
         refreshToken: string,
         previous?: RegistryGrantMetadata,
       ): Promise<void>;
-      cleanupPreviousGrant(grant: RegistryGrantMetadata, previous?: RegistryGrantMetadata): Promise<readonly string[]>;
+      cleanupPreviousLocalCredentials(
+        grant: RegistryGrantMetadata,
+        previous?: RegistryGrantMetadata,
+      ): Promise<readonly string[]>;
     };
 
     await persistence.persistPreparedGrant(replacement, newPair, 'new-refresh-token', previous);
-    const warnings = await persistence.cleanupPreviousGrant(replacement, previous);
+    const warnings = await persistence.cleanupPreviousLocalCredentials(replacement, previous);
 
     expect(metadata.value).toEqual(replacement);
     await expect(memory.store.get(replacement.refreshTokenReference)).resolves.toBe('new-refresh-token');
     await expect(keyStore.load(replacement.keyReference)).resolves.toBeDefined();
     await expect(memory.store.get(previous.refreshTokenReference)).resolves.toBeUndefined();
-    expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toContain('account website');
+    expect(warnings).toEqual([]);
   });
 
   it('reports a failed metadata rollback instead of masking it as a safe timeout', async () => {
@@ -1557,10 +1715,10 @@ function savedGrant(overrides: Partial<RegistryGrantMetadata> = {}): RegistryGra
     issuer: trust.issuer,
     registryId: trust.registryId,
     registryName: trust.registryName,
-    grantId: 'grant-1',
+    grantId: '11111111-1111-4111-8111-111111111111',
     clientId: 'uapkg-cli',
-    keyReference: 'dpop-key:grant-1',
-    refreshTokenReference: 'grant:grant-1',
+    keyReference: 'dpop-key:11111111-1111-4111-8111-111111111111',
+    refreshTokenReference: 'grant:11111111-1111-4111-8111-111111111111',
     publicKeyThumbprint: 'thumbprint',
     deviceName: 'workstation',
     repositoryFingerprint: trust.repositoryFingerprint,
@@ -1602,7 +1760,11 @@ function testIdToken(nonce: string): string {
   ].join('.');
 }
 
-function cliLoginConfirmationResponse(grantId: string, status: 'pending' | 'active' = 'pending'): Response {
+function cliLoginConfirmationResponse(
+  grantId: string,
+  status: 'pending' | 'active' = 'pending',
+  replacesGrantId: string | null = null,
+): Response {
   const now = Date.now();
   return Response.json({
     ok: true,
@@ -1619,6 +1781,7 @@ function cliLoginConfirmationResponse(grantId: string, status: 'pending' | 'acti
       idleExpiresAt: new Date(now + 30 * 24 * 60 * 60 * 1000).toISOString(),
       absoluteExpiresAt: new Date(now + 180 * 24 * 60 * 60 * 1000).toISOString(),
       activationExpiresAt: new Date(now + 60_000).toISOString(),
+      replacesGrantId,
       scopes: [...UAPKG_CLI_SCOPES],
     },
   });

@@ -37,6 +37,7 @@ export type {
   LoginDiagnosticData,
   LoginFailedDiagnostic,
   LoginOAuthErrorDiagnostic,
+  LoginReauthorizationConflictDiagnostic,
 } from './controlPlane/ControlPlaneDiagnostics.js';
 // --- General family ---
 export type {

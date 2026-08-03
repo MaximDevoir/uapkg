@@ -52,12 +52,14 @@ export interface CliLoginConfirmation extends AccountSelf {
   readonly grant: AccountSelf['grant'] & {
     readonly status: 'pending' | 'active';
     readonly activationExpiresAt: string;
+    readonly replacesGrantId: string | null;
   };
 }
 
 export interface ActivatedCliLoginGrant {
   readonly id: string;
   readonly status: 'active';
+  readonly replacesGrantId: string | null;
 }
 
 export interface RegistryGrantMetadata {

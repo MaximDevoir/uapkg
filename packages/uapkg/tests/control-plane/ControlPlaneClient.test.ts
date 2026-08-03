@@ -10,6 +10,7 @@ afterEach(() => {
 describe('ControlPlaneClient CLI login confirmation', () => {
   it('validates preparation and activation responses over DPoP', async () => {
     const grantId = '22222222-2222-4222-8222-222222222222';
+    const predecessorGrantId = '11111111-1111-4111-8111-111111111111';
     const now = Date.now();
     const requests: Array<{ readonly url: string; readonly method: string; readonly authorization: string | null }> =
       [];
@@ -35,20 +36,33 @@ describe('ControlPlaneClient CLI login confirmation', () => {
               idleExpiresAt: new Date(now + 86_400_000).toISOString(),
               absoluteExpiresAt: new Date(now + 172_800_000).toISOString(),
               activationExpiresAt: new Date(now + 60_000).toISOString(),
+              replacesGrantId: predecessorGrantId,
               scopes: ['identity.self.read'],
             },
           });
         }
-        return Response.json({ ok: true, grant: { id: grantId, status: 'active' } });
+        return Response.json({
+          ok: true,
+          grant: { id: grantId, status: 'active', replacesGrantId: predecessorGrantId },
+        });
       }),
     );
     const client = new ControlPlaneClient(UAPKG_CONTROL_PLANE_API);
     const credential = await dpopCredential();
 
     await expect(client.getCliLoginConfirmation(credential)).resolves.toMatchObject({
-      grant: { id: grantId, status: 'pending', activationExpiresAt: expect.any(String) },
+      grant: {
+        id: grantId,
+        status: 'pending',
+        activationExpiresAt: expect.any(String),
+        replacesGrantId: predecessorGrantId,
+      },
     });
-    await expect(client.confirmCliLogin(credential)).resolves.toEqual({ id: grantId, status: 'active' });
+    await expect(client.confirmCliLogin(credential)).resolves.toEqual({
+      id: grantId,
+      status: 'active',
+      replacesGrantId: predecessorGrantId,
+    });
 
     expect(requests).toEqual([
       {
@@ -64,7 +78,7 @@ describe('ControlPlaneClient CLI login confirmation', () => {
     ]);
   });
 
-  it('rejects malformed preparation and non-active confirmation responses', async () => {
+  it('rejects a missing replacement binding and a non-active confirmation response', async () => {
     const grantId = '22222222-2222-4222-8222-222222222222';
     const now = Date.now();
     const fetchMock = vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
@@ -79,11 +93,12 @@ describe('ControlPlaneClient CLI login confirmation', () => {
             deviceName: 'workstation',
             idleExpiresAt: new Date(now + 86_400_000).toISOString(),
             absoluteExpiresAt: new Date(now + 172_800_000).toISOString(),
+            activationExpiresAt: new Date(now + 60_000).toISOString(),
             scopes: ['identity.self.read'],
           },
         });
       }
-      return Response.json({ ok: true, grant: { id: grantId, status: 'pending' } });
+      return Response.json({ ok: true, grant: { id: grantId, status: 'pending', replacesGrantId: null } });
     });
     vi.stubGlobal('fetch', fetchMock);
     const client = new ControlPlaneClient(UAPKG_CONTROL_PLANE_API);

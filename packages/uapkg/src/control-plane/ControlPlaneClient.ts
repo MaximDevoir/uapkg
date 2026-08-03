@@ -60,6 +60,7 @@ const cliLoginConfirmationResponseSchema = accountResponseSchema.extend({
   grant: accountGrantSchema.extend({
     status: z.enum(['pending', 'active']),
     activationExpiresAt: z.iso.datetime(),
+    replacesGrantId: z.uuid().nullable(),
   }),
 });
 
@@ -68,6 +69,7 @@ const activatedCliLoginResponseSchema = z.object({
   grant: z.object({
     id: z.uuid(),
     status: z.literal('active'),
+    replacesGrantId: z.uuid().nullable(),
   }),
 });
 
