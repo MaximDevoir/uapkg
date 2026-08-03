@@ -28,6 +28,8 @@ export {
 } from './config/ConfigDiagnostics.js';
 // --- Control-plane family ---
 export type {
+  ControlPlaneCommandFailedDiagnostic,
+  ControlPlaneCommandFailedDiagnosticData,
   ControlPlaneDiagnostic,
   LoginAccessDeniedDiagnostic,
   LoginAuthorizationResponseInvalidDiagnostic,
@@ -39,6 +41,7 @@ export type {
   LoginOAuthErrorDiagnostic,
   LoginReauthorizationConflictDiagnostic,
 } from './controlPlane/ControlPlaneDiagnostics.js';
+export { createControlPlaneCommandFailedDiagnostic } from './controlPlane/ControlPlaneDiagnostics.js';
 // --- General family ---
 export type {
   GeneralDiagnostic,

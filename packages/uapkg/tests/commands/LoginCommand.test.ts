@@ -208,7 +208,11 @@ function savedGrant(): RegistryGrantMetadata {
     publicKeyThumbprint: 'thumbprint',
     deviceName: 'workstation',
     repositoryFingerprint: trust.repositoryFingerprint,
-    account: { id: 'account-1', username: 'maximdevoir+ts1', email: 'maximdevoir+ts1@gmail.com' },
+    account: {
+      id: '20000000-0000-4000-a000-000000000020',
+      username: 'maximdevoir+ts1',
+      displayName: 'Maxim Devoir',
+    },
     createdAt: 1_700_000_000,
     idleExpiresAt: 1_700_086_400,
     expiresAt: 1_700_172_800,

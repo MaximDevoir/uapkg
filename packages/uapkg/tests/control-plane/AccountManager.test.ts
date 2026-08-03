@@ -8,6 +8,7 @@ import * as oauth from 'oauth4webapi';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   AccountManager,
+  controlPlaneDiagnosticForError,
   describeControlPlaneError,
   type LoginProgressEvent,
   LoopbackAuthorizationReceiver,
@@ -37,6 +38,12 @@ const trust: RegistryTrust = {
   resource: 'https://api.uapkg.dev/v1/registries/00000000-0000-4000-a000-000000000020',
   cacheShortId: 'short-id',
 };
+
+const account = {
+  id: '20000000-0000-4000-a000-000000000020',
+  username: 'maximdevoir+ts1',
+  displayName: 'Maxim Devoir',
+} as const;
 
 const immediateGrantLock: RegistryGrantLock = {
   withLock: async (_issuer, _registryId, operation) => operation(),
@@ -98,6 +105,36 @@ describe('AccountManager', () => {
         new ControlPlaneError('OIDC_IDENTITY_REJECTED', 'The workload identity was rejected.', 401),
       ),
     ).not.toContain('uapkg login');
+  });
+
+  it('maps control-plane failures to stable command diagnostics without server details', () => {
+    const diagnostic = controlPlaneDiagnosticForError(
+      new ControlPlaneError('ACCOUNT_NOT_FOUND', 'The account was not found.', 404, {
+        internalRequestId: 'secret-request-id',
+      }),
+      'whoami',
+    );
+
+    expect(diagnostic).toEqual({
+      level: 'error',
+      code: 'CONTROL_PLANE_COMMAND_FAILED',
+      message: 'The account was not found. (ACCOUNT_NOT_FOUND)',
+      data: {
+        operation: 'whoami',
+        serverCode: 'ACCOUNT_NOT_FOUND',
+        status: 404,
+      },
+    });
+    expect(JSON.stringify(diagnostic)).not.toContain('secret-request-id');
+  });
+
+  it('omits untrusted control-plane metadata from command diagnostics', () => {
+    const diagnostic = controlPlaneDiagnosticForError(
+      new ControlPlaneError('invalid\nserver code', 'The request failed.', 999),
+      'whoami',
+    );
+
+    expect(diagnostic.data).toEqual({ operation: 'whoami' });
   });
 
   it('fails before keyring or network use when interactive login is unavailable', async () => {
@@ -496,7 +533,7 @@ describe('AccountManager', () => {
       issuer: trust.issuer,
       registryId: trust.registryId,
       grantId,
-      account: { username: 'maximdevoir+ts1', email: 'maximdevoir+ts1@gmail.com' },
+      account,
     });
     await expect(memory.store.get(result.grant.refreshTokenReference)).resolves.toBe('new-refresh-token');
     await expect(new DPoPKeyStore(memory.store).load(result.grant.keyReference)).resolves.toBeDefined();
@@ -1888,6 +1925,7 @@ function savedGrant(overrides: Partial<RegistryGrantMetadata> = {}): RegistryGra
     publicKeyThumbprint: 'thumbprint',
     deviceName: 'workstation',
     repositoryFingerprint: trust.repositoryFingerprint,
+    account,
     createdAt: Math.floor(Date.now() / 1000),
     idleExpiresAt: Math.floor(Date.now() / 1000) + 86_400,
     expiresAt: Math.floor(Date.now() / 1000) + 172_800,
@@ -1935,11 +1973,7 @@ function cliLoginConfirmationResponse(
   const now = Date.now();
   return Response.json({
     ok: true,
-    account: {
-      id: 'account-1',
-      username: 'maximdevoir+ts1',
-      email: 'maximdevoir+ts1@gmail.com',
-    },
+    account,
     registry: { id: trust.registryId },
     grant: {
       id: grantId,

@@ -1,6 +1,11 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { hostname } from 'node:os';
-import type { ControlPlaneDiagnostic, LoginDiagnosticCode } from '@uapkg/diagnostics';
+import {
+  type ControlPlaneCommandFailedDiagnostic,
+  type ControlPlaneDiagnostic,
+  createControlPlaneCommandFailedDiagnostic,
+  type LoginDiagnosticCode,
+} from '@uapkg/diagnostics';
 import isCI from 'is-ci';
 import * as oauth from 'oauth4webapi';
 import { AuthMetadataStore } from './AuthMetadataStore.js';
@@ -31,6 +36,7 @@ const CLI_LOGIN_RECONCILIATION_TIMEOUT_MS = 5 * 1000;
 const OAUTH_BACKCHANNEL_TIMEOUT_MS = 30 * 1000;
 const LOOPBACK_CALLBACK_PATH = '/callback';
 const ACCOUNT_COMPLETION_PATH = '/cli-login/complete';
+const CONTROL_PLANE_SERVER_CODE_PATTERN = /^[A-Z][A-Z0-9_]{0,127}$/;
 
 export interface LoginOptions {
   readonly deviceName?: string;
@@ -1259,6 +1265,25 @@ export function loginDiagnosticForError(error: unknown): ControlPlaneDiagnostic 
     message: loginError.message,
     data: loginError.oauthError ? { oauthError: loginError.oauthError } : {},
   } as ControlPlaneDiagnostic;
+}
+
+export function controlPlaneDiagnosticForError(error: unknown, operation: string): ControlPlaneCommandFailedDiagnostic {
+  const serverCode =
+    error instanceof ControlPlaneError && CONTROL_PLANE_SERVER_CODE_PATTERN.test(error.code) ? error.code : undefined;
+  const status =
+    error instanceof ControlPlaneError &&
+    error.status !== undefined &&
+    Number.isInteger(error.status) &&
+    error.status >= 100 &&
+    error.status <= 599
+      ? error.status
+      : undefined;
+  const data = {
+    operation,
+    ...(serverCode === undefined ? {} : { serverCode }),
+    ...(status === undefined ? {} : { status }),
+  };
+  return createControlPlaneCommandFailedDiagnostic(describeControlPlaneError(error), data);
 }
 
 export function describeControlPlaneError(error: unknown): string {

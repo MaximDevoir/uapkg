@@ -15,7 +15,11 @@ describe('control-plane DPoP requests', () => {
       vi.fn(async () =>
         Response.json({
           ok: true,
-          account: { id: 'user-1' },
+          account: {
+            id: '20000000-0000-4000-a000-000000000020',
+            username: 'maxim',
+            displayName: 'Maxim Devoir',
+          },
           registry: { id: '00000000-0000-4000-a000-000000000020' },
           grant: {
             deviceName: 'workstation',
@@ -54,7 +58,11 @@ describe('control-plane DPoP requests', () => {
       }
       return Response.json({
         ok: true,
-        account: { id: 'user-1', displayName: 'User' },
+        account: {
+          id: '20000000-0000-4000-a000-000000000020',
+          username: 'maxim',
+          displayName: 'Maxim Devoir',
+        },
         registry: { id: '00000000-0000-4000-a000-000000000020' },
         grant: {
           id: '10000000-0000-4000-a000-000000000020',

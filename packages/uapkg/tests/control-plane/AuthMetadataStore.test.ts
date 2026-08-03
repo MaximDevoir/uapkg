@@ -1,4 +1,4 @@
-import { access, mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { access, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
@@ -17,6 +17,11 @@ const grant: RegistryGrantMetadata = {
   publicKeyThumbprint: 'thumbprint',
   deviceName: 'workstation',
   repositoryFingerprint: `sha256:${'a'.repeat(64)}`,
+  account: {
+    id: '20000000-0000-4000-a000-000000000020',
+    username: 'maxim',
+    displayName: 'Maxim Devoir',
+  },
   createdAt: 1_700_000_000,
   idleExpiresAt: 1_702_592_000,
   expiresAt: 1_715_552_000,
@@ -70,6 +75,8 @@ describe('AuthMetadataStore', () => {
 
     const raw = await readFile(path, 'utf8');
     expect(raw).toContain('"schemaVersion": 1');
+    expect(raw).toContain('"username": "maxim"');
+    expect(raw).toContain('"displayName": "Maxim Devoir"');
     expect(raw).toContain('"refreshTokenReference": "grant:opaque"');
     expect(raw).not.toContain('refresh_token');
     expect(raw).not.toContain('privateKey');
@@ -90,5 +97,28 @@ describe('AuthMetadataStore', () => {
 
     await expect(firstProcess.find(grant.issuer, grant.registryId)).resolves.toEqual(grant);
     await expect(firstProcess.find(otherGrant.issuer, otherGrant.registryId)).resolves.toEqual(otherGrant);
+  });
+
+  it.each([
+    ['account object', undefined],
+    ['canonical username', { id: grant.account.id, displayName: grant.account.displayName }],
+    ['display name', { id: grant.account.id, username: grant.account.username }],
+  ])('rejects a saved grant whose v1 metadata omits the required %s', async (_field, invalidAccount) => {
+    const directory = await mkdtemp(join(tmpdir(), 'uapkg-auth-metadata-invalid-account-'));
+    const path = join(directory, 'auth.json');
+    await writeFile(
+      path,
+      `${JSON.stringify({
+        schemaVersion: 1,
+        grants: {
+          [`${grant.issuer}|${grant.registryId}`]: { ...grant, account: invalidAccount },
+        },
+      })}\n`,
+      'utf8',
+    );
+
+    await expect(new AuthMetadataStore(path).find(grant.issuer, grant.registryId)).rejects.toThrow(
+      'Saved UAPKG login metadata',
+    );
   });
 });

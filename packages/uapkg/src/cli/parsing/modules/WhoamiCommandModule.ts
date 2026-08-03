@@ -1,5 +1,5 @@
 import type { Argv } from 'yargs';
-import { createUAPKGCommandLineFactory } from '../../UAPKGCommandLine.js';
+import { createUAPKGCommandLineFactory, UAPKG_WHOAMI_FIELDS, type UAPKGWhoamiField } from '../../UAPKGCommandLine.js';
 import type { CommandLineSink, UAPKGCommandModule } from '../contracts/UAPKGCommandModule.js';
 
 export class WhoamiCommandModule implements UAPKGCommandModule {
@@ -7,10 +7,15 @@ export class WhoamiCommandModule implements UAPKGCommandModule {
 
   register(parser: Argv, sink: CommandLineSink): Argv {
     return parser.command(
-      'whoami',
+      'whoami [field]',
       'Show the account associated with this registry login',
       (builder) =>
         builder
+          .positional('field', {
+            type: 'string',
+            choices: UAPKG_WHOAMI_FIELDS,
+            describe: 'Identity or registry field to print',
+          })
           .option('registry', {
             type: 'string',
             describe: 'Configured registry alias (defaults to the selected registry)',
@@ -24,6 +29,7 @@ export class WhoamiCommandModule implements UAPKGCommandModule {
         sink.set(
           this.factory.createWhoami({
             cwd: process.cwd(),
+            field: typeof argv.field === 'string' ? (argv.field as UAPKGWhoamiField) : undefined,
             registry: typeof argv.registry === 'string' ? argv.registry : undefined,
             outputFormat: argv.json ? 'json' : 'text',
           }),

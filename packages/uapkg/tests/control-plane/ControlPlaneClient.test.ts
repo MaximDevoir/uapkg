@@ -33,7 +33,11 @@ describe('ControlPlaneClient CLI login confirmation', () => {
         if (init?.method === 'GET') {
           return Response.json({
             ok: true,
-            account: { id: 'account-1', username: 'maxim' },
+            account: {
+              id: '20000000-0000-4000-a000-000000000020',
+              username: 'maxim',
+              displayName: 'Maxim Devoir',
+            },
             registry: { id: '00000000-0000-4000-a000-000000000020' },
             grant: {
               id: grantId,
@@ -91,7 +95,11 @@ describe('ControlPlaneClient CLI login confirmation', () => {
       if (init?.method === 'GET') {
         return Response.json({
           ok: true,
-          account: { id: 'account-1' },
+          account: {
+            id: '20000000-0000-4000-a000-000000000020',
+            username: 'maxim',
+            displayName: 'Maxim Devoir',
+          },
           registry: { id: '00000000-0000-4000-a000-000000000020' },
           grant: {
             id: grantId,
@@ -116,6 +124,44 @@ describe('ControlPlaneClient CLI login confirmation', () => {
     await expect(client.confirmCliLogin(credential)).rejects.toMatchObject({
       code: 'CLI_LOGIN_CONFIRMATION_RESPONSE_INVALID',
     });
+  });
+});
+
+describe('ControlPlaneClient account identity validation', () => {
+  it.each([
+    {
+      name: 'missing canonical username',
+      account: { id: '20000000-0000-4000-a000-000000000020', displayName: 'Maxim Devoir' },
+    },
+    {
+      name: 'non-UUID account id',
+      account: { id: 'account-1', username: 'maxim', displayName: 'Maxim Devoir' },
+    },
+  ])('rejects an account/self response with $name', async ({ account }) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json({
+          ok: true,
+          account,
+          registry: { id: '00000000-0000-4000-a000-000000000020' },
+          grant: {
+            id: '10000000-0000-4000-a000-000000000020',
+            deviceName: 'workstation',
+            idleExpiresAt: '2027-01-01T00:00:00.000Z',
+            absoluteExpiresAt: '2027-06-01T00:00:00.000Z',
+            scopes: ['identity.self.read'],
+          },
+        }),
+      ),
+    );
+
+    await expect(
+      new ControlPlaneClient(UAPKG_CONTROL_PLANE_API).getSelf({
+        kind: 'bearer',
+        accessToken: 'memory-only-token',
+      }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_SELF_RESPONSE_INVALID' });
   });
 });
 

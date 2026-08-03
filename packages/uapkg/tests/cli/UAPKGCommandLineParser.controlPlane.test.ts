@@ -1,6 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { UAPKGCommandLineParser } from '../../src/cli/parsing/UAPKGCommandLineParser.js';
 
+const WHOAMI_FIELDS = ['username', 'user-id', 'registry', 'registry-id'] as const;
+const WHOAMI_FORMS: ReadonlyArray<{
+  readonly args: readonly string[];
+  readonly field?: (typeof WHOAMI_FIELDS)[number];
+  readonly registry?: string;
+}> = [
+  { args: [] },
+  ...WHOAMI_FIELDS.map((field) => ({ args: [field], field })),
+  { args: ['--registry', 'official'], registry: 'official' },
+  ...WHOAMI_FIELDS.map((field) => ({
+    args: [field, '--registry', 'official'],
+    field,
+    registry: 'official',
+  })),
+];
+
 describe('UAPKG control-plane command parsing', () => {
   it('parses a registry-specific device reauthorization', async () => {
     const parsed = await new UAPKGCommandLineParser().parse([
@@ -39,6 +55,23 @@ describe('UAPKG control-plane command parsing', () => {
       command: 'whoami',
       outputFormat: 'json',
     });
+  });
+
+  it.each(WHOAMI_FORMS)('parses supported whoami form %# in text and JSON modes', async ({ args, field, registry }) => {
+    for (const json of [false, true]) {
+      await expect(
+        new UAPKGCommandLineParser().parse(['node', 'uapkg', 'whoami', ...args, ...(json ? ['--json'] : [])]),
+      ).resolves.toMatchObject({
+        command: 'whoami',
+        field,
+        registry,
+        outputFormat: json ? 'json' : 'text',
+      });
+    }
+  });
+
+  it.each([['unknown'], ['username', 'extra']])('rejects an invalid whoami field shape: %s', async (...args) => {
+    await expect(new UAPKGCommandLineParser().parse(['node', 'uapkg', 'whoami', ...args])).rejects.toThrow();
   });
 
   it('parses the complete GitHub Release publish contract without accepting secret flags', async () => {

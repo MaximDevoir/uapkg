@@ -25,26 +25,17 @@ export class LoginCommand implements Command {
         onProgress: (event) => this.reportProgress(event),
       });
       if (this.options.outputFormat === 'json') {
-        this.root.json.emit({
-          status: 'ok',
-          command: 'login',
-          data: {
-            registry: { alias: trust.alias, id: trust.registryId, name: trust.registryName },
-            account: result.grant.account,
-            deviceName: result.grant.deviceName,
-            expiresAt: result.grant.expiresAt,
-            warnings: result.warnings,
-          },
-          diagnostics: [],
+        this.root.json.emitSuccess('login', {
+          registry: { alias: trust.alias, id: trust.registryId, name: trust.registryName },
+          account: result.grant.account,
+          deviceName: result.grant.deviceName,
+          expiresAt: result.grant.expiresAt,
+          warnings: result.warnings,
         });
       } else {
-        const account =
-          result.grant.account?.username ??
-          result.grant.account?.displayName ??
-          result.grant.account?.email ??
-          result.grant.account?.id ??
-          'your account';
-        process.stdout.write(`Logged in to "${trust.alias}" as ${account} on ${result.grant.deviceName}.\n`);
+        process.stdout.write(
+          `Logged in to "${trust.alias}" as ${result.grant.account.username} on ${result.grant.deviceName}.\n`,
+        );
       }
       for (const warning of result.warnings) {
         process.stderr.write(`Warning: ${warning}\n`);
@@ -53,7 +44,7 @@ export class LoginCommand implements Command {
     } catch (error) {
       const diagnostic = loginDiagnosticForError(error);
       if (this.options.outputFormat === 'json') {
-        this.root.json.emit({ status: 'error', command: 'login', diagnostics: [diagnostic] });
+        this.root.json.emitError('login', [diagnostic]);
       } else {
         process.stderr.write(`${diagnostic.message}\n`);
       }

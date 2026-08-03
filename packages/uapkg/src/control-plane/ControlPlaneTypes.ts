@@ -57,9 +57,8 @@ export interface RegistryTrust {
 
 export interface AccountDisplayMetadata {
   readonly id: string;
-  readonly username?: string;
-  readonly displayName?: string;
-  readonly email?: string;
+  readonly username: string;
+  readonly displayName: string;
 }
 
 export interface AccountSelf {
@@ -101,7 +100,7 @@ export interface RegistryGrantMetadata {
   readonly publicKeyThumbprint: string;
   readonly deviceName: string;
   readonly repositoryFingerprint: string;
-  readonly account?: AccountDisplayMetadata;
+  readonly account: AccountDisplayMetadata;
   readonly createdAt: number;
   readonly idleExpiresAt: number;
   readonly expiresAt: number;

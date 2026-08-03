@@ -47,10 +47,9 @@ const insufficientScopeDetailsSchema = z.object({
 });
 
 const accountSchema = z.object({
-  id: z.string().min(1),
-  username: z.string().optional(),
-  displayName: z.string().optional(),
-  email: z.string().optional(),
+  id: z.uuid(),
+  username: z.string().min(1),
+  displayName: z.string().min(1),
 });
 
 const accountGrantSchema = z.object({

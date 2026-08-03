@@ -12,6 +12,12 @@ export interface LoginDiagnosticData {
   readonly oauthError?: string;
 }
 
+export interface ControlPlaneCommandFailedDiagnosticData {
+  readonly operation: string;
+  readonly serverCode?: string;
+  readonly status?: number;
+}
+
 export type LoginAccessDeniedDiagnostic = DiagnosticBase<'LOGIN_ACCESS_DENIED', LoginDiagnosticData>;
 export type LoginAuthorizationTimeoutDiagnostic = DiagnosticBase<'LOGIN_AUTHORIZATION_TIMEOUT', LoginDiagnosticData>;
 export type LoginAuthorizationResponseInvalidDiagnostic = DiagnosticBase<
@@ -24,6 +30,10 @@ export type LoginReauthorizationConflictDiagnostic = DiagnosticBase<
 >;
 export type LoginOAuthErrorDiagnostic = DiagnosticBase<'LOGIN_OAUTH_ERROR', LoginDiagnosticData>;
 export type LoginFailedDiagnostic = DiagnosticBase<'LOGIN_FAILED', LoginDiagnosticData>;
+export type ControlPlaneCommandFailedDiagnostic = DiagnosticBase<
+  'CONTROL_PLANE_COMMAND_FAILED',
+  ControlPlaneCommandFailedDiagnosticData
+>;
 
 export type ControlPlaneDiagnostic =
   | LoginAccessDeniedDiagnostic
@@ -31,6 +41,19 @@ export type ControlPlaneDiagnostic =
   | LoginAuthorizationResponseInvalidDiagnostic
   | LoginReauthorizationConflictDiagnostic
   | LoginOAuthErrorDiagnostic
-  | LoginFailedDiagnostic;
+  | LoginFailedDiagnostic
+  | ControlPlaneCommandFailedDiagnostic;
 
 export type LoginDiagnosticByCode<C extends LoginDiagnosticCode> = Extract<ControlPlaneDiagnostic, { code: C }>;
+
+export function createControlPlaneCommandFailedDiagnostic(
+  message: string,
+  data: ControlPlaneCommandFailedDiagnosticData,
+): ControlPlaneCommandFailedDiagnostic {
+  return {
+    level: 'error',
+    code: 'CONTROL_PLANE_COMMAND_FAILED',
+    message,
+    data,
+  };
+}

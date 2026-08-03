@@ -14,8 +14,12 @@ export { UAPKGApplication } from './app/UAPKGApplication.js';
 // CLI
 export { parseUAPKGCommandLine } from './cli/parseCommandLine.js';
 export { runUAPKGCLI } from './cli/runUAPKGCLI.js';
-export type { UAPKGCommandLine } from './cli/UAPKGCommandLine.js';
-export { createUAPKGCommandLineFactory, UAPKGCommandLineFactory } from './cli/UAPKGCommandLine.js';
+export type { UAPKGCommandLine, UAPKGWhoamiField } from './cli/UAPKGCommandLine.js';
+export {
+  createUAPKGCommandLineFactory,
+  UAPKG_WHOAMI_FIELDS,
+  UAPKGCommandLineFactory,
+} from './cli/UAPKGCommandLine.js';
 // Commands — new surface
 export { AddCommand, type AddCommandOptions } from './commands/AddCommand.js';
 // Commands — retained, ported onto CompositionRoot in Phase 10
@@ -40,13 +44,19 @@ export {
 export { RemoveCommand, type RemoveCommandOptions } from './commands/RemoveCommand.js';
 export { RequestsCommand, type RequestsCommandOptions } from './commands/RequestsCommand.js';
 export { UpdateCommand, type UpdateCommandOptions } from './commands/UpdateCommand.js';
-export { WhoamiCommand, type WhoamiCommandOptions } from './commands/WhoamiCommand.js';
+export {
+  WhoamiCommand,
+  type WhoamiCommandData,
+  type WhoamiCommandOptions,
+  type WhoamiFieldData,
+} from './commands/WhoamiCommand.js';
 export { WhyCommand, type WhyCommandOptions } from './commands/WhyCommand.js';
 // Control-plane authentication
 export {
   type AccessCredential,
   AccountManager,
   type BrowserOpener,
+  controlPlaneDiagnosticForError,
   describeControlPlaneError,
   LoginError,
   type LoginOptions,

@@ -20,6 +20,8 @@ export type UAPKGConfigAction = 'get' | 'list' | 'set' | 'delete' | 'edit';
 export type UAPKGRegistryAction = 'add' | 'remove' | 'list' | 'use' | 'auth' | 'refresh';
 export type UAPKGRequestsAction = 'list' | 'status';
 export type UAPKGControlPlaneAuthMode = 'auto' | 'login' | 'gat' | 'oidc';
+export const UAPKG_WHOAMI_FIELDS = ['username', 'user-id', 'registry', 'registry-id'] as const;
+export type UAPKGWhoamiField = (typeof UAPKG_WHOAMI_FIELDS)[number];
 export type UAPKGRegistryRequestStatus =
   | 'queued'
   | 'running'
@@ -142,6 +144,7 @@ export interface LogoutCommandLine extends BaseCommandLine {
 
 export interface WhoamiCommandLine extends BaseCommandLine {
   command: 'whoami';
+  field?: UAPKGWhoamiField;
   registry?: string;
   outputFormat: UAPKGOutputFormat;
 }
@@ -241,6 +244,10 @@ export interface LoginCommandLineOptions extends RegistryAuthCommandLineOptions 
 
 export interface LogoutCommandLineOptions extends RegistryAuthCommandLineOptions {
   localOnly?: boolean;
+}
+
+export interface WhoamiCommandLineOptions extends RegistryAuthCommandLineOptions {
+  field?: UAPKGWhoamiField;
 }
 
 export interface PublishCommandLineOptions extends RegistryAuthCommandLineOptions {
@@ -386,10 +393,11 @@ export class UAPKGCommandLineFactory {
     };
   }
 
-  createWhoami(options: RegistryAuthCommandLineOptions = {}): WhoamiCommandLine {
+  createWhoami(options: WhoamiCommandLineOptions = {}): WhoamiCommandLine {
     return {
       command: 'whoami',
       cwd: this.resolveCwd(options.cwd),
+      field: options.field,
       registry: options.registry,
       outputFormat: options.outputFormat ?? 'text',
     };

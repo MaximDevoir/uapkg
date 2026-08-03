@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type {
+  ControlPlaneCommandFailedDiagnostic,
   Diagnostic,
   DiagnosticByCode,
   LoginDiagnosticCode,
@@ -8,6 +9,7 @@ import type {
 import {
   createCacheCorruptDiagnostic,
   createCacheIdentifierCollisionDiagnostic,
+  createControlPlaneCommandFailedDiagnostic,
   createDiagnostic,
   createIoErrorDiagnostic,
   createParseErrorDiagnostic,
@@ -32,6 +34,31 @@ describe('Control-plane diagnostics', () => {
 
     expect(unified.code).toBe('LOGIN_REAUTHORIZATION_CONFLICT');
     expect(byCode.data).toEqual({});
+  });
+
+  it('exposes structured command failures through the unified diagnostic union', () => {
+    const diagnostic: ControlPlaneCommandFailedDiagnostic = createControlPlaneCommandFailedDiagnostic(
+      'The account request failed.',
+      {
+        operation: 'whoami',
+        serverCode: 'ACCOUNT_NOT_FOUND',
+        status: 404,
+      },
+    );
+    const unified: Diagnostic = diagnostic;
+    const byCode: DiagnosticByCode<'CONTROL_PLANE_COMMAND_FAILED'> = diagnostic;
+
+    expect(unified).toEqual({
+      level: 'error',
+      code: 'CONTROL_PLANE_COMMAND_FAILED',
+      message: 'The account request failed.',
+      data: {
+        operation: 'whoami',
+        serverCode: 'ACCOUNT_NOT_FOUND',
+        status: 404,
+      },
+    });
+    expect(byCode.data.operation).toBe('whoami');
   });
 });
 

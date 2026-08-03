@@ -130,6 +130,7 @@ export class UAPKGApplication {
 
       case 'whoami':
         return new WhoamiCommand(root, {
+          field: commandLine.field,
           registry: commandLine.registry,
           outputFormat: commandLine.outputFormat,
         }).execute();

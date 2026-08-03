@@ -11,10 +11,9 @@ const AUTH_METADATA_LOCK_NAMESPACE = 'urn:uapkg:auth-metadata';
 
 const accountSchema = z
   .object({
-    id: z.string().min(1),
-    username: z.string().optional(),
-    displayName: z.string().optional(),
-    email: z.string().optional(),
+    id: z.uuid(),
+    username: z.string().min(1),
+    displayName: z.string().min(1),
   })
   .strict();
 
@@ -30,7 +29,7 @@ const grantSchema = z
     publicKeyThumbprint: z.string().min(1),
     deviceName: z.string().min(1),
     repositoryFingerprint: z.string().regex(/^sha256:[0-9a-f]{64}$/),
-    account: accountSchema.optional(),
+    account: accountSchema,
     createdAt: z.number().int().nonnegative(),
     idleExpiresAt: z.number().int().positive(),
     expiresAt: z.number().int().positive(),

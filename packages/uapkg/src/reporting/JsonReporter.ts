@@ -23,6 +23,14 @@ export interface JsonEnvelope<TData = unknown> {
 export class JsonReporter {
   public constructor(private readonly sink: TextSink = new ProcessTextSink(process.stdout)) {}
 
+  public emitSuccess<TData>(command: string, data: TData, diagnostics: readonly Diagnostic[] = []): void {
+    this.emit({ status: 'ok', command, data, diagnostics });
+  }
+
+  public emitError(command: string, diagnostics: readonly Diagnostic[]): void {
+    this.emit({ status: 'error', command, diagnostics });
+  }
+
   public emit<TData>(envelope: JsonEnvelope<TData>): void {
     this.sink.writeLine(JSON.stringify(envelope, null, 2));
   }
