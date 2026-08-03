@@ -6,10 +6,17 @@ import {
   type ActivatedCliLoginGrant,
   type CliLoginConfirmation,
   ControlPlaneError,
+  isOAuthScopeToken,
+  isUAPKGCliScope,
+  knownUAPKGCliScopes,
+  OAuthScopeInsufficientError,
+  OAuthScopeUnsupportedError,
+  parseOAuthScopeTokens,
   type RegistryRequestStatus,
   type RegistryRequestSubmission,
   type RegistryRequestSummary,
   UAPKG_CONTROL_PLANE_API,
+  type UAPKGCliScope,
 } from './ControlPlaneTypes.js';
 
 export type ControlPlaneCredential =
@@ -17,6 +24,8 @@ export type ControlPlaneCredential =
       readonly kind: 'dpop';
       readonly accessToken: string;
       readonly dpop: oauth.DPoPHandle;
+      readonly registryAlias: string;
+      readonly requestedScopes: readonly UAPKGCliScope[];
     }
   | {
       readonly kind: 'bearer';
@@ -30,6 +39,11 @@ const errorSchema = z.object({
     message: z.string(),
     details: z.record(z.string(), z.unknown()).optional(),
   }),
+});
+
+const insufficientScopeDetailsSchema = z.object({
+  requiredScopes: z.array(z.string()),
+  missingScopes: z.array(z.string()),
 });
 
 const accountSchema = z.object({
@@ -247,13 +261,7 @@ export class ControlPlaneClient {
         );
       } catch (error) {
         if (error instanceof oauth.WWWAuthenticateChallengeError) {
-          throw new ControlPlaneError(
-            'CONTROL_PLANE_AUTHENTICATION_REQUIRED',
-            'The UAPKG control plane rejected the saved login.',
-            401,
-            undefined,
-            { cause: error },
-          );
+          throw await controlPlaneChallengeError(error, credential);
         }
         throw error;
       }
@@ -316,5 +324,89 @@ async function readJson(response: Response): Promise<unknown> {
       undefined,
       { cause: error },
     );
+  }
+}
+
+async function controlPlaneChallengeError(
+  error: oauth.WWWAuthenticateChallengeError,
+  credential: Extract<ControlPlaneCredential, { readonly kind: 'dpop' }>,
+): Promise<ControlPlaneError> {
+  const value = await tryReadJson(error.response);
+  const parsed = errorSchema.safeParse(value);
+
+  if (error.status === 403 && parsed.success && parsed.data.error.code === 'OAUTH_SCOPE_INSUFFICIENT') {
+    const details = insufficientScopeDetailsSchema.safeParse(parsed.data.error.details);
+    if (details.success) {
+      const headerRequiredScopeTokens = error.cause.flatMap((challenge) =>
+        challenge.scheme === 'dpop' && challenge.parameters.error === 'insufficient_scope'
+          ? parseOAuthScopeTokens(challenge.parameters.scope)
+          : [],
+      );
+      const bodyRequiredScopeTokens = validatedOAuthScopeTokens(details.data.requiredScopes);
+      const bodyMissingScopeTokens = validatedOAuthScopeTokens(details.data.missingScopes);
+      if (bodyRequiredScopeTokens && bodyMissingScopeTokens) {
+        const consistentRequiredScopeTokens = headerRequiredScopeTokens.filter((scope) =>
+          bodyRequiredScopeTokens.includes(scope),
+        );
+        const consistentMissingScopeTokens = consistentRequiredScopeTokens.filter((scope) =>
+          bodyMissingScopeTokens.includes(scope),
+        );
+        const requestedScopes = knownUAPKGCliScopes(credential.requestedScopes);
+        if (consistentMissingScopeTokens.some((scope) => !isUAPKGCliScope(scope))) {
+          return new OAuthScopeUnsupportedError(credential.registryAlias, requestedScopes, [], {
+            cause: error,
+            reason: 'cli-update-required',
+            status: error.status,
+          });
+        }
+
+        const requiredScopes = knownUAPKGCliScopes(consistentRequiredScopeTokens);
+        const missingScopes = knownUAPKGCliScopes(consistentMissingScopeTokens).filter((scope) =>
+          requestedScopes.includes(scope),
+        );
+        if (requiredScopes.length > 0 && missingScopes.length > 0) {
+          return new OAuthScopeInsufficientError(
+            parsed.data.error.message,
+            credential.registryAlias,
+            requestedScopes,
+            requiredScopes,
+            missingScopes,
+            error.status,
+            { cause: error },
+          );
+        }
+      }
+    }
+  }
+
+  if (parsed.success) {
+    return new ControlPlaneError(
+      parsed.data.error.code,
+      parsed.data.error.message,
+      error.status,
+      parsed.data.error.details,
+      { cause: error },
+    );
+  }
+  return new ControlPlaneError(
+    'CONTROL_PLANE_AUTHENTICATION_REQUIRED',
+    'The UAPKG control plane rejected the saved login.',
+    error.status,
+    undefined,
+    { cause: error },
+  );
+}
+
+function validatedOAuthScopeTokens(values: readonly string[]): string[] | undefined {
+  if (values.some((scope) => !isOAuthScopeToken(scope))) return undefined;
+  return [...new Set(values)];
+}
+
+async function tryReadJson(response: Response): Promise<unknown> {
+  try {
+    const text = await response.text();
+    return text.trim().length > 0 ? (JSON.parse(text) as unknown) : undefined;
+  } catch {
+    return undefined;
   }
 }

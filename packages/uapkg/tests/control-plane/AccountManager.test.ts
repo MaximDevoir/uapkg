@@ -16,6 +16,8 @@ import {
 import type { AuthMetadataStore } from '../../src/control-plane/AuthMetadataStore.js';
 import {
   ControlPlaneError,
+  OAuthScopeInsufficientError,
+  OAuthScopeUnsupportedError,
   type RegistryGrantMetadata,
   type RegistryTrust,
   UAPKG_CLI_SCOPES,
@@ -1130,7 +1132,7 @@ describe('AccountManager', () => {
     metadata.value = grant;
     await keyStore.save(grant.keyReference, savedPair);
     await memory.store.set(grant.refreshTokenReference, 'refresh-token');
-    const fetchMock = vi.fn();
+    const fetchMock = vi.fn(async () => Response.json(authorizationServerMetadata()));
     vi.stubGlobal('fetch', fetchMock);
     const manager = new AccountManager(
       metadata as unknown as AuthMetadataStore,
@@ -1143,7 +1145,7 @@ describe('AccountManager', () => {
     await expect(manager.getAccessCredential(trust, ['identity.self.read'])).rejects.toThrow(
       'device-bound signing key is missing or has changed',
     );
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     await expect(memory.store.get(grant.refreshTokenReference)).resolves.toBe('refresh-token');
   });
 
@@ -1163,7 +1165,7 @@ describe('AccountManager', () => {
     ]);
     await memory.store.set(grant.keyReference, JSON.stringify({ algorithm: 'ES256', publicKey, privateKey }));
     await memory.store.set(grant.refreshTokenReference, 'refresh-token');
-    const fetchMock = vi.fn();
+    const fetchMock = vi.fn(async () => Response.json(authorizationServerMetadata()));
     vi.stubGlobal('fetch', fetchMock);
     const manager = new AccountManager(
       metadata as unknown as AuthMetadataStore,
@@ -1176,7 +1178,7 @@ describe('AccountManager', () => {
     await expect(manager.getAccessCredential(trust, ['identity.self.read'])).rejects.toThrow(
       'DPoP public and private keys do not match',
     );
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     await expect(memory.store.get(grant.refreshTokenReference)).resolves.toBe('refresh-token');
   });
 
@@ -1193,7 +1195,7 @@ describe('AccountManager', () => {
     await memory.store.set(grant.refreshTokenReference, 'refresh-token');
 
     const fetchMock = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
-      if (fetchMock.mock.calls.length === 1) {
+      if (!init?.body) {
         return Response.json(authorizationServerMetadata());
       }
       const body = init?.body;
@@ -1229,10 +1231,159 @@ describe('AccountManager', () => {
       kind: 'dpop',
       accessToken: 'memory-only-access-token',
     });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     await expect(memory.store.get(grant.refreshTokenReference)).resolves.toBe('rotated-refresh-token');
     expect([...memory.values.values()].join('\n')).not.toContain('memory-only-access-token');
     expect(JSON.stringify(metadata.value)).not.toContain('memory-only-access-token');
+  });
+
+  it('maps refresh-token invalid_scope to a typed plural reauthorization error without retrying or opening a browser', async () => {
+    const metadata = new MemoryMetadataStore();
+    const memory = memoryCredentials();
+    const keyStore = new DPoPKeyStore(memory.store);
+    const pair = await keyStore.generate();
+    const grant = savedGrant({
+      publicKeyThumbprint: await oauth.DPoP({}, pair).calculateThumbprint(),
+    });
+    metadata.value = grant;
+    await keyStore.save(grant.keyReference, pair);
+    await memory.store.set(grant.refreshTokenReference, 'refresh-token');
+    const fetchMock = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      if (!init?.body) return Response.json(authorizationServerMetadata());
+      return Response.json({ error: 'invalid_scope' }, { status: 400 });
+    });
+    const opener = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const manager = new AccountManager(
+      metadata as unknown as AuthMetadataStore,
+      memory.store,
+      opener,
+      () => true,
+      immediateGrantLock,
+    );
+
+    let failure: unknown;
+    try {
+      await manager.getAccessCredential(trust, ['publishing.request.create', 'publishing.request.read.self']);
+    } catch (error) {
+      failure = error;
+    }
+
+    expect(failure).toBeInstanceOf(OAuthScopeInsufficientError);
+    expect(failure).toMatchObject({
+      code: 'OAUTH_SCOPE_INSUFFICIENT',
+      status: 403,
+      requestedScopes: ['publishing.request.create', 'publishing.request.read.self'],
+      requiredScopes: ['publishing.request.create', 'publishing.request.read.self'],
+      missingScopes: ['publishing.request.create', 'publishing.request.read.self'],
+    });
+    expect(describeControlPlaneError(failure)).toBe(
+      'Missing authorization scopes `publishing.request.create`, `publishing.request.read.self` for this action.\nRun `uapkg login --registry official --reauthorize` to authorize the capabilities required by this CLI version.',
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(opener).not.toHaveBeenCalled();
+  });
+
+  it('uses only a recognized invalid_scope hint and never renders an injected scope', async () => {
+    const metadata = new MemoryMetadataStore();
+    const memory = memoryCredentials();
+    const keyStore = new DPoPKeyStore(memory.store);
+    const pair = await keyStore.generate();
+    const grant = savedGrant({
+      publicKeyThumbprint: await oauth.DPoP({}, pair).calculateThumbprint(),
+    });
+    metadata.value = grant;
+    await keyStore.save(grant.keyReference, pair);
+    await memory.store.set(grant.refreshTokenReference, 'refresh-token');
+    const fetchMock = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      if (!init?.body) return Response.json(authorizationServerMetadata());
+      return Response.json(
+        { error: 'invalid_scope', scope: 'publishing.request.create registry.administrator' },
+        { status: 400 },
+      );
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const manager = new AccountManager(
+      metadata as unknown as AuthMetadataStore,
+      memory.store,
+      vi.fn(),
+      () => true,
+      immediateGrantLock,
+    );
+
+    let failure: unknown;
+    try {
+      await manager.getAccessCredential(trust, ['publishing.request.create', 'publishing.request.read.self']);
+    } catch (error) {
+      failure = error;
+    }
+
+    expect(failure).toMatchObject({ missingScopes: ['publishing.request.create'] });
+    const output = describeControlPlaneError(failure);
+    expect(output).toContain('Missing authorization scope `publishing.request.create`');
+    expect(output).not.toContain('registry.administrator');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects a cached token when fresh issuer metadata omits its scope, without reauthorization advice', async () => {
+    const metadata = new MemoryMetadataStore();
+    const memory = memoryCredentials();
+    const keyStore = new DPoPKeyStore(memory.store);
+    const pair = await keyStore.generate();
+    const grant = savedGrant({
+      publicKeyThumbprint: await oauth.DPoP({}, pair).calculateThumbprint(),
+    });
+    metadata.value = grant;
+    await keyStore.save(grant.keyReference, pair);
+    await memory.store.set(grant.refreshTokenReference, 'refresh-token');
+    let discoveryRequests = 0;
+    const fetchMock = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      if (!init?.body) {
+        discoveryRequests += 1;
+        return Response.json({
+          ...authorizationServerMetadata(),
+          ...(discoveryRequests > 1 ? { scopes_supported: ['openid', 'offline_access', 'identity.self.read'] } : {}),
+        });
+      }
+      return Response.json({
+        access_token: 'cached-access-token',
+        token_type: 'DPoP',
+        expires_in: 300,
+        refresh_token: 'rotated-refresh-token',
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const manager = new AccountManager(
+      metadata as unknown as AuthMetadataStore,
+      memory.store,
+      vi.fn(),
+      () => true,
+      immediateGrantLock,
+    );
+
+    await expect(manager.getAccessCredential(trust, ['publishing.request.create'])).resolves.toMatchObject({
+      credential: { accessToken: 'cached-access-token' },
+    });
+
+    let failure: unknown;
+    try {
+      await manager.getAccessCredential(trust, ['publishing.request.create']);
+    } catch (error) {
+      failure = error;
+    }
+
+    expect(failure).toBeInstanceOf(OAuthScopeUnsupportedError);
+    expect(failure).toMatchObject({
+      code: 'OAUTH_SCOPE_UNSUPPORTED',
+      requestedScopes: ['publishing.request.create'],
+      unsupportedScopes: ['publishing.request.create'],
+    });
+    const output = describeControlPlaneError(failure);
+    expect(output).toContain('does not support the OAuth scope required by this UAPKG CLI');
+    expect(output).toContain('Update UAPKG CLI');
+    expect(output).not.toContain('uapkg login');
+    expect(output).not.toContain('reauthorize');
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
   it('serializes concurrent per-grant refreshes and uses the newly rotated token', async () => {
@@ -1739,6 +1890,7 @@ function authorizationServerMetadata(): oauth.AuthorizationServer {
     code_challenge_methods_supported: ['S256'],
     dpop_signing_alg_values_supported: ['ES256'],
     id_token_signing_alg_values_supported: ['ES256'],
+    scopes_supported: ['openid', 'offline_access', ...UAPKG_CLI_SCOPES],
   };
 }
 

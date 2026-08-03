@@ -72,6 +72,8 @@ describe('control-plane DPoP requests', () => {
         kind: 'dpop',
         accessToken,
         dpop,
+        registryAlias: 'official',
+        requestedScopes: ['identity.self.read'],
       }),
     ).resolves.toMatchObject({ grant: { id: '10000000-0000-4000-a000-000000000020' } });
 

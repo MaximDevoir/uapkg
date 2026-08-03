@@ -1,7 +1,13 @@
 import * as oauth from 'oauth4webapi';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describeControlPlaneError } from '../../src/control-plane/AccountManager.js';
 import { ControlPlaneClient, type ControlPlaneCredential } from '../../src/control-plane/ControlPlaneClient.js';
-import { UAPKG_CONTROL_PLANE_API } from '../../src/control-plane/ControlPlaneTypes.js';
+import {
+  OAuthScopeInsufficientError,
+  OAuthScopeUnsupportedError,
+  UAPKG_CONTROL_PLANE_API,
+  type UAPKGCliScope,
+} from '../../src/control-plane/ControlPlaneTypes.js';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -113,11 +119,167 @@ describe('ControlPlaneClient CLI login confirmation', () => {
   });
 });
 
-async function dpopCredential(): Promise<ControlPlaneCredential> {
+describe('ControlPlaneClient OAuth scope challenges', () => {
+  it('preserves a validated DPoP insufficient_scope challenge as a typed 403 without retrying', async () => {
+    const fetchMock = vi.fn(async () =>
+      Response.json(
+        {
+          ok: false,
+          error: {
+            code: 'OAUTH_SCOPE_INSUFFICIENT',
+            message: 'The access token is missing a required scope.',
+            details: {
+              requiredScopes: ['publishing.request.create', 'publishing.request.read.self', 'registry.administrator'],
+              missingScopes: ['publishing.request.create', 'publishing.request.read.self'],
+            },
+          },
+        },
+        {
+          status: 403,
+          headers: {
+            'www-authenticate':
+              'DPoP error="insufficient_scope", scope="publishing.request.create publishing.request.read.self registry.administrator"',
+          },
+        },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new ControlPlaneClient(UAPKG_CONTROL_PLANE_API);
+    const credential = await dpopCredential(['publishing.request.create', 'publishing.request.read.self']);
+
+    let failure: unknown;
+    try {
+      await client.submitRegistryRequest(credential, {
+        registryId: '00000000-0000-4000-a000-000000000020',
+        kind: 'publish_new_version',
+        payload: {
+          packageName: 'example',
+          packageVersion: '1.0.0',
+          source: {
+            type: 'github_release',
+            repository: 'acme/example',
+            releaseTag: 'v1.0.0',
+            assetName: 'package.tgz',
+            pathToManifest: 'uapkg.json',
+          },
+        },
+      });
+    } catch (error) {
+      failure = error;
+    }
+
+    expect(failure).toBeInstanceOf(OAuthScopeInsufficientError);
+    expect(failure).toMatchObject({
+      code: 'OAUTH_SCOPE_INSUFFICIENT',
+      status: 403,
+      requiredScopes: ['publishing.request.create', 'publishing.request.read.self'],
+      missingScopes: ['publishing.request.create', 'publishing.request.read.self'],
+    });
+    expect(describeControlPlaneError(failure)).toContain('`uapkg login --registry official --reauthorize`');
+    expect(describeControlPlaneError(failure)).not.toContain('registry.administrator');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps mismatched or unrequested scope challenge data generic and preserves HTTP 403', async () => {
+    const fetchMock = vi.fn(async () =>
+      Response.json(
+        {
+          ok: false,
+          error: {
+            code: 'OAUTH_SCOPE_INSUFFICIENT',
+            message: 'The access token is missing a required scope.',
+            details: {
+              requiredScopes: ['publishing.request.create'],
+              missingScopes: ['publishing.request.create'],
+            },
+          },
+        },
+        {
+          status: 403,
+          headers: {
+            'www-authenticate': 'DPoP error="insufficient_scope", scope="identity.self.read"',
+          },
+        },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new ControlPlaneClient(UAPKG_CONTROL_PLANE_API);
+    const credential = await dpopCredential(['identity.self.read']);
+
+    let failure: unknown;
+    try {
+      await client.getSelf(credential);
+    } catch (error) {
+      failure = error;
+    }
+
+    expect(failure).not.toBeInstanceOf(OAuthScopeInsufficientError);
+    expect(failure).toMatchObject({ code: 'OAUTH_SCOPE_INSUFFICIENT', status: 403 });
+    expect(describeControlPlaneError(failure)).not.toContain('reauthorize');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('requires a CLI update for a consistent unknown scope without echoing it, retrying, or suggesting login', async () => {
+    const unknownScope = 'server.new;$env:SECRET';
+    const fetchMock = vi.fn(async () =>
+      Response.json(
+        {
+          ok: false,
+          error: {
+            code: 'OAUTH_SCOPE_INSUFFICIENT',
+            message: `Missing ${unknownScope}.`,
+            details: {
+              requiredScopes: [unknownScope],
+              missingScopes: [unknownScope],
+            },
+          },
+        },
+        {
+          status: 403,
+          headers: {
+            'www-authenticate': `DPoP error="insufficient_scope", scope="${unknownScope}"`,
+          },
+        },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const client = new ControlPlaneClient(UAPKG_CONTROL_PLANE_API);
+    const credential = await dpopCredential(['identity.self.read']);
+
+    let failure: unknown;
+    try {
+      await client.getSelf(credential);
+    } catch (error) {
+      failure = error;
+    }
+
+    expect(failure).toBeInstanceOf(OAuthScopeUnsupportedError);
+    expect(failure).toMatchObject({
+      code: 'OAUTH_SCOPE_UNSUPPORTED',
+      status: 403,
+      reason: 'cli-update-required',
+      unsupportedScopes: [],
+    });
+    const output = describeControlPlaneError(failure);
+    expect(output).toContain('requires an OAuth capability that this UAPKG CLI version does not recognize');
+    expect(output).toContain('Update UAPKG CLI and try again');
+    expect(output).not.toContain(unknownScope);
+    expect(output).not.toContain('reauthorize');
+    expect(output).not.toContain('uapkg login');
+    expect(JSON.stringify((failure as OAuthScopeUnsupportedError).details)).not.toContain(unknownScope);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+async function dpopCredential(
+  requestedScopes: readonly UAPKGCliScope[] = ['identity.self.read'],
+): Promise<ControlPlaneCredential> {
   const pair = await oauth.generateKeyPair('ES256');
   return {
     kind: 'dpop',
     accessToken: 'access-token',
     dpop: oauth.DPoP({}, pair),
+    registryAlias: 'official',
+    requestedScopes,
   };
 }

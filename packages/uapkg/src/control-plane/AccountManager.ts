@@ -8,6 +8,10 @@ import { resolveAuthStoragePaths } from './AuthStoragePaths.js';
 import { ControlPlaneClient, type ControlPlaneCredential } from './ControlPlaneClient.js';
 import {
   ControlPlaneError,
+  isUAPKGCliScope,
+  OAuthScopeInsufficientError,
+  OAuthScopeUnsupportedError,
+  parseUAPKGCliScopeString,
   type RegistryGrantMetadata,
   type RegistryTrust,
   registryAudience,
@@ -27,7 +31,6 @@ const CLI_LOGIN_RECONCILIATION_TIMEOUT_MS = 5 * 1000;
 const OAUTH_BACKCHANNEL_TIMEOUT_MS = 30 * 1000;
 const LOOPBACK_CALLBACK_PATH = '/callback';
 const ACCOUNT_COMPLETION_PATH = '/cli-login/complete';
-const ALLOWED_CLI_SCOPES = new Set<string>(UAPKG_CLI_SCOPES);
 
 export interface LoginOptions {
   readonly deviceName?: string;
@@ -128,6 +131,7 @@ export class AccountManager {
     const issuer = new URL(trust.issuer);
     const as = await this.discover(issuer);
     this.validateAuthorizationServer(as);
+    this.assertIssuerSupportsScopes(as, trust, UAPKG_CLI_SCOPES);
     const client = this.client();
     const keyPair = await this.keyStore.generate();
     const dpop = oauth.DPoP(client, keyPair);
@@ -250,6 +254,8 @@ export class AccountManager {
         kind: 'dpop',
         accessToken: tokens.access_token,
         dpop,
+        registryAlias: trust.alias,
+        requestedScopes: UAPKG_CLI_SCOPES,
       };
       const self = await controlPlane.getCliLoginConfirmation(issuedCredential, finalizationSignal);
       finalizationSignal.throwIfAborted();
@@ -381,16 +387,24 @@ export class AccountManager {
   public async getAccessCredential(trust: RegistryTrust, scopes: readonly UAPKGCliScope[]): Promise<AccessCredential> {
     this.assertPinnedTrust(trust);
     const requestedScopes = [...new Set(scopes)].sort();
-    if (requestedScopes.length === 0 || requestedScopes.some((scope) => !ALLOWED_CLI_SCOPES.has(scope))) {
+    if (requestedScopes.length === 0 || requestedScopes.some((scope) => !isUAPKGCliScope(scope))) {
       throw new Error('A control-plane operation requested an unsupported OAuth capability scope.');
     }
     const grant = await this.requireUsableGrant(trust);
+    const as = await this.discover(new URL(trust.issuer));
+    this.assertIssuerSupportsScopes(as, trust, requestedScopes);
     const cacheKey = this.accessTokenCacheKey(grant, requestedScopes);
     const cached = this.accessTokenCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now() + 15_000) {
       return {
         grant,
-        credential: { kind: 'dpop', accessToken: cached.token, dpop: cached.dpop },
+        credential: {
+          kind: 'dpop',
+          accessToken: cached.token,
+          dpop: cached.dpop,
+          registryAlias: trust.alias,
+          requestedScopes,
+        },
       };
     }
 
@@ -408,6 +422,8 @@ export class AccountManager {
             kind: 'dpop',
             accessToken: refreshedCached.token,
             dpop: refreshedCached.dpop,
+            registryAlias: trust.alias,
+            requestedScopes,
           },
         };
       }
@@ -428,7 +444,6 @@ export class AccountManager {
           `The saved login for "${trust.alias}" is missing its protected registry grant. Run \`uapkg login --registry ${trust.alias}\` again.`,
         );
       }
-      const as = await this.discover(new URL(trust.issuer));
       let tokenResponse: oauth.TokenEndpointResponse;
       try {
         tokenResponse = await this.withDPoPNonceRetry(
@@ -443,6 +458,21 @@ export class AccountManager {
           (response) => oauth.processRefreshTokenResponse(as, client, response),
         );
       } catch (error) {
+        if (error instanceof oauth.ResponseBodyError && error.error === 'invalid_scope') {
+          const hintedScopes = parseUAPKGCliScopeString(error.cause.scope).filter((scope) =>
+            requestedScopes.includes(scope),
+          );
+          const missingScopes = hintedScopes.length > 0 ? hintedScopes : requestedScopes;
+          throw new OAuthScopeInsufficientError(
+            'The saved registry grant does not include every OAuth scope required by this operation.',
+            trust.alias,
+            requestedScopes,
+            requestedScopes,
+            missingScopes,
+            403,
+            { cause: error },
+          );
+        }
         if (
           error instanceof oauth.ResponseBodyError &&
           (error.error === 'invalid_grant' || error.error === 'invalid_token')
@@ -465,7 +495,13 @@ export class AccountManager {
       this.accessTokenCache.set(currentCacheKey, { token: tokenResponse.access_token, expiresAt, dpop });
       return {
         grant: currentGrant,
-        credential: { kind: 'dpop', accessToken: tokenResponse.access_token, dpop },
+        credential: {
+          kind: 'dpop',
+          accessToken: tokenResponse.access_token,
+          dpop,
+          registryAlias: trust.alias,
+          requestedScopes,
+        },
       };
     });
   }
@@ -760,6 +796,18 @@ export class AccountManager {
     }
     if (as.dpop_signing_alg_values_supported && !as.dpop_signing_alg_values_supported.includes('ES256')) {
       throw new Error('The UAPKG authorization server does not support ES256 DPoP proofs.');
+    }
+  }
+
+  private assertIssuerSupportsScopes(
+    as: oauth.AuthorizationServer,
+    trust: RegistryTrust,
+    requestedScopes: readonly UAPKGCliScope[],
+  ): void {
+    const advertisedScopes = new Set(Array.isArray(as.scopes_supported) ? as.scopes_supported : []);
+    const unsupportedScopes = requestedScopes.filter((scope) => !advertisedScopes.has(scope));
+    if (unsupportedScopes.length > 0) {
+      throw new OAuthScopeUnsupportedError(trust.alias, requestedScopes, unsupportedScopes);
     }
   }
 
@@ -1211,6 +1259,11 @@ export function loginDiagnosticForError(error: unknown): ControlPlaneDiagnostic 
 
 export function describeControlPlaneError(error: unknown): string {
   if (error instanceof LoginError) return error.message;
+  if (error instanceof OAuthScopeInsufficientError && error.missingScopes.length > 0) {
+    const scopes = error.missingScopes.map((scope) => `\`${scope}\``).join(', ');
+    const noun = error.missingScopes.length === 1 ? 'scope' : 'scopes';
+    return `Missing authorization ${noun} ${scopes} for this action.\nRun \`uapkg login --registry ${error.registryAlias} --reauthorize\` to authorize the capabilities required by this CLI version.`;
+  }
   if (error instanceof ControlPlaneError) {
     if (error.status === 401 && requiresSavedLoginRenewal(error.code)) {
       return `${error.message}\n\nRun \`uapkg login\` to authenticate again.`;

@@ -13,6 +13,34 @@ export const UAPKG_CLI_SCOPES = [
 ] as const;
 
 export type UAPKGCliScope = (typeof UAPKG_CLI_SCOPES)[number];
+const UAPKG_CLI_SCOPE_SET = new Set<string>(UAPKG_CLI_SCOPES);
+const OAUTH_SCOPE_TOKEN_PATTERN = /^[\x21\x23-\x5b\x5d-\x7e]+$/;
+
+export function knownUAPKGCliScopes(value: unknown): UAPKGCliScope[] {
+  if (!Array.isArray(value)) return [];
+  const candidates = new Set(value.filter((scope): scope is string => typeof scope === 'string'));
+  return UAPKG_CLI_SCOPES.filter((scope) => candidates.has(scope));
+}
+
+export function parseUAPKGCliScopeString(value: unknown): UAPKGCliScope[] {
+  return knownUAPKGCliScopes(parseOAuthScopeTokens(value));
+}
+
+export function parseOAuthScopeTokens(value: unknown): string[] {
+  if (typeof value !== 'string' || value.length === 0 || value.trim() !== value) return [];
+  const scopes = value.split(' ');
+  if (scopes.some((scope) => !isOAuthScopeToken(scope))) return [];
+  return [...new Set(scopes)];
+}
+
+export function isOAuthScopeToken(value: unknown): value is string {
+  return typeof value === 'string' && OAUTH_SCOPE_TOKEN_PATTERN.test(value);
+}
+
+export function isUAPKGCliScope(value: unknown): value is UAPKGCliScope {
+  return typeof value === 'string' && UAPKG_CLI_SCOPE_SET.has(value);
+}
+
 export type ControlPlaneAuthMode = 'auto' | 'login' | 'gat' | 'oidc';
 
 export interface RegistryTrust {
@@ -146,6 +174,79 @@ export class ControlPlaneError extends Error {
     super(message, options);
     this.name = 'ControlPlaneError';
   }
+}
+
+export class OAuthScopeInsufficientError extends ControlPlaneError {
+  public readonly requestedScopes: readonly UAPKGCliScope[];
+  public readonly requiredScopes: readonly UAPKGCliScope[];
+  public readonly missingScopes: readonly UAPKGCliScope[];
+
+  public constructor(
+    message: string,
+    public readonly registryAlias: string,
+    requestedScopes: readonly UAPKGCliScope[],
+    requiredScopes: readonly UAPKGCliScope[],
+    missingScopes: readonly UAPKGCliScope[],
+    status = 403,
+    options?: ErrorOptions,
+  ) {
+    const requested = knownUAPKGCliScopes(requestedScopes);
+    const required = knownUAPKGCliScopes(requiredScopes);
+    const missing = knownUAPKGCliScopes(missingScopes).filter(
+      (scope) => requested.includes(scope) && required.includes(scope),
+    );
+    super(
+      'OAUTH_SCOPE_INSUFFICIENT',
+      message,
+      status,
+      { requestedScopes: requested, requiredScopes: required, missingScopes: missing },
+      options,
+    );
+    this.name = 'OAuthScopeInsufficientError';
+    this.requestedScopes = requested;
+    this.requiredScopes = required;
+    this.missingScopes = missing;
+  }
+}
+
+export class OAuthScopeUnsupportedError extends ControlPlaneError {
+  public readonly requestedScopes: readonly UAPKGCliScope[];
+  public readonly unsupportedScopes: readonly UAPKGCliScope[];
+  public readonly reason: 'issuer-does-not-support-requested-scope' | 'cli-update-required';
+
+  public constructor(
+    public readonly registryAlias: string,
+    requestedScopes: readonly UAPKGCliScope[],
+    unsupportedScopes: readonly UAPKGCliScope[],
+    options?: ErrorOptions & {
+      readonly reason?: 'issuer-does-not-support-requested-scope' | 'cli-update-required';
+      readonly status?: number;
+    },
+  ) {
+    const requested = knownUAPKGCliScopes(requestedScopes);
+    const unsupported = knownUAPKGCliScopes(unsupportedScopes).filter((scope) => requested.includes(scope));
+    const reason = options?.reason ?? 'issuer-does-not-support-requested-scope';
+    const message =
+      reason === 'cli-update-required'
+        ? `The authorization service for "${registryAlias}" requires an OAuth capability that this UAPKG CLI version does not recognize. Update UAPKG CLI and try again.`
+        : unsupportedIssuerScopeMessage(registryAlias, unsupported);
+    super(
+      'OAUTH_SCOPE_UNSUPPORTED',
+      message,
+      options?.status,
+      { requestedScopes: requested, unsupportedScopes: unsupported, reason },
+      options,
+    );
+    this.name = 'OAuthScopeUnsupportedError';
+    this.requestedScopes = requested;
+    this.unsupportedScopes = unsupported;
+    this.reason = reason;
+  }
+}
+
+function unsupportedIssuerScopeMessage(registryAlias: string, unsupportedScopes: readonly UAPKGCliScope[]): string {
+  const noun = unsupportedScopes.length === 1 ? 'scope' : 'scopes';
+  return `The authorization service for "${registryAlias}" does not support the OAuth ${noun} required by this UAPKG CLI: ${unsupportedScopes.join(', ')}. Update UAPKG CLI and try again; if it is already current, the authorization service must be updated.`;
 }
 
 export function registryAudience(registryId: string): string {
