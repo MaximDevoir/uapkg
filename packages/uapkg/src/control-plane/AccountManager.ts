@@ -149,7 +149,8 @@ export class AccountManager {
       const codeChallenge = await oauth.calculatePKCECodeChallenge(codeVerifier);
       const state = oauth.generateRandomState();
       const nonce = oauth.generateRandomNonce();
-      const scope = ['openid', 'offline_access', ...UAPKG_CLI_SCOPES].join(' ');
+      const requestedScopes = ['openid', 'offline_access', ...UAPKG_CLI_SCOPES];
+      const scope = requestedScopes.join(' ');
       const deviceName = normalizeDeviceName(options.deviceName);
 
       const parameters = new URLSearchParams({
@@ -168,6 +169,9 @@ export class AccountManager {
         device_name: deviceName,
         max_age: '300',
       });
+      if (requestedScopes.includes('offline_access')) {
+        parameters.set('prompt', 'consent');
+      }
       const expectedPredecessorGrantId = options.reauthorize && previous ? previous.grantId : null;
       if (expectedPredecessorGrantId) {
         parameters.set('replace_grant_id', expectedPredecessorGrantId);

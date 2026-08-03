@@ -194,8 +194,23 @@ describe('AccountManager', () => {
       }
       const body = init?.body;
       expect(body).toBeInstanceOf(URLSearchParams);
-      expect((body as URLSearchParams).get('replace_grant_id')).toBeNull();
-      const redirectUri = new URL((body as URLSearchParams).get('redirect_uri') ?? '');
+      const parameters = body as URLSearchParams;
+      expect(parameters.get('client_id')).toBe('uapkg-cli');
+      expect(parameters.get('response_type')).toBe('code');
+      expect(parameters.get('code_challenge')).toBeTruthy();
+      expect(parameters.get('code_challenge_method')).toBe('S256');
+      expect(parameters.get('state')).toBeTruthy();
+      expect(parameters.get('nonce')).toBeTruthy();
+      expect(parameters.get('scope')).toBe(['openid', 'offline_access', ...UAPKG_CLI_SCOPES].join(' '));
+      expect(parameters.get('prompt')).toBe('consent');
+      expect(parameters.get('resource')).toBe(trust.resource);
+      expect(parameters.get('dpop_jkt')).toBeTruthy();
+      expect(parameters.get('registry_id')).toBe(trust.registryId);
+      expect(parameters.get('registry_source_fingerprint')).toBe(trust.repositoryFingerprint);
+      expect(parameters.get('device_name')).toBeTruthy();
+      expect(parameters.get('max_age')).toBe('300');
+      expect(parameters.get('replace_grant_id')).toBeNull();
+      const redirectUri = new URL(parameters.get('redirect_uri') ?? '');
       expect(redirectUri.hostname).toBe('127.0.0.1');
       expect(Number(redirectUri.port)).toBeGreaterThan(0);
       expect(redirectUri.pathname).toBe('/callback');
