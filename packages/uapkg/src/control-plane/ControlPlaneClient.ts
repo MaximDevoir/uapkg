@@ -12,6 +12,7 @@ import {
   OAuthScopeInsufficientError,
   OAuthScopeUnsupportedError,
   parseOAuthScopeTokens,
+  type RegistryOperation,
   type RegistryRequestStatus,
   type RegistryRequestSubmission,
   type RegistryRequestSummary,
@@ -88,12 +89,12 @@ const activatedCliLoginResponseSchema = z.object({
 
 const requestStatusSchema = z.enum([
   'queued',
-  'running',
-  'waiting_for_pr_checks',
+  'checking',
   'accepted',
-  'failed',
-  'timed_out',
-  'finalization_failed',
+  'ready',
+  'ready_superseded',
+  'rejected',
+  'operationally_failed',
 ]);
 
 const requestSummarySchema = z
@@ -175,15 +176,16 @@ export class ControlPlaneClient {
 
   public async submitRegistryRequest(
     credential: ControlPlaneCredential,
+    operation: RegistryOperation,
     submission: RegistryRequestSubmission,
-    otp?: string,
+    options: { readonly idempotencyKey?: string; readonly otp?: string } = {},
   ): Promise<{ requestId: string; status: RegistryRequestStatus; message: string }> {
-    const value = await this.requestJson(credential, 'POST', '/v1/registry-requests', {
+    const value = await this.requestJson(credential, 'POST', `/v1/registry-requests/${encodeURIComponent(operation)}`, {
       body: JSON.stringify(submission),
       headers: {
         'content-type': 'application/json',
-        'x-uapkg-idempotency-key': randomUUID(),
-        ...(otp ? { 'x-uapkg-otp': otp } : {}),
+        'x-uapkg-idempotency-key': options.idempotencyKey ?? randomUUID(),
+        ...(options.otp ? { 'x-uapkg-otp': options.otp } : {}),
       },
     });
     const parsed = z

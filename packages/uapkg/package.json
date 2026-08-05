@@ -29,6 +29,7 @@
     "@uapkg/installer": "workspace:^",
     "@uapkg/log": "workspace:^",
     "@uapkg/pack": "workspace:^",
+    "@uapkg/package-claims": "workspace:^",
     "@uapkg/package-manifest": "workspace:^",
     "@uapkg/package-manifest-schema": "workspace:^",
     "@uapkg/registry-core": "workspace:^",
@@ -44,6 +45,7 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
+    "tar": "7.5.13",
     "@types/react": "19.2.14"
   },
   "scripts": {

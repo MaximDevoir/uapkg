@@ -18,9 +18,9 @@ export class PublishCommandModule implements UAPKGCommandModule {
           .option('repository', { type: 'string', describe: 'GitHub owner/repository coordinate' })
           .option('tag', { type: 'string', describe: 'GitHub Release tag (defaults to v<version>)' })
           .option('asset', { type: 'string', describe: 'GitHub Release asset name (defaults to package.tgz)' })
-          .option('manifest-path', {
+          .option('asset-path', {
             type: 'string',
-            describe: 'Repository-relative package manifest path',
+            describe: 'Local archive whose exact bytes should be published (skips the download)',
           })
           .option('auth', {
             type: 'string',
@@ -47,7 +47,7 @@ export class PublishCommandModule implements UAPKGCommandModule {
             repository: stringOption(argv.repository),
             tag: stringOption(argv.tag),
             asset: stringOption(argv.asset),
-            manifestPath: stringOption(argv['manifest-path']),
+            assetPath: stringOption(argv['asset-path']),
             auth: String(argv.auth) as UAPKGControlPlaneAuthMode,
             detach: argv.detach === true,
             outputFormat: argv.json ? 'json' : 'text',

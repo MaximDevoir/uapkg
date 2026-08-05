@@ -14,7 +14,12 @@ export interface RequestsCommandOptions {
   readonly outputFormat: UAPKGOutputFormat;
 }
 
-const TERMINAL_STATUSES = new Set<RegistryRequestStatus>(['accepted', 'failed', 'timed_out', 'finalization_failed']);
+const TERMINAL_STATUSES = new Set<RegistryRequestStatus>([
+  'ready',
+  'ready_superseded',
+  'rejected',
+  'operationally_failed',
+]);
 
 export class RequestsCommand implements Command {
   public constructor(
@@ -63,7 +68,7 @@ export class RequestsCommand implements Command {
         }
       }
       this.printRequest(request, trust.alias);
-      return request.status === 'accepted' || !TERMINAL_STATUSES.has(request.status) ? 0 : 1;
+      return isSuccessStatus(request.status) || !TERMINAL_STATUSES.has(request.status) ? 0 : 1;
     } catch (error) {
       process.stderr.write(`${describeControlPlaneError(error)}\n`);
       return 1;
@@ -100,7 +105,7 @@ export class RequestsCommand implements Command {
       payload?: { packageName?: string; packageVersion?: string };
     };
     if (this.options.outputFormat === 'json') {
-      const ok = value.status === 'accepted' || !TERMINAL_STATUSES.has(value.status);
+      const ok = isSuccessStatus(value.status) || !TERMINAL_STATUSES.has(value.status);
       process.stdout.write(`${JSON.stringify({ ok, registry: registryAlias, request })}\n`);
       return;
     }
@@ -113,6 +118,10 @@ export class RequestsCommand implements Command {
       );
     }
   }
+}
+
+function isSuccessStatus(status: RegistryRequestStatus): boolean {
+  return status === 'ready' || status === 'ready_superseded';
 }
 
 function delay(milliseconds: number): Promise<void> {

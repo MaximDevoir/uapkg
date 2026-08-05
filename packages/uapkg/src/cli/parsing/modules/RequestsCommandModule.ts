@@ -4,12 +4,12 @@ import type { CommandLineSink, UAPKGCommandModule } from '../contracts/UAPKGComm
 
 const REQUEST_STATUSES = [
   'queued',
-  'running',
-  'waiting_for_pr_checks',
+  'checking',
   'accepted',
-  'failed',
-  'timed_out',
-  'finalization_failed',
+  'ready',
+  'ready_superseded',
+  'rejected',
+  'operationally_failed',
 ] as const;
 
 export class RequestsCommandModule implements UAPKGCommandModule {

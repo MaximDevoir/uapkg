@@ -46,9 +46,11 @@ export class PackageLister {
       } catch {
         continue; // skip non-directory entries silently
       }
+      const isScopeBucket = bucket.startsWith('@');
       for (const entry of entries) {
         if (extname(entry).toLowerCase() === '.json') {
-          names.push(entry.slice(0, -'.json'.length));
+          const bareName = entry.slice(0, -'.json'.length);
+          names.push(isScopeBucket ? `${bucket}/${bareName}` : bareName);
         }
       }
     }

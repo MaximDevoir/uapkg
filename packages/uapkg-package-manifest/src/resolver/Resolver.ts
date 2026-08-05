@@ -1,3 +1,4 @@
+import { DEFAULT_REGISTRY_ALIAS, type RegistryName } from '@uapkg/common-schema';
 import {
   createCircularDepDiagnostic,
   createRegistryNameCollisionDiagnostic,
@@ -31,7 +32,8 @@ export class Resolver {
     const deps = this.applyOverrides(rootDeps, options.overrides);
 
     for (const [name, dep] of Object.entries(deps)) {
-      const result = await this.resolveNode(name, dep, bag, nodes, visiting, []);
+      // At the project root an absent registry means the configured default alias.
+      const result = await this.resolveNode(name, dep, DEFAULT_REGISTRY_ALIAS, bag, nodes, visiting, []);
       if (result) roots.push(result);
     }
 
@@ -44,25 +46,27 @@ export class Resolver {
   private async resolveNode(
     name: string,
     dep: Dependency,
+    inheritedRegistry: RegistryName,
     bag: DiagnosticBag,
     nodes: Map<string, PackageNode>,
     visiting: Set<string>,
     path: string[],
   ): Promise<PackageNode | null> {
-    const registryResult = this.registryCore.getOrCreateRegistry(dep.registry);
+    const effectiveRegistry = dep.registry ?? inheritedRegistry;
+    const registryResult = this.registryCore.getOrCreateRegistry(effectiveRegistry);
     if (!registryResult.ok) {
-      bag.add(createUnresolvedRegistryDiagnostic(dep.registry, name));
+      bag.add(createUnresolvedRegistryDiagnostic(effectiveRegistry, name));
       return null;
     }
 
     const registry = registryResult.value;
-    const resolved = await registry.resolvePackage(name, dep.version, dep.registry);
+    const resolved = await registry.resolvePackage(name, dep.version, effectiveRegistry);
     if (!resolved.ok) {
       bag.mergeArray(resolved.diagnostics);
       return null;
     }
 
-    const nodeKey = `${dep.registry}::${name}@${resolved.value.version}`;
+    const nodeKey = `${effectiveRegistry}::${name}@${resolved.value.version}`;
 
     if (visiting.has(nodeKey)) {
       bag.add(createCircularDepDiagnostic([...path, name]));
@@ -78,10 +82,11 @@ export class Resolver {
     const versionEntry = resolved.value.entry;
     if (versionEntry.dependencies && !this.devPolicy.includeTransitiveDev()) {
       for (const [childName, childDep] of Object.entries(versionEntry.dependencies)) {
-        const childRegistry = childDep.registry ?? dep.registry;
+        // Registry-record dependencies inherit the parent's effective registry when absent.
         const child = await this.resolveNode(
           childName,
-          { version: childDep.version, registry: childRegistry },
+          { version: childDep.version, ...(childDep.registry !== undefined ? { registry: childDep.registry } : {}) },
+          effectiveRegistry,
           bag,
           nodes,
           visiting,
@@ -96,16 +101,16 @@ export class Resolver {
     const node: PackageNode = {
       name,
       version: resolved.value.version,
-      registry: dep.registry,
+      registry: effectiveRegistry,
       integrity: versionEntry.releaseFiles.package.integrity.hash,
       gitTree: versionEntry.gitTree,
       dependencies: childDeps,
     };
 
-    const conflictKey = `${dep.registry}::${name}`;
+    const conflictKey = `${effectiveRegistry}::${name}`;
     for (const [key, existing] of nodes) {
       if (key.startsWith(conflictKey) && existing.version !== node.version) {
-        bag.add(createVersionConflictDiagnostic(name, [existing.version, node.version], dep.registry));
+        bag.add(createVersionConflictDiagnostic(name, [existing.version, node.version], effectiveRegistry));
       }
     }
 

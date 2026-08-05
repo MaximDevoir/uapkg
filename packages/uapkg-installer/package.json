@@ -19,9 +19,11 @@
     "@uapkg/common-schema": "workspace:^",
     "@uapkg/config": "workspace:^",
     "@uapkg/diagnostics": "workspace:^",
+    "@uapkg/package-claims": "workspace:^",
     "@uapkg/package-manifest": "workspace:^",
     "@uapkg/package-manifest-schema": "workspace:^",
     "@uapkg/registry-core": "workspace:^",
+    "@uapkg/registry-schema": "workspace:^",
     "p-limit": "7.1.1",
     "tar": "7.5.13",
     "undici": "7.18.0"

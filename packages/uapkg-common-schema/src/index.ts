@@ -20,7 +20,7 @@ export { OrgNameSchema } from './primitives/OrgName.js';
 // Branded primitives — types
 export type { PackageName } from './primitives/PackageName.js';
 // Branded primitives — Zod schemas
-export { PackageNameSchema } from './primitives/PackageName.js';
+export { isScopedPackageName, PackageNameSchema } from './primitives/PackageName.js';
 export type { PackageSpec } from './primitives/PackageSpec.js';
 export { PackageSpecSchema } from './primitives/PackageSpec.js';
 export type { PackageVersion } from './primitives/PackageVersion.js';
@@ -30,7 +30,7 @@ export { POSTINSTALL_POLICY_DEFAULT, PostInstallPolicySchema } from './primitive
 export type { RegistryIdentifier, RegistryIdentifierShort } from './primitives/RegistryIdentifier.js';
 export { RegistryIdentifierSchema, RegistryIdentifierShortSchema } from './primitives/RegistryIdentifier.js';
 export type { RegistryName } from './primitives/RegistryName.js';
-export { RegistryNameSchema } from './primitives/RegistryName.js';
+export { DEFAULT_REGISTRY_ALIAS, RegistryNameSchema } from './primitives/RegistryName.js';
 export type { RegistryURL } from './primitives/RegistryURL.js';
 export { RegistryURLSchema } from './primitives/RegistryURL.js';
 export type { UnixTimestamp } from './primitives/UnixTimestamp.js';

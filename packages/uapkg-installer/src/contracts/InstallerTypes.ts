@@ -1,4 +1,5 @@
 import type { AssetHash, InstallPath, PackageName, PackageVersion, RegistryName } from '@uapkg/common-schema';
+import type { RegistryVersion } from '@uapkg/registry-schema';
 
 /**
  * The kind of change the installer will perform for a single package.
@@ -23,6 +24,10 @@ export interface InstallAction {
   readonly sizeBytes?: number;
   /** Asset download URL for add / update. */
   readonly downloadUrl?: string;
+  /** Registry version record used for claims verification (add / update). */
+  readonly registryEntry?: RegistryVersion;
+  /** Immutable registry type from the projected registry metadata, when known. */
+  readonly registryType?: 'public' | 'private';
 }
 
 /**
@@ -45,6 +50,31 @@ export interface InstallPlan {
   readonly summary: InstallSummary;
 }
 
+/** Terminal status of one package after a partial, verification-gated install. */
+export type PackageInstallStatus = 'installed' | 'failed' | 'skipped_no_verified_parent' | 'removed' | 'unchanged';
+
+export interface PackageInstallOutcome {
+  readonly packageName: PackageName;
+  readonly status: PackageInstallStatus;
+}
+
+/**
+ * Result of executing an install plan. Installation is partial by design:
+ * one failed branch never rolls back or blocks unrelated verified branches.
+ */
+export interface InstallReport {
+  readonly plan: InstallPlan;
+  readonly outcomes: readonly PackageInstallOutcome[];
+  /** Packages newly installed (verified add/update actions). */
+  readonly installed: readonly PackageName[];
+  /** Packages whose download/verification/extraction failed. */
+  readonly failed: readonly PackageName[];
+  /** Packages left uninstalled because no verified parent required them. */
+  readonly skipped: readonly PackageName[];
+  /** Installed/retained packages whose dependency closure is incomplete. */
+  readonly incompleteClosure: readonly PackageName[];
+}
+
 /**
  * Options accepted by {@link Installer}. Concurrency is NOT accepted here —
  * the installer reads `network.maxConcurrentDownloads` from config.
@@ -56,4 +86,11 @@ export interface InstallerOptions {
   readonly force?: boolean;
   /** If true, the plan is produced but no IO is performed. */
   readonly dryRun?: boolean;
+  /**
+   * Direct dependency names declared by the trusted root manifest. These seed
+   * the verification-gated traversal: a package is eligible only when a root
+   * or an already verified parent requires it. When omitted, every lockfile
+   * entry is treated as a trusted root request.
+   */
+  readonly rootDependencies?: readonly string[];
 }

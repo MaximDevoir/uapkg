@@ -1,0 +1,444 @@
+import { createHash } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { createServer, type Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { ok } from '@uapkg/diagnostics';
+import type { Lockfile } from '@uapkg/package-manifest-schema';
+import type { RegistryCore } from '@uapkg/registry-core';
+import { PackageRegistryManifestSchema } from '@uapkg/registry-schema';
+import { c as createTar } from 'tar';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { Installer } from '../src/core/Installer.js';
+
+interface FixtureArtifact {
+  readonly url: string;
+  readonly sha256: string;
+  readonly size: number;
+}
+
+interface RegistryFixtureVersion {
+  readonly artifact: FixtureArtifact;
+  readonly recordDependencies?: Record<string, string>;
+  readonly recordPrivate?: boolean;
+}
+
+const artifacts = new Map<string, Buffer>();
+let server: Server;
+let baseUrl: string;
+const tempDirs: string[] = [];
+const originalProfileHome = process.env.UAPKG_INTERNAL_CONFIG_CACHE_HOME;
+
+beforeAll(async () => {
+  server = createServer((req, res) => {
+    const body = artifacts.get(req.url ?? '');
+    if (!body) {
+      res.statusCode = 404;
+      res.end('not found');
+      return;
+    }
+    res.statusCode = 200;
+    res.setHeader('content-length', body.length);
+    res.end(body);
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+});
+
+afterAll(async () => {
+  await new Promise<void>((resolve) => server.close(() => resolve()));
+});
+
+afterEach(async () => {
+  artifacts.clear();
+  if (originalProfileHome === undefined) delete process.env.UAPKG_INTERNAL_CONFIG_CACHE_HOME;
+  else process.env.UAPKG_INTERNAL_CONFIG_CACHE_HOME = originalProfileHome;
+  await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
+});
+
+async function makeTempDir(prefix: string): Promise<string> {
+  const dir = await mkdtemp(join(tmpdir(), prefix));
+  tempDirs.push(dir);
+  return dir;
+}
+
+/** Build a tgz artifact whose packaged uapkg.json carries the given manifest. */
+async function makeArtifact(
+  name: string,
+  version: string,
+  manifest: Record<string, unknown>,
+): Promise<FixtureArtifact> {
+  const staging = await makeTempDir('uapkg-installer-fixture-');
+  const prefix = `${name.replace('/', '-')}-${version}`;
+  const contentRoot = join(staging, prefix);
+  await mkdir(contentRoot, { recursive: true });
+  await writeFile(join(contentRoot, 'uapkg.json'), JSON.stringify(manifest), 'utf8');
+  await writeFile(join(contentRoot, 'payload.txt'), `content of ${name}@${version}`, 'utf8');
+  const archivePath = join(staging, 'package.tgz');
+  await createTar({ gzip: true, file: archivePath, cwd: staging, portable: true }, [prefix]);
+  const bytes = await readFile(archivePath);
+  const urlPath = `/artifacts/${encodeURIComponent(name)}-${version}.tgz`;
+  artifacts.set(urlPath, bytes);
+  return {
+    url: `${baseUrl}${urlPath}`,
+    sha256: createHash('sha256').update(bytes).digest('hex'),
+    size: bytes.length,
+  };
+}
+
+/** Serve arbitrary bytes for a package, returning integrity computed from them. */
+function serveRawArtifact(name: string, version: string, bytes: Buffer): FixtureArtifact {
+  const urlPath = `/artifacts/${encodeURIComponent(name)}-${version}.tgz`;
+  artifacts.set(urlPath, bytes);
+  return {
+    url: `${baseUrl}${urlPath}`,
+    sha256: createHash('sha256').update(bytes).digest('hex'),
+    size: bytes.length,
+  };
+}
+
+function buildRegistryCore(fixtures: Map<string, RegistryFixtureVersion>, shortId: string): RegistryCore {
+  return {
+    getOrCreateRegistry: () =>
+      ok({
+        shortId,
+        getPackageManifest: async (packageName: string) => {
+          const versions: Record<string, unknown> = {};
+          for (const [key, fixture] of fixtures) {
+            const [name, version] = key.split('@@');
+            if (name !== packageName) continue;
+            versions[version] = {
+              gitTree: 'a'.repeat(40),
+              private: fixture.recordPrivate ?? false,
+              releaseFiles: {
+                package: {
+                  url: fixture.artifact.url,
+                  integrity: { hash: `sha256:${fixture.artifact.sha256}`, size: fixture.artifact.size },
+                },
+              },
+              ...(fixture.recordDependencies ? { dependencies: fixture.recordDependencies } : {}),
+            };
+          }
+          if (Object.keys(versions).length === 0) {
+            return ok(undefined as never);
+          }
+          // Parse like production so dependency declarations normalize identically.
+          const parsed = PackageRegistryManifestSchema.parse({
+            name: packageName,
+            packageSource: { type: 'git', url: 'https://example.com/source' },
+            versions,
+          });
+          return ok(parsed);
+        },
+      }),
+  } as unknown as RegistryCore;
+}
+
+function buildConfig(): ConstructorParameters<typeof Installer>[0]['config'] {
+  return {
+    get: (key: string) => {
+      if (key === 'network.maxConcurrentDownloads') return 2;
+      if (key === 'network.retries') return 0;
+      if (key === 'network.timeout') return 30;
+      return undefined;
+    },
+  } as unknown as ConstructorParameters<typeof Installer>[0]['config'];
+}
+
+function buildLockfile(
+  entries: Record<string, { version: string; sha256: string; dependencies?: Record<string, string> }>,
+): Lockfile {
+  const packages: Record<string, unknown> = {};
+  for (const [name, entry] of Object.entries(entries)) {
+    packages[name] = {
+      version: entry.version,
+      registry: 'default',
+      integrity: `sha256:${entry.sha256}`,
+      gitTree: 'a'.repeat(40),
+      ...(entry.dependencies ? { dependencies: entry.dependencies } : {}),
+    };
+  }
+  return { lockfileVersion: 1, packages } as Lockfile;
+}
+
+async function writeRegistryMeta(shortId: string, registryType: 'public' | 'private'): Promise<void> {
+  const profileRoot = await makeTempDir('uapkg-installer-profile-');
+  process.env.UAPKG_INTERNAL_CONFIG_CACHE_HOME = profileRoot;
+  const metaDir = join(profileRoot, 'registry', shortId, 'registry', '.uapkg');
+  await mkdir(metaDir, { recursive: true });
+  await writeFile(
+    join(metaDir, 'registry.meta.json'),
+    JSON.stringify({ schemaVersion: 1, registry: { registryType } }),
+    'utf8',
+  );
+}
+
+async function runInstall(
+  fixtures: Map<string, RegistryFixtureVersion>,
+  lockfile: Lockfile,
+  rootDependencies: readonly string[],
+  shortId = 'testshortid',
+) {
+  const manifestRoot = await makeTempDir('uapkg-installer-root-');
+  const installer = new Installer({ registryCore: buildRegistryCore(fixtures, shortId), config: buildConfig() });
+  const result = await installer.execute(lockfile, null, { manifestRoot, rootDependencies });
+  return { result, manifestRoot };
+}
+
+function fixtureKey(name: string, version: string): string {
+  return `${name}@@${version}`;
+}
+
+describe('verification-gated partial installation', () => {
+  it('installs a verified root and its verified dependency', async () => {
+    const childArtifact = await makeArtifact('child-pkg', '1.0.0', {
+      name: 'child-pkg',
+      version: '1.0.0',
+      kind: 'plugin',
+    });
+    const rootArtifact = await makeArtifact('root-pkg', '1.0.0', {
+      name: 'root-pkg',
+      version: '1.0.0',
+      kind: 'plugin',
+      dependencies: { 'child-pkg': '^1.0.0' },
+    });
+    const fixtures = new Map<string, RegistryFixtureVersion>([
+      [fixtureKey('root-pkg', '1.0.0'), { artifact: rootArtifact, recordDependencies: { 'child-pkg': '^1.0.0' } }],
+      [fixtureKey('child-pkg', '1.0.0'), { artifact: childArtifact }],
+    ]);
+    const lockfile = buildLockfile({
+      'root-pkg': { version: '1.0.0', sha256: rootArtifact.sha256, dependencies: { 'child-pkg': '1.0.0' } },
+      'child-pkg': { version: '1.0.0', sha256: childArtifact.sha256 },
+    });
+
+    const { result, manifestRoot } = await runInstall(fixtures, lockfile, ['root-pkg']);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect([...result.value.installed].sort()).toEqual(['child-pkg', 'root-pkg']);
+    expect(result.value.failed).toEqual([]);
+    expect(result.value.skipped).toEqual([]);
+    expect(result.value.incompleteClosure).toEqual([]);
+    expect(existsSync(join(manifestRoot, 'Plugins', 'root-pkg', 'uapkg.json'))).toBe(true);
+    expect(existsSync(join(manifestRoot, 'Plugins', 'child-pkg', 'uapkg.json'))).toBe(true);
+  });
+
+  it('rejects a package whose archive declares a dependency the registry omitted', async () => {
+    const artifact = await makeArtifact('lying-pkg', '1.0.0', {
+      name: 'lying-pkg',
+      version: '1.0.0',
+      kind: 'plugin',
+      dependencies: { hidden: '^9.0.0' },
+    });
+    const fixtures = new Map<string, RegistryFixtureVersion>([[fixtureKey('lying-pkg', '1.0.0'), { artifact }]]);
+    const lockfile = buildLockfile({ 'lying-pkg': { version: '1.0.0', sha256: artifact.sha256 } });
+
+    const { result, manifestRoot } = await runInstall(fixtures, lockfile, ['lying-pkg']);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.failed).toEqual(['lying-pkg']);
+    expect(result.value.installed).toEqual([]);
+    expect(result.diagnostics.some((d) => (d.code as string) === 'INSTALL_MANIFEST_CLAIMS_MISMATCH')).toBe(true);
+    expect(existsSync(join(manifestRoot, 'Plugins', 'lying-pkg'))).toBe(false);
+  });
+
+  it('never admits an edge injected by the registry when the archive lacks it', async () => {
+    const injectedArtifact = await makeArtifact('injected-dep', '1.0.0', {
+      name: 'injected-dep',
+      version: '1.0.0',
+      kind: 'plugin',
+    });
+    const parentArtifact = await makeArtifact('clean-parent', '1.0.0', {
+      name: 'clean-parent',
+      version: '1.0.0',
+      kind: 'plugin',
+    });
+    const fixtures = new Map<string, RegistryFixtureVersion>([
+      [
+        fixtureKey('clean-parent', '1.0.0'),
+        { artifact: parentArtifact, recordDependencies: { 'injected-dep': '^1.0.0' } },
+      ],
+      [fixtureKey('injected-dep', '1.0.0'), { artifact: injectedArtifact }],
+    ]);
+    const lockfile = buildLockfile({
+      'clean-parent': { version: '1.0.0', sha256: parentArtifact.sha256, dependencies: { 'injected-dep': '1.0.0' } },
+      'injected-dep': { version: '1.0.0', sha256: injectedArtifact.sha256 },
+    });
+
+    const { result, manifestRoot } = await runInstall(fixtures, lockfile, ['clean-parent']);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    // Parent fails (registry claims an extra dependency), so the injected edge is never trusted.
+    expect(result.value.failed).toEqual(['clean-parent']);
+    expect(result.value.skipped).toEqual(['injected-dep']);
+    expect(existsSync(join(manifestRoot, 'Plugins', 'injected-dep'))).toBe(false);
+  });
+
+  it('keeps a shared dependency eligible through its verified parent when another parent fails', async () => {
+    const sharedArtifact = await makeArtifact('shared-dep', '1.0.0', {
+      name: 'shared-dep',
+      version: '1.0.0',
+      kind: 'plugin',
+    });
+    const badParentArtifact = await makeArtifact('bad-parent', '1.0.0', {
+      name: 'bad-parent',
+      version: '1.0.0',
+      kind: 'plugin',
+      dependencies: { 'shared-dep': '^1.0.0', smuggled: '^1.0.0' },
+    });
+    const goodParentArtifact = await makeArtifact('good-parent', '1.0.0', {
+      name: 'good-parent',
+      version: '1.0.0',
+      kind: 'plugin',
+      dependencies: { 'shared-dep': '^1.0.0' },
+    });
+    const fixtures = new Map<string, RegistryFixtureVersion>([
+      [
+        fixtureKey('bad-parent', '1.0.0'),
+        { artifact: badParentArtifact, recordDependencies: { 'shared-dep': '^1.0.0' } },
+      ],
+      [
+        fixtureKey('good-parent', '1.0.0'),
+        { artifact: goodParentArtifact, recordDependencies: { 'shared-dep': '^1.0.0' } },
+      ],
+      [fixtureKey('shared-dep', '1.0.0'), { artifact: sharedArtifact }],
+    ]);
+    const lockfile = buildLockfile({
+      'bad-parent': { version: '1.0.0', sha256: badParentArtifact.sha256, dependencies: { 'shared-dep': '1.0.0' } },
+      'good-parent': { version: '1.0.0', sha256: goodParentArtifact.sha256, dependencies: { 'shared-dep': '1.0.0' } },
+      'shared-dep': { version: '1.0.0', sha256: sharedArtifact.sha256 },
+    });
+
+    const { result, manifestRoot } = await runInstall(fixtures, lockfile, ['bad-parent', 'good-parent']);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.failed).toEqual(['bad-parent']);
+    expect([...result.value.installed].sort()).toEqual(['good-parent', 'shared-dep']);
+    expect(existsSync(join(manifestRoot, 'Plugins', 'shared-dep', 'uapkg.json'))).toBe(true);
+  });
+
+  it('fails a package whose byte count differs from the registry size', async () => {
+    const artifact = await makeArtifact('size-mismatch', '1.0.0', {
+      name: 'size-mismatch',
+      version: '1.0.0',
+      kind: 'plugin',
+    });
+    const fixtures = new Map<string, RegistryFixtureVersion>([
+      [fixtureKey('size-mismatch', '1.0.0'), { artifact: { ...artifact, size: artifact.size + 1 } }],
+    ]);
+    const lockfile = buildLockfile({ 'size-mismatch': { version: '1.0.0', sha256: artifact.sha256 } });
+
+    const { result } = await runInstall(fixtures, lockfile, ['size-mismatch']);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.failed).toEqual(['size-mismatch']);
+    expect(result.diagnostics.some((d) => (d.code as string) === 'INSTALL_SIZE_MISMATCH')).toBe(true);
+  });
+
+  it('fails a package whose bytes do not match the pinned hash', async () => {
+    const artifact = await makeArtifact('hash-mismatch', '1.0.0', {
+      name: 'hash-mismatch',
+      version: '1.0.0',
+      kind: 'plugin',
+    });
+    const fixtures = new Map<string, RegistryFixtureVersion>([[fixtureKey('hash-mismatch', '1.0.0'), { artifact }]]);
+    // Lockfile pins a different digest than the served bytes.
+    const lockfile = buildLockfile({ 'hash-mismatch': { version: '1.0.0', sha256: 'c'.repeat(64) } });
+
+    const { result, manifestRoot } = await runInstall(fixtures, lockfile, ['hash-mismatch']);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.failed).toEqual(['hash-mismatch']);
+    expect(existsSync(join(manifestRoot, 'Plugins', 'hash-mismatch'))).toBe(false);
+  });
+
+  it('treats a corrupt archive as a failure, never a silent success', async () => {
+    const garbage = Buffer.from('this is definitely not a gzip archive');
+    const artifact = serveRawArtifact('corrupt-pkg', '1.0.0', garbage);
+    const fixtures = new Map<string, RegistryFixtureVersion>([[fixtureKey('corrupt-pkg', '1.0.0'), { artifact }]]);
+    const lockfile = buildLockfile({ 'corrupt-pkg': { version: '1.0.0', sha256: artifact.sha256 } });
+
+    const { result } = await runInstall(fixtures, lockfile, ['corrupt-pkg']);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.failed).toEqual(['corrupt-pkg']);
+    expect(result.value.installed).toEqual([]);
+  });
+
+  it('rejects private: true from a public registry even when the record agrees', async () => {
+    const shortId = 'publicshort';
+    await writeRegistryMeta(shortId, 'public');
+    const artifact = await makeArtifact('private-pkg', '1.0.0', {
+      name: 'private-pkg',
+      version: '1.0.0',
+      kind: 'plugin',
+      private: true,
+    });
+    const fixtures = new Map<string, RegistryFixtureVersion>([
+      [fixtureKey('private-pkg', '1.0.0'), { artifact, recordPrivate: true }],
+    ]);
+    const lockfile = buildLockfile({ 'private-pkg': { version: '1.0.0', sha256: artifact.sha256 } });
+
+    const { result } = await runInstall(fixtures, lockfile, ['private-pkg'], shortId);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.failed).toEqual(['private-pkg']);
+    expect(result.diagnostics.some((d) => (d.code as string) === 'INSTALL_PRIVATE_PACKAGE_IN_PUBLIC_REGISTRY')).toBe(
+      true,
+    );
+  });
+
+  it('allows private: true from a private registry when the record agrees', async () => {
+    const shortId = 'privateshort';
+    await writeRegistryMeta(shortId, 'private');
+    const artifact = await makeArtifact('private-ok', '1.0.0', {
+      name: 'private-ok',
+      version: '1.0.0',
+      kind: 'plugin',
+      private: true,
+    });
+    const fixtures = new Map<string, RegistryFixtureVersion>([
+      [fixtureKey('private-ok', '1.0.0'), { artifact, recordPrivate: true }],
+    ]);
+    const lockfile = buildLockfile({ 'private-ok': { version: '1.0.0', sha256: artifact.sha256 } });
+
+    const { result } = await runInstall(fixtures, lockfile, ['private-ok'], shortId);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.installed).toEqual(['private-ok']);
+  });
+
+  it('reports an incomplete closure for a verified parent whose child failed', async () => {
+    const brokenChildBytes = Buffer.from('broken child bytes');
+    const childArtifact = serveRawArtifact('broken-child', '1.0.0', brokenChildBytes);
+    const parentArtifact = await makeArtifact('sturdy-parent', '1.0.0', {
+      name: 'sturdy-parent',
+      version: '1.0.0',
+      kind: 'plugin',
+      dependencies: { 'broken-child': '^1.0.0' },
+    });
+    const fixtures = new Map<string, RegistryFixtureVersion>([
+      [
+        fixtureKey('sturdy-parent', '1.0.0'),
+        { artifact: parentArtifact, recordDependencies: { 'broken-child': '^1.0.0' } },
+      ],
+      [fixtureKey('broken-child', '1.0.0'), { artifact: childArtifact }],
+    ]);
+    const lockfile = buildLockfile({
+      'sturdy-parent': {
+        version: '1.0.0',
+        sha256: parentArtifact.sha256,
+        dependencies: { 'broken-child': '1.0.0' },
+      },
+      'broken-child': { version: '1.0.0', sha256: childArtifact.sha256 },
+    });
+
+    const { result } = await runInstall(fixtures, lockfile, ['sturdy-parent']);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.installed).toEqual(['sturdy-parent']);
+    expect(result.value.failed).toEqual(['broken-child']);
+    expect(result.value.incompleteClosure).toEqual(['sturdy-parent']);
+  });
+});

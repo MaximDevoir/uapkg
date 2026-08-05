@@ -5,6 +5,7 @@ import { AddCommandModule } from './modules/AddCommandModule.js';
 import { ConfigCommandModule } from './modules/ConfigCommandModule.js';
 import { InitCommandModule } from './modules/InitCommandModule.js';
 import { InstallCommandModule } from './modules/InstallCommandModule.js';
+import { LifecycleCommandModule } from './modules/LifecycleCommandModule.js';
 import { ListCommandModule } from './modules/ListCommandModule.js';
 import { LoginCommandModule } from './modules/LoginCommandModule.js';
 import { LogoutCommandModule } from './modules/LogoutCommandModule.js';
@@ -38,6 +39,7 @@ export class UAPKGParserRegistry {
       new LogoutCommandModule(),
       new WhoamiCommandModule(),
       new PublishCommandModule(),
+      new LifecycleCommandModule(),
       new RequestsCommandModule(),
     ],
   ) {}

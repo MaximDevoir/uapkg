@@ -195,9 +195,8 @@ describe('ControlPlaneClient OAuth scope challenges', () => {
 
     let failure: unknown;
     try {
-      await client.submitRegistryRequest(credential, {
+      await client.submitRegistryRequest(credential, 'publish', {
         registryId: '00000000-0000-4000-a000-000000000020',
-        kind: 'publish_new_version',
         payload: {
           packageName: 'example',
           packageVersion: '1.0.0',
@@ -206,7 +205,6 @@ describe('ControlPlaneClient OAuth scope challenges', () => {
             repository: 'acme/example',
             releaseTag: 'v1.0.0',
             assetName: 'package.tgz',
-            pathToManifest: 'uapkg.json',
           },
         },
       });

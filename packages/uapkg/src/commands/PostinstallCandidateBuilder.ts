@@ -20,11 +20,18 @@ import type { PostinstallCandidate } from '../postinstall/runner/PostinstallOrch
  * to keep the postinstall subsystem independent of `@uapkg/installer`.
  */
 export class PostinstallCandidateBuilder {
-  public build(root: CompositionRoot, plan: InstallPlan, lockfile: Lockfile): PostinstallCandidate[] {
+  public build(
+    root: CompositionRoot,
+    plan: InstallPlan,
+    lockfile: Lockfile,
+    installedNames?: ReadonlySet<string>,
+  ): PostinstallCandidate[] {
     const lockPackages = lockfile.packages as Record<string, { registry: string }>;
     const candidates: PostinstallCandidate[] = [];
     for (const action of plan.actions) {
       if (action.type !== 'add' && action.type !== 'update') continue;
+      // Failed/skipped branches never run postinstall.
+      if (installedNames && !installedNames.has(action.packageName)) continue;
       const locked = lockPackages[action.packageName];
       const registry = locked?.registry ?? action.registry;
       if (!registry) continue;

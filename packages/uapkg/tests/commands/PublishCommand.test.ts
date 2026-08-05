@@ -1,22 +1,50 @@
+import { createHash } from 'node:crypto';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { ok } from '@uapkg/diagnostics';
 import type { Manifest } from '@uapkg/package-manifest-schema';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { c as createTar } from 'tar';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
 import { PublishCommand } from '../../src/commands/PublishCommand.js';
 import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSelector.js';
 import { ControlPlaneClient } from '../../src/control-plane/ControlPlaneClient.js';
 import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';
 
-afterEach(() => {
-  vi.restoreAllMocks();
+const cleanups: string[] = [];
+let profileHome: string;
+
+beforeEach(async () => {
+  profileHome = await mkdtemp(join(tmpdir(), 'uapkg-publish-profile-'));
+  cleanups.push(profileHome);
+  vi.stubEnv('UAPKG_INTERNAL_CONFIG_CACHE_HOME', profileHome);
 });
 
-describe('PublishCommand registry policy boundary', () => {
-  it('allows a private manifest to reach trusted registry and server policy resolution', async () => {
+afterEach(async () => {
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
+  await Promise.all(cleanups.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
+});
+
+async function makeArchive(manifest: Record<string, unknown>): Promise<string> {
+  const dir = await mkdtemp(join(tmpdir(), 'uapkg-publish-archive-'));
+  cleanups.push(dir);
+  const contentRoot = join(dir, 'pack-root');
+  await mkdir(contentRoot, { recursive: true });
+  await writeFile(join(contentRoot, 'uapkg.json'), JSON.stringify(manifest), 'utf8');
+  const archivePath = join(dir, 'package.tgz');
+  await createTar({ gzip: true, file: archivePath, cwd: dir, portable: true }, ['pack-root']);
+  return archivePath;
+}
+
+describe('PublishCommand (artifact-first)', () => {
+  it('lets a private packaged manifest reach trusted registry resolution before any policy call', async () => {
     const resolveTrust = vi.fn(async () => {
       throw new Error('trusted registry policy reached');
     });
     const root = {
+      cwd: process.cwd(),
       packageManifest: {
         readManifest: vi.fn(async () =>
           ok({
@@ -41,11 +69,11 @@ describe('PublishCommand registry policy boundary', () => {
     expect(resolveTrust).toHaveBeenCalledWith(undefined);
     const output = stderr.mock.calls.map(([value]) => String(value)).join('');
     expect(output).toContain('trusted registry policy reached');
-    expect(output).not.toContain('marked private and cannot be published');
   });
 
   it('requests only create capability for a detached publication', async () => {
     const trust = registryTrust();
+    const archivePath = await makeArchive({ name: 'example', version: '1.2.3', kind: 'plugin' });
     const select = vi.spyOn(AuthenticationSelector.prototype, 'select').mockResolvedValue({
       kind: 'login',
       credential: { kind: 'bearer', accessToken: 'memory-only-token' },
@@ -57,12 +85,12 @@ describe('PublishCommand registry policy boundary', () => {
       message: 'queued',
     });
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-    const root = publishRoot(trust, true);
+    const root = publishRoot(trust);
     const command = new PublishCommand(root, {
       repository: 'acme/example',
       tag: 'v1.2.3',
       asset: 'package.tgz',
-      manifestPath: 'uapkg.json',
+      assetPath: archivePath,
       auth: 'login',
       detach: true,
       outputFormat: 'json',
@@ -73,8 +101,18 @@ describe('PublishCommand registry policy boundary', () => {
     expect(select).toHaveBeenCalledWith('login', trust, ['publishing.request.create'], true);
   });
 
-  it('applies CLI-over-manifest precedence and forces a registry refresh after acceptance', async () => {
+  it('submits archive-derived claims and observed integrity to the dedicated publish route', async () => {
     const trust = registryTrust();
+    const manifest = {
+      name: 'example',
+      version: '1.2.3',
+      kind: 'plugin',
+      dependencies: { 'core-utils': '^1.0.0' },
+    };
+    const archivePath = await makeArchive(manifest);
+    const archiveBytes = await readFile(archivePath);
+    const expectedDigest = `sha256:${createHash('sha256').update(archiveBytes).digest('hex')}`;
+
     const forceRefresh = vi.fn(async () => undefined);
     const select = vi.spyOn(AuthenticationSelector.prototype, 'select').mockResolvedValue({
       kind: 'login',
@@ -82,23 +120,22 @@ describe('PublishCommand registry policy boundary', () => {
       otp: '123456',
     });
     const submit = vi.spyOn(ControlPlaneClient.prototype, 'submitRegistryRequest').mockResolvedValue({
-      requestId: 'request-accepted',
+      requestId: 'request-ready',
       status: 'queued',
       message: 'queued',
     });
     vi.spyOn(ControlPlaneClient.prototype, 'getRegistryRequest').mockResolvedValue({
-      id: 'request-accepted',
+      id: 'request-ready',
       registryId: trust.registryId,
-      kind: 'publish_new_package',
-      status: 'accepted',
+      kind: 'publish',
+      status: 'ready',
     });
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-    const root = publishRoot(trust, false, {
+    const root = publishRoot(trust, {
       registry: 'manifest-registry',
       owner: 'manifest-owner',
       repository: 'manifest/repository',
       asset: 'manifest.tgz',
-      manifestPath: 'packages/manifest/uapkg.json',
     });
     Object.assign(root.registryTrustResolver, { forceRefresh });
     const command = new PublishCommand(root, {
@@ -107,7 +144,7 @@ describe('PublishCommand registry policy boundary', () => {
       repository: 'cli/repository',
       tag: 'release-1.2.3',
       asset: 'cli.tgz',
-      manifestPath: 'packages/cli/uapkg.json',
+      assetPath: archivePath,
       auth: 'login',
       detach: false,
       outputFormat: 'json',
@@ -124,9 +161,9 @@ describe('PublishCommand registry policy boundary', () => {
     );
     expect(submit).toHaveBeenCalledWith(
       expect.anything(),
+      'publish',
       {
         registryId: trust.registryId,
-        kind: 'publish_new_package',
         ownerOrganizationName: 'cli-owner',
         payload: {
           packageName: 'example',
@@ -136,13 +173,54 @@ describe('PublishCommand registry policy boundary', () => {
             repository: 'cli/repository',
             releaseTag: 'release-1.2.3',
             assetName: 'cli.tgz',
-            pathToManifest: 'packages/cli/uapkg.json',
+          },
+          observedIntegrity: { sha256: expectedDigest, sizeBytes: archiveBytes.length },
+          claims: {
+            name: 'example',
+            version: '1.2.3',
+            private: false,
+            dependencies: { 'core-utils': { version: '^1.0.0' } },
+            devDependencies: {},
+            peerDependencies: {},
           },
         },
       },
-      '123456',
+      { idempotencyKey: expect.any(String), otp: '123456' },
     );
     expect(forceRefresh).toHaveBeenCalledWith(trust);
+  });
+
+  it('reuses the persisted idempotency key for a retried identical submission', async () => {
+    const trust = registryTrust();
+    const archivePath = await makeArchive({ name: 'example', version: '1.2.3', kind: 'plugin' });
+    vi.spyOn(AuthenticationSelector.prototype, 'select').mockResolvedValue({
+      kind: 'login',
+      credential: { kind: 'bearer', accessToken: 'memory-only-token' },
+      otp: undefined,
+    });
+    const submit = vi.spyOn(ControlPlaneClient.prototype, 'submitRegistryRequest').mockResolvedValue({
+      requestId: 'request-detached',
+      status: 'queued',
+      message: 'queued',
+    });
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+
+    const options = {
+      repository: 'acme/example',
+      tag: 'v1.2.3',
+      asset: 'package.tgz',
+      assetPath: archivePath,
+      auth: 'login' as const,
+      detach: true,
+      outputFormat: 'json' as const,
+    };
+    await expect(new PublishCommand(publishRoot(trust), options).execute()).resolves.toBe(0);
+    await expect(new PublishCommand(publishRoot(trust), options).execute()).resolves.toBe(0);
+
+    const firstKey = (submit.mock.calls[0]?.[3] as { idempotencyKey?: string }).idempotencyKey;
+    const secondKey = (submit.mock.calls[1]?.[3] as { idempotencyKey?: string }).idempotencyKey;
+    expect(firstKey).toBeTruthy();
+    expect(secondKey).toBe(firstKey);
   });
 });
 
@@ -163,16 +241,15 @@ function registryTrust(): RegistryTrust {
 
 function publishRoot(
   trust: RegistryTrust,
-  packageExists: boolean,
   publish?: {
     registry?: string;
     owner?: string;
     repository?: string;
     asset?: string;
-    manifestPath?: string;
   },
 ): CompositionRoot {
   return {
+    cwd: process.cwd(),
     packageManifest: {
       readManifest: vi.fn(async () =>
         ok({
@@ -186,20 +263,6 @@ function publishRoot(
     registryTrustResolver: {
       resolve: vi.fn(async () => trust),
       forceRefresh: vi.fn(async () => undefined),
-    },
-    registryCore: {
-      getOrCreateRegistry: vi.fn(() =>
-        ok({
-          getPackageManifest: vi.fn(async () =>
-            packageExists
-              ? ok({ name: 'example' })
-              : {
-                  ok: false,
-                  diagnostics: [{ code: 'PACKAGE_NOT_FOUND', message: 'not found' }],
-                },
-          ),
-        }),
-      ),
     },
     accountManager: {},
   } as unknown as CompositionRoot;

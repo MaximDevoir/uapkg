@@ -1,15 +1,21 @@
 import { unlink } from 'node:fs/promises';
 import type { ConfigInstance } from '@uapkg/config';
-import { DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
+import { type Diagnostic, DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
 import type { Lockfile } from '@uapkg/package-manifest-schema';
 import type { RegistryCore } from '@uapkg/registry-core';
 import pLimit from 'p-limit';
-import type { InstallAction, InstallerOptions, InstallPlan } from '../contracts/InstallerTypes.js';
+import type {
+  InstallAction,
+  InstallerOptions,
+  InstallReport,
+  PackageInstallOutcome,
+} from '../contracts/InstallerTypes.js';
 import type { DownloadStatusSnapshot } from '../contracts/StatusStreamTypes.js';
 import { NoMarkerPolicy } from '../safety/NoMarkerPolicy.js';
 import { SafetyPolicyRegistry } from '../safety/SafetyPolicyRegistry.js';
 import { SlotTable } from '../status/SlotTable.js';
 import { StatusStream } from '../status/StatusStream.js';
+import { ClaimsVerifier } from './ClaimsVerifier.js';
 import { DiskStateInspector } from './DiskStateInspector.js';
 import { InstallPlanner } from './InstallPlanner.js';
 import { IntegrityVerifier } from './IntegrityVerifier.js';
@@ -32,8 +38,13 @@ export interface InstallerConstructorOptions {
  * god-class — each step delegates to a single-responsibility module.
  *
  * Public surface:
- *   - execute(lockfile, previous?) → Result<InstallPlan>
+ *   - execute(lockfile, previous?) → Result<InstallReport>
  *   - getStatusStream() → AsyncIterable<DownloadStatusSnapshot>
+ *
+ * Installation is verification-gated and partial: a package activates only
+ * after exact byte-size, SHA-256, and packaged-manifest claims verification,
+ * its outgoing dependency edges are trusted only after it verifies, and a
+ * failed branch is reported without blocking unrelated verified branches.
  *
  * Concurrency is read from `network.maxConcurrentDownloads` in config;
  * retries/timeout from `network.retries` / `network.timeout`.
@@ -45,6 +56,7 @@ export class Installer {
   private readonly planner: InstallPlanner;
   private readonly downloader = new PackageDownloader();
   private readonly verifier = new IntegrityVerifier();
+  private readonly claimsVerifier = new ClaimsVerifier();
   private readonly extractor = new PackageExtractor();
   private readonly remover = new PackageRemover();
   private readonly safety = new SafetyPolicyRegistry();
@@ -76,7 +88,7 @@ export class Installer {
     lockfile: Lockfile,
     previousLockfile: Lockfile | null,
     options: InstallerOptions,
-  ): Promise<Result<InstallPlan>> {
+  ): Promise<Result<InstallReport>> {
     const bag = new DiagnosticBag();
     const maxConcurrent = this.readMaxConcurrent();
     const runtime = this.createExecutionRuntime(maxConcurrent);
@@ -111,48 +123,181 @@ export class Installer {
 
     if (options.dryRun) {
       runtime.stream.close();
-      return ok(plan);
+      return ok(this.emptyReport(plan));
     }
 
-    // 4. Execute actions under concurrency limit
+    // 4. Execute under concurrency limit with verification-gated waves.
     const limit = pLimit(maxConcurrent);
     const retries = this.readNumber('network.retries', 2);
     const timeoutSeconds = this.readNumber('network.timeout', 300);
-    const timeoutMs = timeoutSeconds * 1000;
+    const net = { retries, timeoutMs: timeoutSeconds * 1000 };
 
+    const blockedNames = new Set(verdictsResult.value.filter((v) => v.blocked).map((v) => v.action.packageName));
+    const allowedActions = plan.actions.filter((action) => !blockedNames.has(action.packageName));
+
+    const outcomes = new Map<string, PackageInstallOutcome['status']>();
+    const failureDiagnostics: Diagnostic[] = [];
+
+    for (const name of blockedNames) outcomes.set(name, 'failed');
+
+    // Removals and unchanged bookkeeping first.
     await Promise.all(
-      verdictsResult.value
-        .filter((v) => !v.blocked)
-        .map((v) =>
+      allowedActions
+        .filter((action) => action.type === 'remove')
+        .map((action) =>
           limit(async () => {
-            const res = await this.executeAction(options.manifestRoot, v.action, { retries, timeoutMs }, runtime);
-            if (!res.ok) bag.mergeArray(res.diagnostics);
+            const result = await this.executeRemove(options.manifestRoot, action, runtime);
+            outcomes.set(action.packageName, result.ok ? 'removed' : 'failed');
+            if (!result.ok) failureDiagnostics.push(...result.diagnostics);
           }),
         ),
     );
 
+    // Dependency edges from the lockfile (equal to verified claims for
+    // verified parents because claims comparison covers the buckets).
+    const edges = new Map<string, readonly string[]>();
+    for (const [name, entry] of Object.entries(lockfile.packages as Record<string, { dependencies?: object }>)) {
+      edges.set(name, Object.keys(entry.dependencies ?? {}));
+    }
+
+    // Trusted roots: the root manifest's declared dependencies (or every
+    // lockfile entry when the caller supplied no seeds).
+    const seeds = new Set(options.rootDependencies ?? Object.keys(lockfile.packages));
+
+    // Already-active packages are verified parents for edge admission.
+    const verified = new Set<string>();
+    for (const action of allowedActions) {
+      if (action.type === 'unchanged') {
+        verified.add(action.packageName);
+        outcomes.set(action.packageName, 'unchanged');
+      }
+    }
+
+    const pending = new Map<string, InstallAction>();
+    for (const action of allowedActions) {
+      if (action.type === 'add' || action.type === 'update') pending.set(action.packageName, action);
+    }
+
+    const failed = new Set<string>();
+
+    while (pending.size > 0) {
+      const eligible: InstallAction[] = [];
+      for (const action of pending.values()) {
+        if (this.isEligible(action.packageName, seeds, verified, edges)) eligible.push(action);
+      }
+      if (eligible.length === 0) break;
+
+      await Promise.all(
+        eligible.map((action) =>
+          limit(async () => {
+            pending.delete(action.packageName);
+            const result = await this.executeDownloadAction(options.manifestRoot, action, net, runtime);
+            if (result.ok) {
+              verified.add(action.packageName);
+              outcomes.set(action.packageName, 'installed');
+            } else {
+              failed.add(action.packageName);
+              outcomes.set(action.packageName, 'failed');
+              failureDiagnostics.push(...result.diagnostics);
+            }
+          }),
+        ),
+      );
+    }
+
+    // Whatever remains pending has no verified parent left to admit it.
+    for (const action of pending.values()) {
+      outcomes.set(action.packageName, 'skipped_no_verified_parent');
+      failureDiagnostics.push(
+        this.skippedDiagnostic(action.packageName, 'no trusted root or verified parent requires this package'),
+      );
+    }
+
     runtime.stream.close();
-    if (bag.hasErrors()) return bag.toFailure();
-    return ok(plan);
+
+    const report = this.buildReport(plan, outcomes, edges, verified);
+    return ok(report, failureDiagnostics);
   }
 
   // -------------------------------------------------------------------
   // Internals
   // -------------------------------------------------------------------
 
-  private async executeAction(
+  private isEligible(
+    name: string,
+    seeds: ReadonlySet<string>,
+    verified: ReadonlySet<string>,
+    edges: ReadonlyMap<string, readonly string[]>,
+  ): boolean {
+    if (seeds.has(name)) return true;
+    for (const parent of verified) {
+      if (edges.get(parent)?.includes(name)) return true;
+    }
+    return false;
+  }
+
+  private emptyReport(plan: InstallReport['plan']): InstallReport {
+    return { plan, outcomes: [], installed: [], failed: [], skipped: [], incompleteClosure: [] };
+  }
+
+  private buildReport(
+    plan: InstallReport['plan'],
+    outcomes: ReadonlyMap<string, PackageInstallOutcome['status']>,
+    edges: ReadonlyMap<string, readonly string[]>,
+    verified: ReadonlySet<string>,
+  ): InstallReport {
+    const outcomeList: PackageInstallOutcome[] = [];
+    const installed: PackageInstallOutcome['packageName'][] = [];
+    const failed: PackageInstallOutcome['packageName'][] = [];
+    const skipped: PackageInstallOutcome['packageName'][] = [];
+
+    for (const [rawName, status] of outcomes) {
+      const packageName = rawName as PackageInstallOutcome['packageName'];
+      outcomeList.push({ packageName, status });
+      if (status === 'installed') installed.push(packageName);
+      else if (status === 'failed') failed.push(packageName);
+      else if (status === 'skipped_no_verified_parent') skipped.push(packageName);
+    }
+
+    // A verified/retained package whose declared child failed or was skipped
+    // has an incomplete dependency closure.
+    const unusable = new Set<string>([...failed, ...skipped]);
+    const incompleteClosure: PackageInstallOutcome['packageName'][] = [];
+    for (const parent of verified) {
+      const children = edges.get(parent) ?? [];
+      if (children.some((child) => unusable.has(child))) {
+        incompleteClosure.push(parent as PackageInstallOutcome['packageName']);
+      }
+    }
+
+    return {
+      plan,
+      outcomes: outcomeList,
+      installed,
+      failed,
+      skipped,
+      incompleteClosure,
+    };
+  }
+
+  private skippedDiagnostic(packageName: string, reason: string): Diagnostic {
+    const bag = new DiagnosticBag();
+    bag.addError('INSTALL_SKIPPED_NO_VERIFIED_PARENT', `Skipped "${packageName}": ${reason}.`, {
+      packageName,
+      reason,
+    });
+    return bag.all()[0];
+  }
+
+  private async executeRemove(
     manifestRoot: string,
     action: InstallAction,
-    net: { readonly retries: number; readonly timeoutMs: number },
     runtime: ExecutionRuntime,
   ): Promise<Result<void>> {
     const { slots, stream } = runtime;
-
-    if (action.type === 'unchanged') return ok(undefined);
-
     const slotId =
       slots.claim({
-        state: action.type === 'remove' ? 'removing' : 'downloading',
+        state: 'removing',
         packageName: action.packageName,
         version: action.targetVersion,
         bytesDone: 0,
@@ -162,19 +307,60 @@ export class Installer {
     stream.publish();
 
     try {
-      if (action.type === 'remove') {
-        const r = await this.remover.remove(action.packageName, manifestRoot, action.path);
-        slots.update(slotId, { state: r.ok ? 'done' : 'failed' });
-        stream.publish();
-        slots.release(slotId);
-        return r;
-      }
+      const result = await this.remover.remove(action.packageName, manifestRoot, action.path);
+      slots.update(slotId, { state: result.ok ? 'done' : 'failed' });
+      stream.publish();
+      slots.release(slotId);
+      return result;
+    } catch (err) {
+      slots.update(slotId, { state: 'failed' });
+      stream.publish();
+      slots.release(slotId);
+      return this.unexpectedFailure(action.packageName, err);
+    }
+  }
 
-      if (!action.downloadUrl || !action.integrity) {
-        slots.update(slotId, { state: 'failed' });
-        stream.publish();
-        slots.release(slotId);
-        return ok(undefined);
+  private async executeDownloadAction(
+    manifestRoot: string,
+    action: InstallAction,
+    net: { readonly retries: number; readonly timeoutMs: number },
+    runtime: ExecutionRuntime,
+  ): Promise<Result<void>> {
+    const { slots, stream } = runtime;
+
+    const slotId =
+      slots.claim({
+        state: 'downloading',
+        packageName: action.packageName,
+        version: action.targetVersion,
+        bytesDone: 0,
+        bytesTotal: action.sizeBytes,
+        attempt: 1,
+      }) ?? 0;
+    stream.publish();
+
+    const failSlot = (): void => {
+      slots.update(slotId, { state: 'failed' });
+      stream.publish();
+      slots.release(slotId);
+    };
+
+    try {
+      if (
+        !action.downloadUrl ||
+        !action.integrity ||
+        !action.registryEntry ||
+        action.sizeBytes === undefined ||
+        action.targetVersion === undefined
+      ) {
+        failSlot();
+        const bag = new DiagnosticBag();
+        bag.addError(
+          'INSTALL_ACTION_METADATA_MISSING',
+          `Cannot verify "${action.packageName}": the registry record is missing its artifact URL, integrity, size, or claims.`,
+          { packageName: action.packageName, version: action.targetVersion },
+        );
+        return bag.toFailure();
       }
 
       // Download
@@ -188,33 +374,53 @@ export class Installer {
         },
       );
       if (!dl.ok) {
-        slots.update(slotId, { state: 'failed' });
-        stream.publish();
-        slots.release(slotId);
+        failSlot();
         return dl as Result<never>;
       }
 
-      // Verify
+      // Verify: exact byte count, then SHA-256, then packaged-manifest claims.
       slots.update(slotId, { state: 'verifying' });
       stream.publish();
+
+      if (dl.value.bytesDownloaded !== action.sizeBytes) {
+        await this.safeUnlink(dl.value.tempPath);
+        failSlot();
+        const bag = new DiagnosticBag();
+        bag.addError(
+          'INSTALL_SIZE_MISMATCH',
+          `Artifact for "${action.packageName}" is ${dl.value.bytesDownloaded} bytes but the registry declares ${action.sizeBytes}.`,
+          { packageName: action.packageName, expected: action.sizeBytes, actual: dl.value.bytesDownloaded },
+        );
+        return bag.toFailure();
+      }
+
       const verify = await this.verifier.verify(action.packageName, dl.value.tempPath, action.integrity);
       if (!verify.ok) {
         await this.safeUnlink(dl.value.tempPath);
-        slots.update(slotId, { state: 'failed' });
-        stream.publish();
-        slots.release(slotId);
+        failSlot();
         return verify as Result<never>;
       }
 
-      // Extract
+      const claims = await this.claimsVerifier.verify({
+        packageName: action.packageName,
+        version: action.targetVersion,
+        archivePath: dl.value.tempPath,
+        registryEntry: action.registryEntry,
+        registryType: action.registryType,
+      });
+      if (!claims.ok) {
+        await this.safeUnlink(dl.value.tempPath);
+        failSlot();
+        return claims as Result<never>;
+      }
+
+      // Extract (activation) — only after every verification passed.
       slots.update(slotId, { state: 'extracting' });
       stream.publish();
       const ex = await this.extractor.extract(action.packageName, dl.value.tempPath, manifestRoot, action.path);
       await this.safeUnlink(dl.value.tempPath);
       if (!ex.ok) {
-        slots.update(slotId, { state: 'failed' });
-        stream.publish();
-        slots.release(slotId);
+        failSlot();
         return ex as Result<never>;
       }
 
@@ -223,12 +429,21 @@ export class Installer {
       stream.publish();
       slots.release(slotId);
       return ok(undefined);
-    } catch (_err) {
-      slots.update(slotId, { state: 'failed' });
-      stream.publish();
-      slots.release(slotId);
-      return ok(undefined); // never throw — diagnostics already captured inside collaborators
+    } catch (err) {
+      failSlot();
+      // Fail closed: an unexpected error is a failure, never silent success.
+      return this.unexpectedFailure(action.packageName, err);
     }
+  }
+
+  private unexpectedFailure(packageName: string, err: unknown): Result<never> {
+    const bag = new DiagnosticBag();
+    bag.addError(
+      'INSTALL_UNEXPECTED_ERROR',
+      `Unexpected installer error for "${packageName}": ${err instanceof Error ? err.message : String(err)}`,
+      { packageName, reason: String(err) },
+    );
+    return bag.toFailure();
   }
 
   private readMaxConcurrent(): number {

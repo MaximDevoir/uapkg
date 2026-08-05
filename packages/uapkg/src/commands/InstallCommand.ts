@@ -58,18 +58,28 @@ export class InstallCommand implements Command {
     const progress = new InstallProgressReporter();
     const consumer = progress.consume(this.root.installer.getStatusStream());
 
+    // Trusted roots for verification-gated traversal: the manifest's declared buckets.
+    const rootDependencies = [
+      ...Object.keys(manifest.dependencies ?? {}),
+      ...Object.keys(manifest.devDependencies ?? {}),
+      ...Object.keys(manifest.peerDependencies ?? {}),
+    ];
+
     const executeResult = await this.root.installer.execute(lockfile, previousLockfile, {
       manifestRoot: this.root.cwd,
       force: this.options.force,
       dryRun: this.options.dryRun,
+      rootDependencies,
     });
     await consumer;
 
     if (!executeResult.ok) return this.fail([...commandDiagnostics, ...executeResult.diagnostics]);
-    const plan = executeResult.value;
+    const report = executeResult.value;
+    const plan = report.plan;
+    const hasBranchFailures = report.failed.length > 0 || report.skipped.length > 0;
 
     const builder = new PostinstallCandidateBuilder();
-    const candidates = builder.build(this.root, plan, lockfile);
+    const candidates = builder.build(this.root, plan, lockfile, new Set(report.installed));
     const manifestType = builder.resolveManifestType(manifest);
 
     let postDiagnostics: readonly Diagnostic[] = [];
@@ -89,17 +99,23 @@ export class InstallCommand implements Command {
 
     if (this.options.outputFormat === 'json') {
       this.root.json.emit({
-        status: 'ok',
+        status: hasBranchFailures ? 'error' : 'ok',
         command: 'install',
-        data: { plan: plan.summary },
+        data: {
+          plan: plan.summary,
+          installed: report.installed,
+          failed: report.failed,
+          skipped: report.skipped,
+          incompleteClosure: report.incompleteClosure,
+        },
         diagnostics: [...commandDiagnostics, ...executeResult.diagnostics, ...postDiagnostics],
       });
-      return 0;
+      return hasBranchFailures ? 1 : 0;
     }
 
     this.root.diagnostics.reportAll([...commandDiagnostics, ...executeResult.diagnostics, ...postDiagnostics]);
     progress.renderSummary(plan.summary);
-    return 0;
+    return hasBranchFailures ? 1 : 0;
   }
 
   private fail(diagnostics: readonly Diagnostic[]): number {

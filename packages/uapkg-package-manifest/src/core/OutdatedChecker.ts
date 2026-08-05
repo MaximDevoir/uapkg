@@ -1,4 +1,5 @@
 import type { PackageName, PackageVersion, RegistryName } from '@uapkg/common-schema';
+import { DEFAULT_REGISTRY_ALIAS } from '@uapkg/common-schema';
 import { DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
 import type { Lockfile, Manifest } from '@uapkg/package-manifest-schema';
 import type { RegistryCore } from '@uapkg/registry-core';
@@ -49,13 +50,15 @@ export class OutdatedChecker {
       const decl = declared[name];
       if (!decl) continue; // transitive — skip
 
-      const registryResult = this.registryCore.getOrCreateRegistry(decl.registry);
+      // Root-level absence means the configured default alias.
+      const declaredRegistry = decl.registry ?? DEFAULT_REGISTRY_ALIAS;
+      const registryResult = this.registryCore.getOrCreateRegistry(declaredRegistry);
       if (!registryResult.ok) {
         bag.mergeArray(registryResult.diagnostics);
         continue;
       }
       const registry = registryResult.value;
-      const pkgResult = await registry.getPackageManifest(name, decl.registry);
+      const pkgResult = await registry.getPackageManifest(name, declaredRegistry);
       if (!pkgResult.ok) {
         bag.mergeArray(pkgResult.diagnostics);
         continue;

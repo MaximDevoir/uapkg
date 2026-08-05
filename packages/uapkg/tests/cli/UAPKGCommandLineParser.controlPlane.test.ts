@@ -89,8 +89,8 @@ describe('UAPKG control-plane command parsing', () => {
       'v1.2.3',
       '--asset',
       'example.tgz',
-      '--manifest-path',
-      'packages/example/uapkg.json',
+      '--asset-path',
+      'dist/example.tgz',
       '--auth',
       'gat',
       '--detach',
@@ -103,7 +103,7 @@ describe('UAPKG control-plane command parsing', () => {
       repository: 'acme/example',
       tag: 'v1.2.3',
       asset: 'example.tgz',
-      manifestPath: 'packages/example/uapkg.json',
+      assetPath: 'dist/example.tgz',
       auth: 'gat',
       detach: true,
     });
@@ -113,10 +113,10 @@ describe('UAPKG control-plane command parsing', () => {
 
   it('parses request listing and watched status', async () => {
     const parser = new UAPKGCommandLineParser();
-    await expect(parser.parse(['node', 'uapkg', 'requests', 'list', '--status', 'failed'])).resolves.toMatchObject({
+    await expect(parser.parse(['node', 'uapkg', 'requests', 'list', '--status', 'rejected'])).resolves.toMatchObject({
       command: 'requests',
       action: 'list',
-      status: 'failed',
+      status: 'rejected',
     });
     await expect(parser.parse(['node', 'uapkg', 'requests', 'status', 'req_123', '--watch'])).resolves.toMatchObject({
       command: 'requests',
@@ -130,7 +130,7 @@ describe('UAPKG control-plane command parsing', () => {
     ['requests', 'status', '--watch'],
     ['requests', 'list', 'req_123'],
     ['requests', 'list', '--watch'],
-    ['requests', 'status', 'req_123', '--status', 'failed'],
+    ['requests', 'status', 'req_123', '--status', 'rejected'],
     ['requests', 'status', 'req_123', '--registry', 'official'],
   ])('rejects invalid request command shape: %s', async (...args) => {
     await expect(new UAPKGCommandLineParser().parse(['node', 'uapkg', ...args])).rejects.toThrow();

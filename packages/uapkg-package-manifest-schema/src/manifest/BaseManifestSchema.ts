@@ -6,8 +6,12 @@ import { PublishSchema } from './PublishSchema.js';
 
 /**
  * Fields shared by all manifest kinds.
+ *
+ * Loose: unknown top-level members are preserved so read-modify-write
+ * commands do not strip fields this build does not understand, and newer
+ * optional manifest fields never fail an older client.
  */
-export const BaseManifestSchema = z.object({
+export const BaseManifestSchema = z.looseObject({
   name: PackageNameSchema,
   version: PackageVersionSchema,
   kind: ManifestKindSchema,

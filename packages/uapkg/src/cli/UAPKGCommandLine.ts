@@ -15,6 +15,11 @@ export type UAPKGCommandName =
   | 'logout'
   | 'whoami'
   | 'publish'
+  | 'yank'
+  | 'unyank'
+  | 'unpublish'
+  | 'deprecate'
+  | 'undeprecate'
   | 'requests';
 export type UAPKGConfigAction = 'get' | 'list' | 'set' | 'delete' | 'edit';
 export type UAPKGRegistryAction = 'add' | 'remove' | 'list' | 'use' | 'auth' | 'refresh';
@@ -24,12 +29,12 @@ export const UAPKG_WHOAMI_FIELDS = ['username', 'user-id', 'registry', 'registry
 export type UAPKGWhoamiField = (typeof UAPKG_WHOAMI_FIELDS)[number];
 export type UAPKGRegistryRequestStatus =
   | 'queued'
-  | 'running'
-  | 'waiting_for_pr_checks'
+  | 'checking'
   | 'accepted'
-  | 'failed'
-  | 'timed_out'
-  | 'finalization_failed';
+  | 'ready'
+  | 'ready_superseded'
+  | 'rejected'
+  | 'operationally_failed';
 export type UAPKGConfigScope = 'global' | 'local';
 export type UAPKGOutputFormat = 'text' | 'json';
 
@@ -156,7 +161,20 @@ export interface PublishCommandLine extends BaseCommandLine {
   repository?: string;
   tag?: string;
   asset?: string;
-  manifestPath?: string;
+  assetPath?: string;
+  auth: UAPKGControlPlaneAuthMode;
+  detach: boolean;
+  outputFormat: UAPKGOutputFormat;
+}
+
+export type UAPKGLifecycleCommandName = 'yank' | 'unyank' | 'unpublish' | 'deprecate' | 'undeprecate';
+
+export interface LifecycleCommandLine extends BaseCommandLine {
+  command: UAPKGLifecycleCommandName;
+  packageName: string;
+  packageVersion: string;
+  reason?: string;
+  registry?: string;
   auth: UAPKGControlPlaneAuthMode;
   detach: boolean;
   outputFormat: UAPKGOutputFormat;
@@ -189,6 +207,7 @@ export type UAPKGCommandLine =
   | LogoutCommandLine
   | WhoamiCommandLine
   | PublishCommandLine
+  | LifecycleCommandLine
   | RequestsCommandLine;
 
 export interface CommonCommandLineOptions {
@@ -255,7 +274,13 @@ export interface PublishCommandLineOptions extends RegistryAuthCommandLineOption
   repository?: string;
   tag?: string;
   asset?: string;
-  manifestPath?: string;
+  assetPath?: string;
+  auth?: UAPKGControlPlaneAuthMode;
+  detach?: boolean;
+}
+
+export interface LifecycleCommandLineOptions extends RegistryAuthCommandLineOptions {
+  reason?: string;
   auth?: UAPKGControlPlaneAuthMode;
   detach?: boolean;
 }
@@ -412,7 +437,26 @@ export class UAPKGCommandLineFactory {
       repository: options.repository,
       tag: options.tag,
       asset: options.asset,
-      manifestPath: options.manifestPath,
+      assetPath: options.assetPath,
+      auth: options.auth ?? 'auto',
+      detach: options.detach === true,
+      outputFormat: options.outputFormat ?? 'text',
+    };
+  }
+
+  createLifecycle(
+    command: UAPKGLifecycleCommandName,
+    packageName: string,
+    packageVersion: string,
+    options: LifecycleCommandLineOptions = {},
+  ): LifecycleCommandLine {
+    return {
+      command,
+      cwd: this.resolveCwd(options.cwd),
+      packageName,
+      packageVersion,
+      reason: options.reason,
+      registry: options.registry,
       auth: options.auth ?? 'auto',
       detach: options.detach === true,
       outputFormat: options.outputFormat ?? 'text',

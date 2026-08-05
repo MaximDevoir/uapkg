@@ -8,7 +8,10 @@ export type {
   InstallActionType,
   InstallerOptions,
   InstallPlan,
+  InstallReport,
   InstallSummary,
+  PackageInstallOutcome,
+  PackageInstallStatus,
 } from './contracts/InstallerTypes.js';
 export type {
   BuiltInSafetyPolicyId,
@@ -24,6 +27,7 @@ export type {
 } from './contracts/StatusStreamTypes.js';
 
 // Core
+export { type ClaimsVerificationInput, ClaimsVerifier } from './core/ClaimsVerifier.js';
 export { type DiskStateEntry, DiskStateInspector } from './core/DiskStateInspector.js';
 export { Installer, type InstallerConstructorOptions } from './core/Installer.js';
 export { InstallPlanner } from './core/InstallPlanner.js';

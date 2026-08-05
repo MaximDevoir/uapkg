@@ -116,28 +116,53 @@ export interface RegistryRequestSource {
   readonly repository: string;
   readonly releaseTag: string;
   readonly assetName: string;
-  readonly pathToManifest: string;
 }
 
+/** Artifact integrity observed by this client from the exact bytes it inspected. */
+export interface ObservedArtifactIntegrity {
+  /** Exactly `sha256:` + 64 lowercase hex characters. */
+  readonly sha256: string;
+  readonly sizeBytes: number;
+}
+
+/** Normalized packaged-manifest claims submitted with a publish request. */
+export interface SubmittedPackageClaims {
+  readonly name: string;
+  readonly version: string;
+  readonly private: boolean;
+  readonly dependencies: Readonly<Record<string, { readonly version: string; readonly registry?: string }>>;
+  readonly devDependencies: Readonly<Record<string, { readonly version: string; readonly registry?: string }>>;
+  readonly peerDependencies: Readonly<Record<string, { readonly version: string; readonly registry?: string }>>;
+}
+
+/** The six route-derived registry operations (PS-REQ-001). */
+export type RegistryOperation = 'publish' | 'unpublish' | 'yank' | 'unyank' | 'deprecate' | 'undeprecate';
+
+/**
+ * Body for `POST /v1/registry-requests/{operation}`. The operation is
+ * derived from the route; the body never carries a kind.
+ */
 export interface RegistryRequestSubmission {
   readonly registryId: string;
-  readonly kind: 'publish_new_package' | 'publish_new_version';
   readonly ownerOrganizationName?: string;
   readonly payload: {
     readonly packageName: string;
     readonly packageVersion: string;
-    readonly source: RegistryRequestSource;
+    readonly source?: RegistryRequestSource;
+    readonly observedIntegrity?: ObservedArtifactIntegrity;
+    readonly claims?: SubmittedPackageClaims;
+    readonly reason?: string;
   };
 }
 
 export type RegistryRequestStatus =
   | 'queued'
-  | 'running'
-  | 'waiting_for_pr_checks'
+  | 'checking'
   | 'accepted'
-  | 'failed'
-  | 'timed_out'
-  | 'finalization_failed';
+  | 'ready'
+  | 'ready_superseded'
+  | 'rejected'
+  | 'operationally_failed';
 
 export interface RegistryRequestSummary {
   readonly id: string;

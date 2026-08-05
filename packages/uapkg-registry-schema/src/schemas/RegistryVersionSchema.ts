@@ -6,34 +6,35 @@ import { RegistryDependencySchema } from './RegistryDependencySchema.js';
 /**
  * Release files attached to a version.
  */
-export const ReleaseFilesSchema = z
-  .object({
-    package: RegistryAssetSchema,
-  })
-  .strict();
+export const ReleaseFilesSchema = z.object({
+  package: RegistryAssetSchema,
+});
 
 /**
  * Metadata about a published version.
  */
-export const VersionMetaSchema = z
-  .object({
-    publishedAt: UnixTimestampSchema,
-  })
-  .strict();
+export const VersionMetaSchema = z.object({
+  publishedAt: UnixTimestampSchema,
+});
 
 /**
  * A single version entry within a package registry manifest.
+ *
+ * Unknown optional members are tolerated (and ignored) rather than rejected:
+ * install-time verification compares the mandatory core plus the optional
+ * keys understood on both sides, so a newer record must not break an older
+ * client. The mandatory core itself stays strictly validated.
  */
-export const RegistryVersionSchema = z
-  .object({
-    gitTree: GitTreeSchema,
-    meta: VersionMetaSchema.optional(),
-    releaseFiles: ReleaseFilesSchema,
-    dependencies: z.record(PackageNameSchema, RegistryDependencySchema).optional(),
-    devDependencies: z.record(PackageNameSchema, RegistryDependencySchema).optional(),
-    peerDependencies: z.record(PackageNameSchema, RegistryDependencySchema).optional(),
-  })
-  .strict();
+export const RegistryVersionSchema = z.object({
+  gitTree: GitTreeSchema,
+  // Normalized packaged `private` claim; records predating the field read as false.
+  private: z.boolean().default(false),
+  meta: VersionMetaSchema.optional(),
+  releaseFiles: ReleaseFilesSchema,
+  dependencies: z.record(PackageNameSchema, RegistryDependencySchema).optional(),
+  devDependencies: z.record(PackageNameSchema, RegistryDependencySchema).optional(),
+  peerDependencies: z.record(PackageNameSchema, RegistryDependencySchema).optional(),
+});
 
 export type RegistryVersion = z.infer<typeof RegistryVersionSchema>;
 export type ReleaseFiles = z.infer<typeof ReleaseFilesSchema>;

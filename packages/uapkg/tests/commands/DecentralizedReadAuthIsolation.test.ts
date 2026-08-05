@@ -1,5 +1,5 @@
 import { ok } from '@uapkg/diagnostics';
-import type { InstallPlan } from '@uapkg/installer';
+import type { InstallReport } from '@uapkg/installer';
 import type { Lockfile, Manifest } from '@uapkg/package-manifest-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
@@ -21,15 +21,22 @@ const lockfile = {
   packages: {},
 } as Lockfile;
 
-const plan: InstallPlan = {
-  actions: [],
-  summary: {
-    added: 0,
-    updated: 0,
-    removed: 0,
-    unchanged: 0,
-    totalBytes: 0,
+const report: InstallReport = {
+  plan: {
+    actions: [],
+    summary: {
+      added: 0,
+      updated: 0,
+      removed: 0,
+      unchanged: 0,
+      totalBytes: 0,
+    },
   },
+  outcomes: [],
+  installed: [],
+  failed: [],
+  skipped: [],
+  incompleteClosure: [],
 };
 
 afterEach(() => {
@@ -60,7 +67,7 @@ describe('decentralized read command authentication isolation', () => {
     };
     const installer = {
       getStatusStream: vi.fn(() => emptyStatusStream()),
-      execute: vi.fn(async () => ok(plan)),
+      execute: vi.fn(async () => ok(report)),
     };
     const root = {
       cwd: 'D:\\project',

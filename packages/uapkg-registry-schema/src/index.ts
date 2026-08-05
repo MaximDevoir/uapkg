@@ -2,6 +2,8 @@
 // @uapkg/registry-schema — public API
 // ---------------------------------------------------------------------------
 
+// Paths
+export { getRegistryPackagePath, getRegistryPackagePathSegments } from './paths/RegistryPackagePath.js';
 // Schemas
 export { type Integrity, IntegritySchema } from './schemas/IntegritySchema.js';
 export {

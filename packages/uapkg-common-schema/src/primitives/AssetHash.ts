@@ -3,11 +3,11 @@ import type { Brand } from '../brand/Brand.js';
 
 /**
  * Branded type for an asset integrity hash.
- * Format: `${hashMethod}:${hexHash}` (e.g. `sha256:abcdef…`).
+ * Exactly `sha256:` followed by 64 lowercase hexadecimal characters.
  */
 export type AssetHash = Brand<string, 'AssetHash'>;
 
 export const AssetHashSchema = z
   .string()
-  .regex(/^[a-z0-9]+:[a-f0-9]+$/, 'Must match format "algorithm:hexhash"')
+  .regex(/^sha256:[a-f0-9]{64}$/, 'Must be "sha256:" followed by 64 lowercase hex characters')
   .transform((v) => v as AssetHash);

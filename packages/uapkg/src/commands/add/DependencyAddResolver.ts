@@ -1,5 +1,5 @@
 import type { PackageSpec, VersionRange } from '@uapkg/common-schema';
-import { RegistryNameSchema, VersionRangeSchema } from '@uapkg/common-schema';
+import { DEFAULT_REGISTRY_ALIAS, RegistryNameSchema, VersionRangeSchema } from '@uapkg/common-schema';
 import { createRegistryNotFoundDiagnostic, fail, ok, type Result } from '@uapkg/diagnostics';
 import type { Dependency } from '@uapkg/package-manifest-schema';
 import type { CompositionRoot } from '../../app/CompositionRoot.js';
@@ -37,11 +37,15 @@ export class DependencyAddResolver {
 
     const dependencyRange = spec.range ?? VersionRangeSchema.parse(`^${resolution.value.version}`);
 
+    // Only an explicit non-default --registry is recorded; the default alias stays absent in the manifest.
+    const recordedRegistry =
+      registryNameInput !== undefined && registryName !== DEFAULT_REGISTRY_ALIAS ? registryName : undefined;
+
     return ok(
       {
         dependency: {
           version: dependencyRange,
-          registry: registryName,
+          ...(recordedRegistry !== undefined ? { registry: recordedRegistry } : {}),
         },
         resolvedVersion: resolution.value.version,
       },

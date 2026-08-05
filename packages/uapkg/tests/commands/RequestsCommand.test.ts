@@ -9,7 +9,7 @@ afterEach(() => {
 });
 
 describe('RequestsCommand output', () => {
-  it('marks a failed terminal request as not ok in JSON and exits unsuccessfully', async () => {
+  it('marks a rejected terminal request as not ok in JSON and exits unsuccessfully', async () => {
     const trust = registryTrust();
     vi.stubGlobal(
       'fetch',
@@ -19,8 +19,8 @@ describe('RequestsCommand output', () => {
           request: {
             id: 'request-failed',
             registryId: trust.registryId,
-            kind: 'publish_new_version',
-            status: 'failed',
+            kind: 'publish',
+            status: 'rejected',
           },
         }),
       ),
@@ -50,8 +50,8 @@ describe('RequestsCommand output', () => {
         request: {
           id: 'request-failed',
           registryId: trust.registryId,
-          kind: 'publish_new_version',
-          status: 'failed',
+          kind: 'publish',
+          status: 'rejected',
         },
       })}\n`,
     );

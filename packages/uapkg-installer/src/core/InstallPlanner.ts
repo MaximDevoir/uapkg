@@ -1,7 +1,11 @@
+import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import type { AssetHash, InstallPath, PackageName, PackageVersion, RegistryName } from '@uapkg/common-schema';
 import { DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
 import type { Lockfile } from '@uapkg/package-manifest-schema';
-import type { RegistryCore } from '@uapkg/registry-core';
+import { getRegistryRepoPath, type RegistryCore } from '@uapkg/registry-core';
+import type { RegistryVersion } from '@uapkg/registry-schema';
 import type { InstallAction, InstallPlan, InstallSummary } from '../contracts/InstallerTypes.js';
 import type { DiskStateEntry } from './DiskStateInspector.js';
 
@@ -14,7 +18,8 @@ import type { DiskStateEntry } from './DiskStateInspector.js';
  *  - Package in current lockfile, on disk, different → `update`
  *  - Package in previous lockfile only                → `remove`
  *
- * Fetches asset URLs + integrity + size from `RegistryCore` for add/update
+ * Fetches asset URLs + integrity + size + the registry version record (for
+ * install-time claims verification) from `RegistryCore` for add/update
  * actions. Pure with respect to disk (planner only reads registry metadata).
  */
 export class InstallPlanner {
@@ -54,6 +59,8 @@ export class InstallPlanner {
           integrity: locked.integrity,
           sizeBytes: meta.value.sizeBytes,
           downloadUrl: meta.value.downloadUrl,
+          registryEntry: meta.value.registryEntry,
+          registryType: meta.value.registryType,
         });
         continue;
       }
@@ -75,6 +82,8 @@ export class InstallPlanner {
           integrity: locked.integrity,
           sizeBytes: meta.value.sizeBytes,
           downloadUrl: meta.value.downloadUrl,
+          registryEntry: meta.value.registryEntry,
+          registryType: meta.value.registryType,
         });
         continue;
       }
@@ -125,7 +134,14 @@ export class InstallPlanner {
   private async fetchAssetMeta(
     locked: LockEntry,
     name: PackageName,
-  ): Promise<Result<{ readonly downloadUrl: string; readonly sizeBytes?: number }>> {
+  ): Promise<
+    Result<{
+      readonly downloadUrl: string;
+      readonly sizeBytes?: number;
+      readonly registryEntry: RegistryVersion;
+      readonly registryType?: 'public' | 'private';
+    }>
+  > {
     const bag = new DiagnosticBag();
     const registryResult = this.registryCore.getOrCreateRegistry(locked.registry);
     if (!registryResult.ok) {
@@ -137,17 +153,41 @@ export class InstallPlanner {
       bag.mergeArray(pkgManifest.diagnostics);
       return bag.toFailure();
     }
-    const versionEntry = (pkgManifest.value.versions as Record<string, RegistryVersionShape>)[
+    const versionEntry = (pkgManifest.value.versions as Record<string, RegistryVersion>)[
       locked.version as unknown as string
     ];
     if (!versionEntry) {
-      bag.mergeArray([]);
+      bag.addError(
+        'INSTALL_VERSION_NOT_IN_REGISTRY',
+        `Version ${locked.version} of "${name}" is not present in registry "${locked.registry}".`,
+        { packageName: name, version: locked.version, registry: locked.registry },
+      );
       return bag.toFailure();
     }
     return ok({
       downloadUrl: versionEntry.releaseFiles.package.url,
       sizeBytes: versionEntry.releaseFiles.package.integrity.size,
+      registryEntry: versionEntry,
+      registryType: await this.readRegistryType(registryResult.value.shortId),
     });
+  }
+
+  /**
+   * Read the immutable registry type from the projected registry metadata.
+   * Absent files or fields yield undefined, which install verification treats
+   * with private-registry semantics (comparison only, no public policy rule).
+   */
+  private async readRegistryType(shortId: string): Promise<'public' | 'private' | undefined> {
+    const metaPath = join(getRegistryRepoPath(shortId), '.uapkg', 'registry.meta.json');
+    if (!existsSync(metaPath)) return undefined;
+    try {
+      const raw = await readFile(metaPath, 'utf8');
+      const parsed = JSON.parse(raw) as { registry?: { registryType?: unknown } };
+      const value = parsed.registry?.registryType;
+      return value === 'public' || value === 'private' ? value : undefined;
+    } catch {
+      return undefined;
+    }
   }
 }
 
@@ -159,6 +199,7 @@ interface LockEntry {
   readonly path?: InstallPath;
 }
 
+// biome-ignore lint: TODO: review if no longer used after refactor
 interface RegistryVersionShape {
   readonly releaseFiles: {
     readonly package: { readonly url: string; readonly integrity: { readonly size: number } };

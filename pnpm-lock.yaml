@@ -78,6 +78,9 @@ importers:
       '@uapkg/pack':
         specifier: workspace:^
         version: link:../uapkg-pack
+      '@uapkg/package-claims':
+        specifier: workspace:^
+        version: link:../uapkg-package-claims
       '@uapkg/package-manifest':
         specifier: workspace:^
         version: link:../uapkg-package-manifest
@@ -121,6 +124,9 @@ importers:
       '@types/react':
         specifier: 19.2.14
         version: 19.2.14
+      tar:
+        specifier: 7.5.13
+        version: 7.5.13
 
   packages/uapkg-common:
     dependencies:
@@ -201,6 +207,9 @@ importers:
       '@uapkg/diagnostics':
         specifier: workspace:^
         version: link:../uapkg-diagnostics
+      '@uapkg/package-claims':
+        specifier: workspace:^
+        version: link:../uapkg-package-claims
       '@uapkg/package-manifest':
         specifier: workspace:^
         version: link:../uapkg-package-manifest
@@ -210,6 +219,9 @@ importers:
       '@uapkg/registry-core':
         specifier: workspace:^
         version: link:../uapkg-registry-core
+      '@uapkg/registry-schema':
+        specifier: workspace:^
+        version: link:../uapkg-registry-schema
       p-limit:
         specifier: 7.1.1
         version: 7.1.1
@@ -250,6 +262,27 @@ importers:
       '@types/semver':
         specifier: 7.7.1
         version: 7.7.1
+
+  packages/uapkg-package-claims:
+    dependencies:
+      '@uapkg/common-schema':
+        specifier: workspace:^
+        version: link:../uapkg-common-schema
+      '@uapkg/diagnostics':
+        specifier: workspace:^
+        version: link:../uapkg-diagnostics
+      '@uapkg/package-manifest-schema':
+        specifier: workspace:^
+        version: link:../uapkg-package-manifest-schema
+      '@uapkg/registry-schema':
+        specifier: workspace:^
+        version: link:../uapkg-registry-schema
+      tar:
+        specifier: 7.5.13
+        version: 7.5.13
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
 
   packages/uapkg-package-manifest:
     dependencies:

@@ -9,13 +9,18 @@ import {
   ok,
   type Result,
 } from '@uapkg/diagnostics';
-import { type PackageRegistryManifest, PackageRegistryManifestSchema } from '@uapkg/registry-schema';
+import {
+  getRegistryPackagePathSegments,
+  type PackageRegistryManifest,
+  PackageRegistryManifestSchema,
+} from '@uapkg/registry-schema';
 import { getRegistryRepoPath } from '../paths/RegistryPaths.js';
 
 /**
  * Reads package manifests from the local cloned registry repo.
  *
- * Layout: `registry/packages/{first-letter}/{package-name}.json`
+ * Layout: `packages/{first-letter}/{package-name}.json` (unscoped) or
+ * `packages/@{scope}/{package-name}.json` (scoped).
  */
 export class RegistryPackageReader {
   constructor(private readonly shortId: string) {}
@@ -58,7 +63,6 @@ export class RegistryPackageReader {
   }
 
   private resolveManifestPath(packageName: string): string {
-    const firstLetter = packageName.charAt(0).toLowerCase();
-    return join(getRegistryRepoPath(this.shortId), 'packages', firstLetter, `${packageName}.json`);
+    return join(getRegistryRepoPath(this.shortId), ...getRegistryPackagePathSegments(packageName));
   }
 }

@@ -28,6 +28,8 @@ export interface DownloadOptions {
 export interface DownloadResult {
   readonly tempPath: string;
   readonly bytesTotal?: number;
+  /** Exact number of bytes written to the temp file. */
+  readonly bytesDownloaded: number;
 }
 
 /**
@@ -110,7 +112,7 @@ export class PackageDownloader {
 
       await pipeline(progressStream, createWriteStream(tempPath));
 
-      return ok({ tempPath, bytesTotal });
+      return ok({ tempPath, bytesTotal, bytesDownloaded: bytesDone });
     } catch (err) {
       await this.safeUnlink(tempPath);
       if (timedOut) {

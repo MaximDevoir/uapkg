@@ -7,6 +7,7 @@ import { ListCommand } from '../commands/ListCommand.js';
 import { LoginCommand } from '../commands/LoginCommand.js';
 import { LogoutCommand } from '../commands/LogoutCommand.js';
 import { OutdatedCommand } from '../commands/OutdatedCommand.js';
+import { PackageLifecycleCommand } from '../commands/PackageLifecycleCommand.js';
 import { PackCommand } from '../commands/PackCommand.js';
 import { ProjectGetNameCommand } from '../commands/ProjectGetNameCommand.js';
 import { PublishCommand } from '../commands/PublishCommand.js';
@@ -142,7 +143,23 @@ export class UAPKGApplication {
           repository: commandLine.repository,
           tag: commandLine.tag,
           asset: commandLine.asset,
-          manifestPath: commandLine.manifestPath,
+          assetPath: commandLine.assetPath,
+          auth: commandLine.auth,
+          detach: commandLine.detach,
+          outputFormat: commandLine.outputFormat,
+        }).execute();
+
+      case 'yank':
+      case 'unyank':
+      case 'unpublish':
+      case 'deprecate':
+      case 'undeprecate':
+        return new PackageLifecycleCommand(root, {
+          operation: commandLine.command,
+          packageName: commandLine.packageName,
+          packageVersion: commandLine.packageVersion,
+          reason: commandLine.reason,
+          registry: commandLine.registry,
           auth: commandLine.auth,
           detach: commandLine.detach,
           outputFormat: commandLine.outputFormat,
