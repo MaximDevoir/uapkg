@@ -1,5 +1,15 @@
 # @uapkg/diagnostics
 
+## 1.2.0
+
+### Patch Changes
+
+- [`ed4ab0a`](https://github.com/MaximDevoir/uapkg/commit/ed4ab0a2ade631e882dfa551db1daa7b6031d7b6) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Make CLI reauthorization atomically replace the saved registry login and report concurrent replacement conflicts.
+
+- [`2394f0a`](https://github.com/MaximDevoir/uapkg/commit/2394f0a1f602a654f735d727d06f7e90f236f12f) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Canonicalize Git registry identities across equivalent coordinates and report malformed or colliding local registry caches before Git updates.
+
+- [`42cce65`](https://github.com/MaximDevoir/uapkg/commit/42cce65960a0e45ef800af0a4f8711b8ee92b065) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Add stable field-specific `whoami` output, canonical account metadata, and shared JSON success and error reporting helpers.
+
 ## 1.1.10
 
 ### Patch Changes

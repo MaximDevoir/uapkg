@@ -1,5 +1,18 @@
 # @uapkg/config
 
+## 1.2.0
+
+### Patch Changes
+
+- [`848a0c5`](https://github.com/MaximDevoir/uapkg/commit/848a0c5d9e25aeb69b829a2fd0ca1f78016273bb) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Select the built-in registry by CLI build mode, add explicit Git-owned registry authentication and forced refresh commands, and reject credential-bearing HTTP registry URLs.
+
+- [`2394f0a`](https://github.com/MaximDevoir/uapkg/commit/2394f0a1f602a654f735d727d06f7e90f236f12f) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Centralize CLI runtime profile selection and isolate development configuration, registry cache, and authentication files from production state.
+
+- Updated dependencies [[`3f4fadb`](https://github.com/MaximDevoir/uapkg/commit/3f4fadbb963d78df7715a5b48350e25dff81575c), [`ed4ab0a`](https://github.com/MaximDevoir/uapkg/commit/ed4ab0a2ade631e882dfa551db1daa7b6031d7b6), [`848a0c5`](https://github.com/MaximDevoir/uapkg/commit/848a0c5d9e25aeb69b829a2fd0ca1f78016273bb), [`2394f0a`](https://github.com/MaximDevoir/uapkg/commit/2394f0a1f602a654f735d727d06f7e90f236f12f), [`2394f0a`](https://github.com/MaximDevoir/uapkg/commit/2394f0a1f602a654f735d727d06f7e90f236f12f), [`42cce65`](https://github.com/MaximDevoir/uapkg/commit/42cce65960a0e45ef800af0a4f8711b8ee92b065)]:
+  - @uapkg/common-schema@1.2.0
+  - @uapkg/diagnostics@1.2.0
+  - @uapkg/common@1.2.0
+
 ## 1.1.10
 
 ### Patch Changes

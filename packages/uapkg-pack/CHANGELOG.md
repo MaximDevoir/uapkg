@@ -1,5 +1,13 @@
 # @uapkg/pack
 
+## 1.2.0
+
+### Patch Changes
+
+- Updated dependencies [[`ed4ab0a`](https://github.com/MaximDevoir/uapkg/commit/ed4ab0a2ade631e882dfa551db1daa7b6031d7b6), [`2394f0a`](https://github.com/MaximDevoir/uapkg/commit/2394f0a1f602a654f735d727d06f7e90f236f12f), [`42cce65`](https://github.com/MaximDevoir/uapkg/commit/42cce65960a0e45ef800af0a4f8711b8ee92b065)]:
+  - @uapkg/diagnostics@1.2.0
+  - @uapkg/log@1.2.0
+
 ## 1.1.10
 
 ### Patch Changes
