@@ -1,5 +1,57 @@
 # uapkg
 
+## 1.2.0
+
+### Minor Changes
+
+- [`3f4fadb`](https://github.com/MaximDevoir/uapkg/commit/3f4fadbb963d78df7715a5b48350e25dff81575c) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Move publishing and installation to the artifact-first v1 model.
+
+  `uapkg publish` now observes the exact release artifact (fresh download or `--asset-path`), reads the packaged `uapkg.json` claims from it, and submits the observed integrity and normalized claims to the dedicated `POST /v1/registry-requests/publish` route with a persisted idempotency key, polling the new `queued → checking → accepted → ready` status vocabulary (`--manifest-path` and client-side kind selection are removed). New `uapkg yank`, `unyank`, `unpublish`, `deprecate`, and `undeprecate` commands submit the route-derived lifecycle operations.
+
+  The new `@uapkg/package-claims` package provides the shared packaged-manifest reader, canonical-JSON claims normalization, and comparison used by both publish preflight and the installer. Installation is now verification-gated: every package must pass exact size, SHA-256, and packaged-claims comparison before activation, dependency edges are only trusted from verified parents, and installs report installed/failed/skipped outcomes instead of failing open.
+
+  Schemas adopt the v1 contracts: scoped package names (`@scope/name`) with a shared registry path layout, exact `sha256:`-prefixed asset hashes, a normalized `private` flag on registry version records with tolerant parsing of unknown members, inherited registries expressed by omission, and a fail-closed lockfile version.
+
+- [`2d9b24a`](https://github.com/MaximDevoir/uapkg/commit/2d9b24aa5b64f8e9fce4621f26dfbed8f700a98c) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Add browser-based, DPoP-bound registry login and the control-plane publishing command set.
+
+  Extend publish manifest coordinates and ensure forced registry refreshes bypass both freshness checks.
+
+- [`848a0c5`](https://github.com/MaximDevoir/uapkg/commit/848a0c5d9e25aeb69b829a2fd0ca1f78016273bb) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Select the built-in registry by CLI build mode, add explicit Git-owned registry authentication and forced refresh commands, and reject credential-bearing HTTP registry URLs.
+
+### Patch Changes
+
+- [`ed4ab0a`](https://github.com/MaximDevoir/uapkg/commit/ed4ab0a2ade631e882dfa551db1daa7b6031d7b6) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Make CLI reauthorization atomically replace the saved registry login and report concurrent replacement conflicts.
+
+- [`7630014`](https://github.com/MaximDevoir/uapkg/commit/763001409daae3d3c0fe6d4f9ba63f4bdc4060a4) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Handle evolving CLI OAuth scope grants with actionable reauthorization and unsupported-scope diagnostics.
+
+- [`411b2d4`](https://github.com/MaximDevoir/uapkg/commit/411b2d4f892164fa05b778ec204e35849965c6d6) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Embed development-mode identity in CLI builds and verify production artifacts before publishing.
+
+- [`4f2715f`](https://github.com/MaximDevoir/uapkg/commit/4f2715f109545c5296578c654f9b8493b28458e6) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Accept package-manager option separators in development build commands so production release builds receive their build-mode flag correctly.
+
+- [`bab39b4`](https://github.com/MaximDevoir/uapkg/commit/bab39b443cafa9997de21ede11dd69f4d68c1622) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Keep CLI refresh tokens independent of the browser login session by explicitly requesting consent for offline access.
+
+- [`2394f0a`](https://github.com/MaximDevoir/uapkg/commit/2394f0a1f602a654f735d727d06f7e90f236f12f) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Centralize CLI runtime profile selection and isolate development configuration, registry cache, and authentication files from production state.
+
+- [`42cce65`](https://github.com/MaximDevoir/uapkg/commit/42cce65960a0e45ef800af0a4f8711b8ee92b065) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Add stable field-specific `whoami` output, canonical account metadata, and shared JSON success and error reporting helpers.
+
+- [`1eb391c`](https://github.com/MaximDevoir/uapkg/commit/1eb391c34f2d957c795b23c57d006edcdefdefc8) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Fix pnpm 11 global development linking, state detection, and published CLI restoration.
+
+- [`ccf90b0`](https://github.com/MaximDevoir/uapkg/commit/ccf90b042c9ee2353b92ab62ff60db770345650b) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Pin development CLI authentication and control-plane requests to the isolated development environment.
+
+- Updated dependencies [[`3f4fadb`](https://github.com/MaximDevoir/uapkg/commit/3f4fadbb963d78df7715a5b48350e25dff81575c), [`ed4ab0a`](https://github.com/MaximDevoir/uapkg/commit/ed4ab0a2ade631e882dfa551db1daa7b6031d7b6), [`2d9b24a`](https://github.com/MaximDevoir/uapkg/commit/2d9b24aa5b64f8e9fce4621f26dfbed8f700a98c), [`848a0c5`](https://github.com/MaximDevoir/uapkg/commit/848a0c5d9e25aeb69b829a2fd0ca1f78016273bb), [`2394f0a`](https://github.com/MaximDevoir/uapkg/commit/2394f0a1f602a654f735d727d06f7e90f236f12f), [`2394f0a`](https://github.com/MaximDevoir/uapkg/commit/2394f0a1f602a654f735d727d06f7e90f236f12f), [`42cce65`](https://github.com/MaximDevoir/uapkg/commit/42cce65960a0e45ef800af0a4f8711b8ee92b065)]:
+  - @uapkg/common-schema@1.2.0
+  - @uapkg/installer@1.2.0
+  - @uapkg/package-claims@1.2.0
+  - @uapkg/package-manifest@1.2.0
+  - @uapkg/package-manifest-schema@1.2.0
+  - @uapkg/registry-core@1.2.0
+  - @uapkg/diagnostics@1.2.0
+  - @uapkg/config@1.2.0
+  - @uapkg/common@1.2.0
+  - @uapkg/diagnostics-format@1.2.0
+  - @uapkg/log@1.2.0
+  - @uapkg/pack@1.2.0
+
 ## 1.1.10
 
 ### Patch Changes
