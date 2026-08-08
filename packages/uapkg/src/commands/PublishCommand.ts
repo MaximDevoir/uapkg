@@ -111,6 +111,8 @@ export class PublishCommand implements Command {
           ? (['publishing.request.create'] as const)
           : (['publishing.request.create', 'publishing.request.read.self'] as const);
         let authentication = await selector.select(this.options.auth, trust, requestedScopes, true);
+        let requestOtp = authentication.otp;
+        authentication = { kind: authentication.kind, credential: authentication.credential };
 
         const submission: RegistryRequestSubmission = {
           registryId: trust.registryId,
@@ -129,10 +131,17 @@ export class PublishCommand implements Command {
         const idempotencyKey = idempotencyStore.getOrCreate(submissionDigest, () => randomUUID());
 
         const client = new ControlPlaneClient(trust.apiBaseUrl);
-        const created = await client.submitRegistryRequest(authentication.credential, 'publish', submission, {
-          idempotencyKey,
-          otp: authentication.otp,
-        });
+        let created: Awaited<ReturnType<ControlPlaneClient['submitRegistryRequest']>>;
+        try {
+          created = await client.submitRegistryRequest(authentication.credential, 'publish', submission, {
+            idempotencyKey,
+            otp: requestOtp,
+          });
+        } finally {
+          // The request-scoped proof must not remain reachable while the CLI
+          // polls, refreshes credentials, or watches the durable request.
+          requestOtp = undefined;
+        }
         if (this.options.detach) {
           this.printCreated(created.requestId, created.status, trust.alias);
           return 0;

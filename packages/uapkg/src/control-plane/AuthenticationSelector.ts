@@ -23,7 +23,7 @@ export class AuthenticationSelector {
     mode: ControlPlaneAuthMode,
     trust: RegistryTrust,
     scopes: readonly UAPKGCliScope[],
-    requireFreshOtp: boolean,
+    requireRequestOtp: boolean,
   ): Promise<SelectedAuthentication> {
     if (mode === 'oidc' || (mode === 'auto' && this.oidc.isAvailable())) {
       const accessToken = await this.oidc.exchange(trust);
@@ -31,12 +31,12 @@ export class AuthenticationSelector {
     }
 
     if (mode === 'login' || (mode === 'auto' && (await this.account.hasGrant(trust)))) {
-      if (requireFreshOtp) this.assertInteractiveFreshOtp();
+      if (requireRequestOtp) this.assertInteractiveRequestOtp();
       const access = await this.account.getAccessCredential(trust, scopes);
       return {
         kind: 'login',
         credential: access.credential,
-        otp: requireFreshOtp ? await this.readOtp() : undefined,
+        otp: requireRequestOtp ? await this.readOtp() : undefined,
       };
     }
 
@@ -52,7 +52,7 @@ export class AuthenticationSelector {
       return {
         kind: 'gat',
         credential: { kind: 'bearer', accessToken },
-        otp: requireFreshOtp ? await this.readOtp() : undefined,
+        otp: requireRequestOtp ? await this.readOtp() : undefined,
       };
     }
 
@@ -67,18 +67,18 @@ export class AuthenticationSelector {
   }
 
   private async readOtp(): Promise<string> {
-    this.assertInteractiveFreshOtp();
+    this.assertInteractiveRequestOtp();
     const otp = (await this.prompts.secret('Current TOTP code')).trim();
-    if (!/^[0-9]{6,10}$/.test(otp)) {
-      throw new Error('A current numeric TOTP code is required for interactive publishing.');
+    if (!/^[0-9]{6}$/.test(otp)) {
+      throw new Error('A current 6-digit TOTP code is required for this publishing request.');
     }
     return otp;
   }
 
-  private assertInteractiveFreshOtp(): void {
+  private assertInteractiveRequestOtp(): void {
     if (this.isInteractive()) return;
     throw new Error(
-      'Fresh TOTP confirmation requires an attended TTY. Human publishing is not supported in headless environments.',
+      'Request-scoped TOTP confirmation requires an attended TTY. Human publishing is not supported in headless environments.',
     );
   }
 }

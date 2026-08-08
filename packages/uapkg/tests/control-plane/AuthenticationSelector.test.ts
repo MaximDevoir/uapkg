@@ -148,10 +148,24 @@ describe('AuthenticationSelector', () => {
     );
 
     await expect(selector.select('auto', trust, ['publishing.request.create'], true)).rejects.toThrow(
-      'Fresh TOTP confirmation requires an attended TTY',
+      'Request-scoped TOTP confirmation requires an attended TTY',
     );
     expect(account.getAccessCredential).not.toHaveBeenCalled();
     expect(prompt.secret).not.toHaveBeenCalled();
+  });
+
+  it('rejects non-six-digit request OTPs before transport', async () => {
+    process.env.UAPKG_TOKEN = 'uapkg_gat_test';
+    const selector = new AuthenticationSelector(
+      { hasGrant: vi.fn(async () => false), getAccessCredential: vi.fn() } as unknown as AccountManager,
+      prompts(['12345678']),
+      { isAvailable: () => false } as GitHubActionsOidcCredentialProvider,
+      () => true,
+    );
+
+    await expect(selector.select('gat', trust, ['publishing.request.create'], true)).rejects.toThrow(
+      'A current 6-digit TOTP code is required for this publishing request.',
+    );
   });
 });
 

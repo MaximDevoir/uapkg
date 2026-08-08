@@ -64,6 +64,8 @@ export class PackageLifecycleCommand implements Command {
         ? (['publishing.request.create'] as const)
         : (['publishing.request.create', 'publishing.request.read.self'] as const);
       let authentication = await selector.select(this.options.auth, trust, requestedScopes, true);
+      let requestOtp = authentication.otp;
+      authentication = { kind: authentication.kind, credential: authentication.credential };
 
       const submission: RegistryRequestSubmission = {
         registryId: trust.registryId,
@@ -79,10 +81,16 @@ export class PackageLifecycleCommand implements Command {
       const idempotencyKey = idempotencyStore.getOrCreate(submissionDigest, () => randomUUID());
 
       const client = new ControlPlaneClient(trust.apiBaseUrl);
-      const created = await client.submitRegistryRequest(authentication.credential, operation, submission, {
-        idempotencyKey,
-        otp: authentication.otp,
-      });
+      let created: Awaited<ReturnType<ControlPlaneClient['submitRegistryRequest']>>;
+      try {
+        created = await client.submitRegistryRequest(authentication.credential, operation, submission, {
+          idempotencyKey,
+          otp: requestOtp,
+        });
+      } finally {
+        // Do not retain the request-bound code during status reads or watch.
+        requestOtp = undefined;
+      }
       if (this.options.detach) {
         this.print(created.requestId, created.status, trust.alias, undefined);
         return 0;

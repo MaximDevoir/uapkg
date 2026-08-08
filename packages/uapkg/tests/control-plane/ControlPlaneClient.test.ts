@@ -165,6 +165,49 @@ describe('ControlPlaneClient account identity validation', () => {
   });
 });
 
+describe('ControlPlaneClient request-scoped OTP transport', () => {
+  it('sends x-uapkg-otp only on the selected mutation and never on status polling', async () => {
+    const observed: Array<{ method: string; otp: string | null }> = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
+        const headers = new Headers(init?.headers);
+        observed.push({ method: init?.method ?? 'GET', otp: headers.get('x-uapkg-otp') });
+        if (init?.method === 'POST') {
+          return Response.json({ ok: true, requestId: 'request-1', status: 'queued', message: 'queued' });
+        }
+        return Response.json({
+          ok: true,
+          request: {
+            id: 'request-1',
+            registryId: '00000000-0000-4000-a000-000000000020',
+            kind: 'publish',
+            status: 'ready',
+          },
+        });
+      }),
+    );
+    const client = new ControlPlaneClient(UAPKG_CONTROL_PLANE_API);
+    const credential = { kind: 'bearer', accessToken: 'memory-only-token' } as const;
+
+    await client.submitRegistryRequest(
+      credential,
+      'publish',
+      {
+        registryId: '00000000-0000-4000-a000-000000000020',
+        payload: { packageName: 'example', packageVersion: '1.0.0' },
+      },
+      { otp: '123456' },
+    );
+    await client.getRegistryRequest(credential, 'request-1');
+
+    expect(observed).toEqual([
+      { method: 'POST', otp: '123456' },
+      { method: 'GET', otp: null },
+    ]);
+  });
+});
+
 describe('ControlPlaneClient OAuth scope challenges', () => {
   it('preserves a validated DPoP insufficient_scope challenge as a typed 403 without retrying', async () => {
     const fetchMock = vi.fn(async () =>
