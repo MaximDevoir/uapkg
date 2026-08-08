@@ -1,5 +1,27 @@
 # uapkg
 
+## 1.3.0
+
+### Minor Changes
+
+- [`5d512ac`](https://github.com/MaximDevoir/uapkg/commit/5d512ac5798cbe8d6d4d0ecd2aff91f65715e446) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Scope two-factor authentication codes to the sensitive registry request that prompted for them.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @uapkg/common@1.3.0
+  - @uapkg/common-schema@1.3.0
+  - @uapkg/config@1.3.0
+  - @uapkg/diagnostics@1.3.0
+  - @uapkg/diagnostics-format@1.3.0
+  - @uapkg/installer@1.3.0
+  - @uapkg/log@1.3.0
+  - @uapkg/pack@1.3.0
+  - @uapkg/package-claims@1.3.0
+  - @uapkg/package-manifest@1.3.0
+  - @uapkg/package-manifest-schema@1.3.0
+  - @uapkg/registry-core@1.3.0
+
 ## 1.2.0
 
 ### Minor Changes
