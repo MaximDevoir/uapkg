@@ -107,6 +107,29 @@ describe('AccountManager', () => {
     ).not.toContain('uapkg login');
   });
 
+  it('renders an action-specific second-factor challenge without depending on structured details', () => {
+    const error = new ControlPlaneError(
+      'SECOND_FACTOR_REQUIRED',
+      'A TOTP code is required for this action (package.publish).',
+      403,
+      { action: 'package.publish' },
+    );
+
+    expect(describeControlPlaneError(error)).toBe(
+      'A TOTP code is required for this action (package.publish). (SECOND_FACTOR_REQUIRED)',
+    );
+    expect(controlPlaneDiagnosticForError(error, 'publish')).toEqual({
+      level: 'error',
+      code: 'CONTROL_PLANE_COMMAND_FAILED',
+      message: 'A TOTP code is required for this action (package.publish). (SECOND_FACTOR_REQUIRED)',
+      data: {
+        operation: 'publish',
+        serverCode: 'SECOND_FACTOR_REQUIRED',
+        status: 403,
+      },
+    });
+  });
+
   it('maps control-plane failures to stable command diagnostics without server details', () => {
     const diagnostic = controlPlaneDiagnosticForError(
       new ControlPlaneError('ACCOUNT_NOT_FOUND', 'The account was not found.', 404, {

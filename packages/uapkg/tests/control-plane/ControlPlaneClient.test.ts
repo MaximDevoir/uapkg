@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { describeControlPlaneError } from '../../src/control-plane/AccountManager.js';
 import { ControlPlaneClient, type ControlPlaneCredential } from '../../src/control-plane/ControlPlaneClient.js';
 import {
+  ControlPlaneError,
   OAuthScopeInsufficientError,
   OAuthScopeUnsupportedError,
   UAPKG_CONTROL_PLANE_API,
@@ -205,6 +206,44 @@ describe('ControlPlaneClient request-scoped OTP transport', () => {
       { method: 'POST', otp: '123456' },
       { method: 'GET', otp: null },
     ]);
+  });
+
+  it('preserves the challenged action on a second-factor-required response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json(
+          {
+            ok: false,
+            error: {
+              code: 'SECOND_FACTOR_REQUIRED',
+              message: 'A TOTP code is required for this action (package.publish).',
+              details: { action: 'package.publish' },
+            },
+          },
+          { status: 403 },
+        ),
+      ),
+    );
+    const client = new ControlPlaneClient(UAPKG_CONTROL_PLANE_API);
+
+    let failure: unknown;
+    try {
+      await client.submitRegistryRequest({ kind: 'bearer', accessToken: 'memory-only-token' }, 'publish', {
+        registryId: '00000000-0000-4000-a000-000000000020',
+        payload: { packageName: 'example', packageVersion: '1.0.0' },
+      });
+    } catch (error) {
+      failure = error;
+    }
+
+    expect(failure).toBeInstanceOf(ControlPlaneError);
+    expect(failure).toMatchObject({
+      code: 'SECOND_FACTOR_REQUIRED',
+      message: 'A TOTP code is required for this action (package.publish).',
+      status: 403,
+      details: { action: 'package.publish' },
+    });
   });
 });
 
