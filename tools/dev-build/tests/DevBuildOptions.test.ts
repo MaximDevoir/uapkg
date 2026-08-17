@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { parseDevBuildOptions } from '../DevBuildOptions';
 
 describe('parseDevBuildOptions', () => {
-  it('defaults a normal build to production', () => {
+  it('defaults a normal build to development', () => {
     expect(parseDevBuildOptions('build', [])).toEqual({
       force: false,
-      buildMode: 'production',
+      buildMode: 'development',
     });
   });
 
@@ -26,11 +26,11 @@ describe('parseDevBuildOptions', () => {
     });
     expect(parseDevBuildOptions('link', ['--', '--force'])).toEqual({
       force: true,
-      buildMode: undefined,
+      buildMode: 'development',
     });
     expect(parseDevBuildOptions('watch', ['--'])).toEqual({
       force: false,
-      buildMode: undefined,
+      buildMode: 'development',
     });
     expect(() => parseDevBuildOptions('build', ['--', '--staging'])).toThrow('Unsupported option for build: --staging');
   });
@@ -50,11 +50,11 @@ describe('parseDevBuildOptions', () => {
   it('preserves the force option for link and unlink', () => {
     expect(parseDevBuildOptions('link', ['--force'])).toEqual({
       force: true,
-      buildMode: undefined,
+      buildMode: 'development',
     });
     expect(parseDevBuildOptions('unlink', ['--force'])).toEqual({
       force: true,
-      buildMode: undefined,
+      buildMode: 'development',
     });
   });
 

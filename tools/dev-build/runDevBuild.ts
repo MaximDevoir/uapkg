@@ -46,6 +46,7 @@ const options = parseDevBuildOptions(mode, process.argv.slice(3));
 const orchestrator = new DevBuildOrchestrator(resolveWorkspaceRoot());
 
 if (mode === 'build') {
+  console.log(`[dev-build] Starting build in ${options.buildMode ?? 'development'} mode...`);
   orchestrator.buildAll(options.buildMode ?? 'development');
 } else if (mode === 'link') {
   orchestrator.link(options);

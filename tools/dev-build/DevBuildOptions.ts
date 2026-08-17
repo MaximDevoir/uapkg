@@ -28,7 +28,7 @@ export function parseDevBuildOptions(command: DevBuildMode, args: string[]): Dev
 
   return {
     force: optionArgs.includes('--force'),
-    buildMode: command === 'build' ? resolveBuildMode(hasDevelopment) : undefined,
+    buildMode: resolveBuildMode(hasProduction),
   };
 }
 
@@ -44,6 +44,12 @@ function getAllowedFlags(command: DevBuildMode) {
   return new Set<string>();
 }
 
-function resolveBuildMode(hasDevelopment: boolean): UAPKGBuildMode {
-  return hasDevelopment ? 'development' : 'production';
+/**
+ * Resolves the build mode based on the presence of the `--production` flag.
+ *
+ * @param hasProduction Whether the `--production` argument was supplied
+ * @returns The resolved build mode, with explicit production superceding development mode. If neither is supplied, defaults to development mode.
+ */
+function resolveBuildMode(hasProduction: boolean): UAPKGBuildMode {
+  return hasProduction ? 'production' : 'development';
 }

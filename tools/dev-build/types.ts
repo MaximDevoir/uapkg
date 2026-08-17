@@ -4,7 +4,7 @@ export type DevBuildMode = 'build' | 'link' | 'watch' | 'unlink' | 'status' | 'c
 
 export interface DevBuildOptions {
   force: boolean;
-  buildMode?: UAPKGBuildMode;
+  buildMode: UAPKGBuildMode;
 }
 
 export type CurrentGlobalUapkgState =
