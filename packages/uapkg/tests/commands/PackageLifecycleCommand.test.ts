@@ -22,7 +22,7 @@ describe('PackageLifecycleCommand request-scoped OTP', () => {
     });
     vi.spyOn(PublishIdempotencyStore.prototype, 'getOrCreate').mockReturnValue('idempotency-key');
     vi.spyOn(PublishIdempotencyStore.prototype, 'clear').mockImplementation(() => undefined);
-    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
 
     const observed: Array<{
       readonly method: string;
@@ -59,6 +59,17 @@ describe('PackageLifecycleCommand request-scoped OTP', () => {
             kind: 'yank',
             status: pollCount === 1 ? 'checking' : 'ready',
           },
+          ...(pollCount === 1
+            ? {}
+            : {
+                checks: [
+                  {
+                    checkId: 'lifecycle.version-state',
+                    executionState: 'completed',
+                    conclusion: 'success',
+                  },
+                ],
+              }),
         });
       }),
     );
@@ -110,6 +121,110 @@ describe('PackageLifecycleCommand request-scoped OTP', () => {
         otp: null,
       },
     ]);
+    expect(stdout).toHaveBeenCalledWith(
+      `${JSON.stringify({
+        ok: true,
+        operation: 'yank',
+        registry: trust.alias,
+        requestId: 'request-yank',
+        status: 'ready',
+        checks: [
+          {
+            checkId: 'lifecycle.version-state',
+            executionState: 'completed',
+            conclusion: 'success',
+          },
+        ],
+      })}\n`,
+    );
+  });
+
+  it('exits unsuccessfully and renders terminal diagnostics after a watched lifecycle failure', async () => {
+    vi.useFakeTimers();
+    const trust = registryTrust();
+    vi.spyOn(AuthenticationSelector.prototype, 'select').mockResolvedValue({
+      kind: 'login',
+      credential: { kind: 'bearer', accessToken: 'memory-only-token' },
+    });
+    vi.spyOn(PublishIdempotencyStore.prototype, 'getOrCreate').mockReturnValue('idempotency-key');
+    vi.spyOn(PublishIdempotencyStore.prototype, 'clear').mockImplementation(() => undefined);
+    let reads = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
+        if ((init?.method ?? 'GET') === 'POST') {
+          return Response.json({ ok: true, requestId: 'request-yank-failed', status: 'queued', message: 'queued' });
+        }
+        reads += 1;
+        return Response.json(
+          reads === 1
+            ? {
+                ok: true,
+                request: {
+                  id: 'request-yank-failed',
+                  registryId: trust.registryId,
+                  kind: 'yank',
+                  status: 'checking',
+                },
+              }
+            : {
+                ok: true,
+                request: {
+                  id: 'request-yank-failed',
+                  registryId: trust.registryId,
+                  kind: 'yank',
+                  status: 'rejected',
+                },
+                checks: [
+                  {
+                    checkId: 'lifecycle.version-state',
+                    executionState: 'completed',
+                    conclusion: 'failure',
+                    reasonCode: 'VERSION_STATE_CHANGED',
+                  },
+                ],
+              },
+        );
+      }),
+    );
+    const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const root = {
+      registryTrustResolver: {
+        resolve: vi.fn(async () => trust),
+        forceRefresh: vi.fn(async () => undefined),
+      },
+      accountManager: {},
+    } as unknown as CompositionRoot;
+
+    const execution = new PackageLifecycleCommand(root, {
+      operation: 'yank',
+      packageName: 'example',
+      packageVersion: '1.2.3',
+      reason: 'security response',
+      auth: 'login',
+      detach: false,
+      outputFormat: 'json',
+    }).execute();
+    await vi.advanceTimersByTimeAsync(2_000);
+
+    await expect(execution).resolves.toBe(1);
+    expect(stdout).toHaveBeenCalledWith(
+      `${JSON.stringify({
+        ok: false,
+        operation: 'yank',
+        registry: trust.alias,
+        requestId: 'request-yank-failed',
+        status: 'rejected',
+        checks: [
+          {
+            checkId: 'lifecycle.version-state',
+            executionState: 'completed',
+            conclusion: 'failure',
+            reasonCode: 'VERSION_STATE_CHANGED',
+          },
+        ],
+      })}\n`,
+    );
   });
 });
 

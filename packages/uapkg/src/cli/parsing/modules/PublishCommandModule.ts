@@ -14,7 +14,10 @@ export class PublishCommandModule implements UAPKGCommandModule {
       (builder) =>
         builder
           .option('registry', { type: 'string', describe: 'Configured registry alias' })
-          .option('owner', { type: 'string', describe: 'Owner organization for a new unscoped package' })
+          .option('owner', {
+            type: 'string',
+            describe: 'UAPKG organization namespace for a new unscoped package',
+          })
           .option('repository', { type: 'string', describe: 'GitHub owner/repository coordinate' })
           .option('tag', { type: 'string', describe: 'GitHub Release tag (defaults to v<version>)' })
           .option('asset', { type: 'string', describe: 'GitHub Release asset name (defaults to package.tgz)' })

@@ -247,6 +247,165 @@ describe('ControlPlaneClient request-scoped OTP transport', () => {
   });
 });
 
+describe('ControlPlaneClient registry request detail', () => {
+  const request = {
+    id: 'request-1',
+    registryId: '00000000-0000-4000-a000-000000000020',
+    kind: 'publish',
+    status: 'operationally_failed',
+  } as const;
+  const credential = { kind: 'bearer', accessToken: 'memory-only-token' } as const;
+
+  it('parses bounded checks and sanitized terminal retry exhaustion details', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json({
+          ok: true,
+          request,
+          checks: [
+            {
+              checkId: 'publish.source-public-access',
+              executionState: 'completed',
+              conclusion: 'failure',
+              reasonCode: 'SOURCE_REPOSITORY_PRIVATE',
+              evidence: { credential: 'must-not-be-returned' },
+            },
+            {
+              checkId: 'publish.source-revalidation',
+              executionState: 'completed',
+              conclusion: 'skipped',
+              reasonCode: 'unavailable_in_private_registry',
+            },
+          ],
+          terminalFailure: {
+            reasonCode: 'GITHUB_REGISTRY_APP_INSTALLATION_REQUIRED',
+            attempts: 5,
+            maxAttempts: 5,
+            message: 'must-not-be-returned',
+          },
+        }),
+      ),
+    );
+
+    const detail = await new ControlPlaneClient(UAPKG_CONTROL_PLANE_API).getRegistryRequestDetail(
+      credential,
+      request.id,
+    );
+
+    expect(detail).toEqual({
+      request,
+      checks: [
+        {
+          checkId: 'publish.source-public-access',
+          executionState: 'completed',
+          conclusion: 'failure',
+          reasonCode: 'SOURCE_REPOSITORY_PRIVATE',
+        },
+        {
+          checkId: 'publish.source-revalidation',
+          executionState: 'completed',
+          conclusion: 'skipped',
+          reasonCode: 'unavailable_in_private_registry',
+        },
+      ],
+      terminalFailure: {
+        reasonCode: 'GITHUB_REGISTRY_APP_INSTALLATION_REQUIRED',
+        attempts: 5,
+        maxAttempts: 5,
+      },
+    });
+    expect(JSON.stringify(detail)).not.toContain('must-not-be-returned');
+  });
+
+  it('accepts the original summary-only response and preserves getRegistryRequest', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        Response.json({
+          ok: true,
+          request,
+          // The summary-only method intentionally ignores additive fields,
+          // including ones an older client does not understand.
+          checks: 'future-or-malformed-detail',
+        }),
+      ),
+    );
+    const client = new ControlPlaneClient(UAPKG_CONTROL_PLANE_API);
+
+    await expect(client.getRegistryRequest(credential, request.id)).resolves.toEqual(request);
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ ok: true, request })),
+    );
+    await expect(client.getRegistryRequestDetail(credential, request.id)).resolves.toEqual({ request });
+  });
+
+  it.each([
+    {
+      name: 'more than 100 checks',
+      response: {
+        ok: true,
+        request,
+        checks: Array.from({ length: 101 }, (_, index) => ({
+          checkId: `publish.check-${index}`,
+          executionState: 'pending',
+        })),
+      },
+    },
+    {
+      name: 'an oversized check identifier',
+      response: {
+        ok: true,
+        request,
+        checks: [{ checkId: 'x'.repeat(129), executionState: 'pending' }],
+      },
+    },
+    {
+      name: 'a control character in a displayed check identifier',
+      response: {
+        ok: true,
+        request,
+        checks: [{ checkId: 'publish.check\u001b[31m', executionState: 'pending' }],
+      },
+    },
+    {
+      name: 'an oversized check reason code',
+      response: {
+        ok: true,
+        request,
+        checks: [{ checkId: 'publish.check', executionState: 'completed', reasonCode: 'x'.repeat(129) }],
+      },
+    },
+    {
+      name: 'an invalid terminal reason code',
+      response: {
+        ok: true,
+        request,
+        terminalFailure: { reasonCode: 'not_safe_for_display', attempts: 5, maxAttempts: 5 },
+      },
+    },
+    {
+      name: 'a non-positive attempt count',
+      response: {
+        ok: true,
+        request,
+        terminalFailure: { reasonCode: 'RETRY_EXHAUSTED', attempts: 0 },
+      },
+    },
+  ])('rejects $name', async ({ response }) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json(response)),
+    );
+
+    await expect(
+      new ControlPlaneClient(UAPKG_CONTROL_PLANE_API).getRegistryRequestDetail(credential, request.id),
+    ).rejects.toMatchObject({ code: 'REGISTRY_REQUEST_RESPONSE_INVALID' });
+  });
+});
+
 describe('ControlPlaneClient OAuth scope challenges', () => {
   it('preserves a validated DPoP insufficient_scope challenge as a typed 403 without retrying', async () => {
     const fetchMock = vi.fn(async () =>

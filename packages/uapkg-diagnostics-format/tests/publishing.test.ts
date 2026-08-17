@@ -19,6 +19,7 @@ function publishFailure() {
       facts: [
         { kind: 'package', value: 'demo-package' },
         { kind: 'requested-owner', value: 'acme' },
+        { kind: 'allowed-owner', value: 'other-org' },
         { kind: 'token-owner', value: 'other-org' },
       ],
       resources: [
@@ -38,7 +39,8 @@ describe('publish diagnostic formatting', () => {
       [
         '[ERROR PUBLISH_REQUEST_FAILED]: The selected token was created for a different organization.',
         '  Package: demo-package',
-        '  Requested owner: acme',
+        '  Requested UAPKG owner: acme',
+        '  Allowed UAPKG owner: other-org',
         '  Token owner: other-org',
         '  Server code: GAT_OWNER_ORGANIZATION_MISMATCH',
         '  HTTP status: 403',
@@ -71,8 +73,10 @@ describe('publish diagnostic formatting', () => {
       diagnostic.message,
       'Package:',
       'demo-package',
-      'Requested owner:',
+      'Requested UAPKG owner:',
       'acme',
+      'Allowed UAPKG owner:',
+      'other-org',
       'Token owner:',
       'other-org',
       'Server code:',

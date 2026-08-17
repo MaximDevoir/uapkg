@@ -178,6 +178,37 @@ export interface RegistryRequestSummary {
   };
 }
 
+export type RegistryRequestCheckExecutionState =
+  | 'pending'
+  | 'running'
+  | 'retrying'
+  | 'blocked_by_dependency'
+  | 'completed';
+
+export type RegistryRequestCheckConclusion = 'success' | 'failure' | 'skipped';
+
+/** One bounded, caller-visible result from the request's sealed check plan. */
+export interface RegistryRequestCheck {
+  readonly checkId: string;
+  readonly executionState: RegistryRequestCheckExecutionState;
+  readonly conclusion?: RegistryRequestCheckConclusion;
+  readonly reasonCode?: string;
+}
+
+/** Sanitized durable retry-exhaustion details for an operational failure. */
+export interface RegistryRequestTerminalFailure {
+  readonly reasonCode: string;
+  readonly attempts?: number;
+  readonly maxAttempts?: number;
+}
+
+/** Additive detail returned by the request-status endpoint. */
+export interface RegistryRequestDetail {
+  readonly request: RegistryRequestSummary;
+  readonly checks?: readonly RegistryRequestCheck[];
+  readonly terminalFailure?: RegistryRequestTerminalFailure;
+}
+
 export interface ControlPlaneApiErrorBody {
   readonly ok: false;
   readonly error: {

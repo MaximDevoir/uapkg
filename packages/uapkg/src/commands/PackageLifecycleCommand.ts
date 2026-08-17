@@ -7,20 +7,19 @@ import { ControlPlaneClient } from '../control-plane/ControlPlaneClient.js';
 import {
   type ControlPlaneAuthMode,
   ControlPlaneError,
+  type RegistryRequestDetail,
   type RegistryRequestStatus,
   type RegistryRequestSubmission,
 } from '../control-plane/ControlPlaneTypes.js';
 import { PublishIdempotencyStore } from '../control-plane/PublishIdempotencyStore.js';
 import { InkPromptService } from '../prompts/InkPromptService.js';
+import {
+  formatRegistryRequestTerminal,
+  isRegistryRequestSuccessStatus,
+  isRegistryRequestTerminalStatus,
+} from '../reporting/RegistryRequestTerminalFormatter.js';
 import type { Command } from './Command.js';
 
-const TERMINAL_STATUSES = new Set<RegistryRequestStatus>([
-  'ready',
-  'ready_superseded',
-  'rejected',
-  'operationally_failed',
-]);
-const SUCCESS_STATUSES = new Set<RegistryRequestStatus>(['ready', 'ready_superseded']);
 const WATCH_TIMEOUT_MS = 30 * 60 * 1000;
 const REASON_REQUIRED: ReadonlySet<UAPKGLifecycleCommandName> = new Set(['yank', 'unyank', 'unpublish', 'deprecate']);
 
@@ -92,28 +91,28 @@ export class PackageLifecycleCommand implements Command {
         requestOtp = undefined;
       }
       if (this.options.detach) {
-        this.print(created.requestId, created.status, trust.alias, undefined);
+        this.printCreated(created.requestId, created.status, trust.alias);
         return 0;
       }
 
-      let request = await client.getRegistryRequest(authentication.credential, created.requestId);
+      let detail = await client.getRegistryRequestDetail(authentication.credential, created.requestId);
       let previousStatus = '';
       const deadline = Date.now() + WATCH_TIMEOUT_MS;
-      while (!TERMINAL_STATUSES.has(request.status)) {
+      while (!isRegistryRequestTerminalStatus(detail.request.status)) {
         if (Date.now() >= deadline) {
           throw new Error(
-            `Timed out waiting for request ${request.id}. Check it with \`uapkg requests status ${request.id}\`.`,
+            `Timed out waiting for request ${detail.request.id}. Check it with \`uapkg requests status ${detail.request.id}\`.`,
           );
         }
-        if (this.options.outputFormat === 'text' && request.status !== previousStatus) {
+        if (this.options.outputFormat === 'text' && detail.request.status !== previousStatus) {
           process.stdout.write(
-            `${request.id}: ${request.status}${request.currentStep ? ` (${request.currentStep})` : ''}\n`,
+            `${detail.request.id}: ${detail.request.status}${detail.request.currentStep ? ` (${detail.request.currentStep})` : ''}\n`,
           );
-          previousStatus = request.status;
+          previousStatus = detail.request.status;
         }
         await delay(2_000);
         try {
-          request = await client.getRegistryRequest(authentication.credential, created.requestId);
+          detail = await client.getRegistryRequestDetail(authentication.credential, created.requestId);
         } catch (error) {
           if (!(error instanceof ControlPlaneError) || error.status !== 401) throw error;
           if (authentication.kind === 'gat') throw error;
@@ -121,24 +120,24 @@ export class PackageLifecycleCommand implements Command {
             this.root.accountManager.invalidateAccessCredentials(trust);
           }
           authentication = await selector.select(authentication.kind, trust, ['publishing.request.read.self'], false);
-          request = await client.getRegistryRequest(authentication.credential, created.requestId);
+          detail = await client.getRegistryRequestDetail(authentication.credential, created.requestId);
         }
       }
 
       idempotencyStore.clear(submissionDigest);
 
-      if (SUCCESS_STATUSES.has(request.status)) {
+      if (isRegistryRequestSuccessStatus(detail.request.status)) {
         let refreshWarning: string | undefined;
         try {
           await this.root.registryTrustResolver.forceRefresh(trust);
         } catch (error) {
           refreshWarning = error instanceof Error ? error.message : String(error);
         }
-        this.print(request.id, request.status, trust.alias, refreshWarning);
+        this.printTerminal(detail, trust.alias, refreshWarning);
         return 0;
       }
 
-      this.print(request.id, request.status, trust.alias, undefined);
+      this.printTerminal(detail, trust.alias);
       return 1;
     } catch (error) {
       process.stderr.write(`${describeControlPlaneError(error)}\n`);
@@ -146,21 +145,15 @@ export class PackageLifecycleCommand implements Command {
     }
   }
 
-  private print(
-    requestId: string,
-    status: RegistryRequestStatus,
-    registryAlias: string,
-    refreshWarning?: string,
-  ): void {
+  private printCreated(requestId: string, status: RegistryRequestStatus, registryAlias: string): void {
     if (this.options.outputFormat === 'json') {
       process.stdout.write(
         `${JSON.stringify({
-          ok: this.options.detach || SUCCESS_STATUSES.has(status),
+          ok: true,
           operation: this.options.operation,
           registry: registryAlias,
           requestId,
           status,
-          ...(refreshWarning ? { registryRefreshWarning: refreshWarning } : {}),
         })}\n`,
       );
       return;
@@ -168,9 +161,23 @@ export class PackageLifecycleCommand implements Command {
     process.stdout.write(
       `${this.options.operation} request ${requestId} for ${this.options.packageName}@${this.options.packageVersion}: ${status}.\n`,
     );
-    if (refreshWarning) {
-      process.stderr.write(`The operation succeeded, but the local registry refresh failed: ${refreshWarning}\n`);
-    }
+  }
+
+  private printTerminal(detail: RegistryRequestDetail, registryAlias: string, refreshWarning?: string): void {
+    const output = formatRegistryRequestTerminal({
+      detail,
+      registryAlias,
+      outputFormat: this.options.outputFormat,
+      presentation: {
+        kind: 'lifecycle',
+        operation: this.options.operation,
+        packageName: this.options.packageName,
+        packageVersion: this.options.packageVersion,
+      },
+      ...(refreshWarning ? { registryRefreshWarning: refreshWarning } : {}),
+    });
+    process.stdout.write(output.stdout);
+    if (output.stderr) process.stderr.write(output.stderr);
   }
 }
 

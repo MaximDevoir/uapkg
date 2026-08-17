@@ -41,6 +41,7 @@ const ownerRequiredDetailsSchema = packageDetailsSchema;
 const requestedOwnerDetailsSchema = packageDetailsSchema.extend({
   requestedOwnerOrganizationName: ownerNameSchema.optional(),
   ownerOrganizationName: ownerNameSchema.optional(),
+  allowedOwnerOrganizationNames: ownerNamesSchema.optional(),
 });
 const gatOwnerMismatchDetailsSchema = packageDetailsSchema.extend({
   requestedOwnerOrganizationName: ownerNameSchema.optional(),
@@ -243,12 +244,26 @@ const oauthScopeSpec = defineSpec(oauthScopeDetailsSchema, (details) => ({
 const packageOwnerNotAuthorizedSpec = defineSpec(requestedOwnerDetailsSchema, (details, context) => {
   const owner =
     details.requestedOwnerOrganizationName ?? details.ownerOrganizationName ?? safeOwner(context.requestedOwner);
+  const allowedOwners = details.allowedOwnerOrganizationNames ?? [];
+  const scoped = scopedOwner(context.packageName);
+  const retryOwner = allowedOwners.length === 1 && !scoped ? allowedOwners[0] : undefined;
   return {
     message: owner
-      ? `Your account is not allowed to create this package for organization "${owner}".`
-      : 'Your account is not allowed to create this package for the requested organization.',
-    hint: 'Choose an organization where you can publish, or ask an organization administrator to grant access.',
-    facts: compactFacts([fact('requested-owner', owner)]),
+      ? `Your account is not allowed to create this package for UAPKG organization "${owner}".`
+      : 'Your account is not allowed to create this package for the requested UAPKG organization.',
+    hint: scoped
+      ? allowedOwners.length > 0
+        ? 'This package’s `@owner` scope determines ownership. Rebuild it under one of the allowed UAPKG organization scopes shown above.'
+        : 'This package’s `@owner` scope determines ownership. Rebuild it under a UAPKG organization scope where you can publish, or ask an organization administrator to grant access.'
+      : retryOwner
+        ? `Retry with \`--owner ${retryOwner}\` to use the allowed UAPKG organization namespace.`
+        : allowedOwners.length > 0
+          ? 'Choose one of the allowed UAPKG organization namespaces with `--owner`, or ask a UAPKG organization administrator to grant access.'
+          : 'Choose a UAPKG organization namespace where you can publish, or ask a UAPKG organization administrator to grant access.',
+    facts: compactFacts([
+      fact('requested-owner', owner),
+      ...allowedOwners.map((allowedOwner) => fact('allowed-owner', allowedOwner)),
+    ]),
   };
 });
 
@@ -647,6 +662,11 @@ export const PUBLISH_SUBMISSION_ERROR_CATALOG = {
   REGISTRY_LINK_MISSING: fixedSpec(
     'The selected registry is not connected to an initialized repository.',
     'Finish the registry repository connection in account settings, then try publishing again.',
+    ['registries'],
+  ),
+  REGISTRY_LINK_NOT_READY: fixedSpec(
+    'The selected registry repository connection is incomplete.',
+    'Finish reconnecting the registry repository in account settings, then try publishing again.',
     ['registries'],
   ),
   PACKAGE_POLICY_NOT_CONFIGURED: internalServiceSpec(

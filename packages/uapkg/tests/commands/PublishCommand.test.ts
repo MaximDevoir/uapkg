@@ -23,6 +23,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  vi.useRealTimers();
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
   await Promise.all(cleanups.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
@@ -125,11 +126,13 @@ describe('PublishCommand (artifact-first)', () => {
       status: 'queued',
       message: 'queued',
     });
-    vi.spyOn(ControlPlaneClient.prototype, 'getRegistryRequest').mockResolvedValue({
-      id: 'request-ready',
-      registryId: trust.registryId,
-      kind: 'publish',
-      status: 'ready',
+    vi.spyOn(ControlPlaneClient.prototype, 'getRegistryRequestDetail').mockResolvedValue({
+      request: {
+        id: 'request-ready',
+        registryId: trust.registryId,
+        kind: 'publish',
+        status: 'ready',
+      },
     });
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
     const root = publishRoot(trust, {
@@ -189,6 +192,78 @@ describe('PublishCommand (artifact-first)', () => {
       { idempotencyKey: expect.any(String), otp: '123456' },
     );
     expect(forceRefresh).toHaveBeenCalledWith(trust);
+  });
+
+  it('watches a queued publish through rejection and returns the failed check', async () => {
+    const trust = registryTrust();
+    const archivePath = await makeArchive({ name: 'example', version: '1.2.3', kind: 'plugin' });
+    vi.spyOn(AuthenticationSelector.prototype, 'select').mockResolvedValue({
+      kind: 'login',
+      credential: { kind: 'bearer', accessToken: 'memory-only-token' },
+    });
+    vi.spyOn(ControlPlaneClient.prototype, 'submitRegistryRequest').mockResolvedValue({
+      requestId: 'request-rejected',
+      status: 'queued',
+      message: 'queued',
+    });
+    vi.spyOn(ControlPlaneClient.prototype, 'getRegistryRequestDetail')
+      .mockResolvedValueOnce({
+        request: {
+          id: 'request-rejected',
+          registryId: trust.registryId,
+          kind: 'publish',
+          status: 'checking',
+        },
+      })
+      .mockResolvedValueOnce({
+        request: {
+          id: 'request-rejected',
+          registryId: trust.registryId,
+          kind: 'publish',
+          status: 'rejected',
+        },
+        checks: [
+          {
+            checkId: 'publish.source-revalidation',
+            executionState: 'completed',
+            conclusion: 'failure',
+            reasonCode: 'GITHUB_RELEASE_NOT_FOUND',
+          },
+        ],
+      });
+    const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+
+    const execution = new PublishCommand(publishRoot(trust), {
+      repository: 'acme/example',
+      tag: 'v1.2.3',
+      asset: 'package.tgz',
+      assetPath: archivePath,
+      auth: 'login',
+      detach: false,
+      outputFormat: 'json',
+    }).execute();
+
+    await expect(execution).resolves.toBe(1);
+    expect(stdout).toHaveBeenCalledWith(
+      `${JSON.stringify({
+        ok: false,
+        registry: trust.alias,
+        request: {
+          id: 'request-rejected',
+          registryId: trust.registryId,
+          kind: 'publish',
+          status: 'rejected',
+        },
+        checks: [
+          {
+            checkId: 'publish.source-revalidation',
+            executionState: 'completed',
+            conclusion: 'failure',
+            reasonCode: 'GITHUB_RELEASE_NOT_FOUND',
+          },
+        ],
+      })}\n`,
+    );
   });
 
   it('reuses the persisted idempotency key for a retried identical submission', async () => {
@@ -374,7 +449,7 @@ describe('PublishCommand (artifact-first)', () => {
       status: 'queued',
       message: 'queued',
     });
-    vi.spyOn(ControlPlaneClient.prototype, 'getRegistryRequest').mockRejectedValue(
+    vi.spyOn(ControlPlaneClient.prototype, 'getRegistryRequestDetail').mockRejectedValue(
       new ControlPlaneError('REQUEST_STATUS_UNAVAILABLE', 'Status polling failed.', 503),
     );
     const reportOne = vi.fn();
@@ -420,13 +495,15 @@ describe('PublishCommand (artifact-first)', () => {
       message: 'queued',
     });
     const getRequest = vi
-      .spyOn(ControlPlaneClient.prototype, 'getRegistryRequest')
+      .spyOn(ControlPlaneClient.prototype, 'getRegistryRequestDetail')
       .mockRejectedValueOnce(new ControlPlaneError('OIDC_SESSION_EXPIRED', 'Session expired.', 401))
       .mockResolvedValueOnce({
-        id: 'request-ready',
-        registryId: trust.registryId,
-        kind: 'publish',
-        status: 'ready',
+        request: {
+          id: 'request-ready',
+          registryId: trust.registryId,
+          kind: 'publish',
+          status: 'ready',
+        },
       });
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
 

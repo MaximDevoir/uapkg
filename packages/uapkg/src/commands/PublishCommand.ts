@@ -15,6 +15,7 @@ import { ControlPlaneClient } from '../control-plane/ControlPlaneClient.js';
 import {
   type ControlPlaneAuthMode,
   ControlPlaneError,
+  type RegistryRequestDetail,
   type RegistryRequestStatus,
   type RegistryRequestSubmission,
 } from '../control-plane/ControlPlaneTypes.js';
@@ -24,16 +25,14 @@ import {
 } from '../control-plane/PublishIdempotencyStore.js';
 import { publishRequestDiagnosticForError } from '../control-plane/PublishRequestErrorMapper.js';
 import { InkPromptService } from '../prompts/InkPromptService.js';
+import {
+  formatRegistryRequestTerminal,
+  isRegistryRequestSuccessStatus,
+  isRegistryRequestTerminalStatus,
+} from '../reporting/RegistryRequestTerminalFormatter.js';
 import type { Command } from './Command.js';
 
 const execFileAsync = promisify(execFile);
-const TERMINAL_STATUSES = new Set<RegistryRequestStatus>([
-  'ready',
-  'ready_superseded',
-  'rejected',
-  'operationally_failed',
-]);
-const SUCCESS_STATUSES = new Set<RegistryRequestStatus>(['ready', 'ready_superseded']);
 const PUBLISH_WATCH_TIMEOUT_MS = 30 * 60 * 1000;
 
 export interface PublishCommandOptions {
@@ -176,7 +175,7 @@ export class PublishCommand implements Command {
 
         const readRequest = async () => {
           try {
-            return await client.getRegistryRequest(authentication.credential, created.requestId);
+            return await client.getRegistryRequestDetail(authentication.credential, created.requestId);
           } catch (error) {
             if (!(error instanceof ControlPlaneError) || error.status !== 401) throw error;
             if (authentication.kind === 'gat') throw error;
@@ -184,43 +183,43 @@ export class PublishCommand implements Command {
               this.root.accountManager.invalidateAccessCredentials(trust);
             }
             authentication = await selector.select(authentication.kind, trust, ['publishing.request.read.self'], false);
-            return client.getRegistryRequest(authentication.credential, created.requestId);
+            return client.getRegistryRequestDetail(authentication.credential, created.requestId);
           }
         };
 
-        let request = await readRequest();
+        let detail = await readRequest();
         let previousStatus = '';
         const deadline = Date.now() + PUBLISH_WATCH_TIMEOUT_MS;
-        while (!TERMINAL_STATUSES.has(request.status)) {
+        while (!isRegistryRequestTerminalStatus(detail.request.status)) {
           if (Date.now() >= deadline) {
             throw new Error(
-              `Timed out waiting for publishing request ${request.id}. Check it with \`uapkg requests status ${request.id}\`.`,
+              `Timed out waiting for publishing request ${detail.request.id}. Check it with \`uapkg requests status ${detail.request.id}\`.`,
             );
           }
-          if (this.options.outputFormat === 'text' && request.status !== previousStatus) {
+          if (this.options.outputFormat === 'text' && detail.request.status !== previousStatus) {
             process.stdout.write(
-              `${request.id}: ${request.status}${request.currentStep ? ` (${request.currentStep})` : ''}\n`,
+              `${detail.request.id}: ${detail.request.status}${detail.request.currentStep ? ` (${detail.request.currentStep})` : ''}\n`,
             );
-            previousStatus = request.status;
+            previousStatus = detail.request.status;
           }
           await delay(2_000);
-          request = await readRequest();
+          detail = await readRequest();
         }
 
         if (!usesActionsIdempotency) idempotencyStore.clear(submissionDigest);
 
-        if (SUCCESS_STATUSES.has(request.status)) {
+        if (isRegistryRequestSuccessStatus(detail.request.status)) {
           let refreshWarning: string | undefined;
           try {
             await this.root.registryTrustResolver.forceRefresh(trust);
           } catch (error) {
             refreshWarning = error instanceof Error ? error.message : String(error);
           }
-          this.printTerminal(request, trust.alias, refreshWarning);
+          this.printTerminal(detail, trust.alias, refreshWarning);
           return 0;
         }
 
-        this.printTerminal(request, trust.alias);
+        this.printTerminal(detail, trust.alias);
         return 1;
       } finally {
         await artifact.cleanup();
@@ -280,29 +279,16 @@ export class PublishCommand implements Command {
     process.stdout.write(`Publishing request ${requestId} submitted to "${registryAlias}" (${status}).\n`);
   }
 
-  private printTerminal(
-    request: { id: string; status: RegistryRequestStatus; currentStep?: string },
-    registryAlias: string,
-    refreshWarning?: string,
-  ): void {
-    if (this.options.outputFormat === 'json') {
-      process.stdout.write(
-        `${JSON.stringify({
-          ok: SUCCESS_STATUSES.has(request.status),
-          registry: registryAlias,
-          request,
-          ...(refreshWarning ? { registryRefreshWarning: refreshWarning } : {}),
-        })}\n`,
-      );
-      return;
-    }
-    process.stdout.write(`Publishing request ${request.id}: ${request.status}.\n`);
-    if (request.status === 'ready_superseded') {
-      process.stdout.write('The publication was accepted; a newer change to the same package is already projected.\n');
-    }
-    if (refreshWarning) {
-      process.stderr.write(`Package publication succeeded, but the local registry refresh failed: ${refreshWarning}\n`);
-    }
+  private printTerminal(detail: RegistryRequestDetail, registryAlias: string, refreshWarning?: string): void {
+    const output = formatRegistryRequestTerminal({
+      detail,
+      registryAlias,
+      outputFormat: this.options.outputFormat,
+      presentation: { kind: 'publish' },
+      ...(refreshWarning ? { registryRefreshWarning: refreshWarning } : {}),
+    });
+    process.stdout.write(output.stdout);
+    if (output.stderr) process.stderr.write(output.stderr);
   }
 }
 

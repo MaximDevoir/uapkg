@@ -138,17 +138,100 @@ describe('publishRequestDiagnosticForError', () => {
     expect(JSON.stringify(diagnostic)).not.toContain('publishing.request.create');
   });
 
-  it('names the requested organization when the account cannot create its package', () => {
+  it('names requested and allowed UAPKG owners and provides an exact option fragment for one allowed namespace', () => {
     const diagnostic = publishRequestDiagnosticForError(
       new ControlPlaneError('PACKAGE_OWNER_NOT_AUTHORIZED', 'unsafe', 403, {
         packageName: 'example',
         requestedOwnerOrganizationName: 'widgets',
+        allowedOwnerOrganizationNames: ['ts1'],
       }),
       { ...context, requestedOwner: 'widgets' },
     );
 
     expect(diagnostic.message).toContain('"widgets"');
     expect(diagnostic.data.facts).toContainEqual({ kind: 'requested-owner', value: 'widgets' });
+    expect(diagnostic.data.facts).toContainEqual({ kind: 'allowed-owner', value: 'ts1' });
+    expect(diagnostic.hint).toContain('Retry with `--owner ts1`');
+    expect(diagnostic.data.resources).not.toContainEqual(
+      expect.objectContaining({ kind: 'command', command: expect.stringContaining('--owner') }),
+    );
+  });
+
+  it('does not recommend --owner when the package scope determines ownership', () => {
+    const diagnostic = publishRequestDiagnosticForError(
+      new ControlPlaneError('PACKAGE_OWNER_NOT_AUTHORIZED', 'unsafe', 403, {
+        requestedOwnerOrganizationName: 'widgets',
+        allowedOwnerOrganizationNames: ['ts1'],
+      }),
+      { ...context, packageName: '@widgets/example', requestedOwner: 'widgets' },
+    );
+
+    expect(diagnostic.hint).toContain('`@owner` scope determines ownership');
+    expect(diagnostic.hint).toContain('allowed UAPKG organization scopes');
+    expect(diagnostic.hint).not.toContain('--owner');
+  });
+
+  it('uses generic guidance when the server has no allowed owner suggestions', () => {
+    const diagnostic = publishRequestDiagnosticForError(
+      new ControlPlaneError('PACKAGE_OWNER_NOT_AUTHORIZED', 'unsafe', 403, {
+        requestedOwnerOrganizationName: 'widgets',
+        allowedOwnerOrganizationNames: [],
+      }),
+      { ...context, requestedOwner: 'widgets' },
+    );
+
+    expect(diagnostic.hint).toContain('Choose a UAPKG organization namespace where you can publish');
+    expect(diagnostic.data.facts).not.toContainEqual(expect.objectContaining({ kind: 'allowed-owner' }));
+  });
+
+  it('sorts multiple allowed UAPKG owners without claiming one exact retry', () => {
+    const diagnostic = publishRequestDiagnosticForError(
+      new ControlPlaneError('PACKAGE_OWNER_NOT_AUTHORIZED', 'unsafe', 403, {
+        requestedOwnerOrganizationName: 'widgets',
+        allowedOwnerOrganizationNames: ['zeta', 'acme', 'acme'],
+      }),
+      { ...context, requestedOwner: 'widgets' },
+    );
+
+    expect(diagnostic.data.facts.filter((value) => value.kind === 'allowed-owner')).toEqual([
+      { kind: 'allowed-owner', value: 'acme' },
+      { kind: 'allowed-owner', value: 'zeta' },
+    ]);
+    expect(diagnostic.hint).toContain('Choose one of the allowed UAPKG organization namespaces');
+    expect(diagnostic.data.resources).not.toContainEqual(
+      expect.objectContaining({ kind: 'command', command: expect.stringContaining('--owner') }),
+    );
+  });
+
+  it('rejects malformed or oversized allowed-owner diagnostics as one untrusted detail object', () => {
+    const oversizedOwner = `owner-${'x'.repeat(101)}`;
+    const diagnostic = publishRequestDiagnosticForError(
+      new ControlPlaneError('PACKAGE_OWNER_NOT_AUTHORIZED', 'unsafe', 403, {
+        requestedOwnerOrganizationName: 'server-requested-owner',
+        allowedOwnerOrganizationNames: ['ts1', oversizedOwner],
+      }),
+      { ...context, requestedOwner: 'safe-local-owner' },
+    );
+
+    expect(diagnostic.data.facts).toContainEqual({ kind: 'requested-owner', value: 'safe-local-owner' });
+    expect(diagnostic.data.facts).not.toContainEqual(expect.objectContaining({ kind: 'allowed-owner' }));
+    expect(JSON.stringify(diagnostic)).not.toContain('server-requested-owner');
+    expect(JSON.stringify(diagnostic)).not.toContain(oversizedOwner);
+  });
+
+  it('rejects a server owner list above the public 20-name bound instead of presenting it as complete', () => {
+    const allowedOwnerOrganizationNames = Array.from({ length: 21 }, (_, index) => `team-${index}`);
+    const diagnostic = publishRequestDiagnosticForError(
+      new ControlPlaneError('PACKAGE_OWNER_NOT_AUTHORIZED', 'unsafe', 403, {
+        requestedOwnerOrganizationName: 'server-requested-owner',
+        allowedOwnerOrganizationNames,
+      }),
+      { ...context, requestedOwner: 'safe-local-owner' },
+    );
+
+    expect(diagnostic.data.facts).toContainEqual({ kind: 'requested-owner', value: 'safe-local-owner' });
+    expect(diagnostic.data.facts).not.toContainEqual(expect.objectContaining({ kind: 'allowed-owner' }));
+    expect(diagnostic.hint).toContain('Choose a UAPKG organization namespace where you can publish');
   });
 
   it.each([
@@ -329,6 +412,24 @@ describe('publishRequestDiagnosticForError', () => {
     const diagnostic = publishRequestDiagnosticForError(new ControlPlaneError(serverCode, 'unsafe', 400), context);
 
     expect(diagnostic.hint).toContain(expectedFix);
+  });
+
+  it('maps an incomplete registry link to reconnect guidance and settings', () => {
+    const diagnostic = publishRequestDiagnosticForError(
+      new ControlPlaneError('REGISTRY_LINK_NOT_READY', 'unsafe', 409),
+      context,
+    );
+
+    expect(diagnostic).toMatchObject({
+      message: 'The selected registry repository connection is incomplete.',
+      hint: expect.stringContaining('Finish reconnecting'),
+      data: { serverCode: 'REGISTRY_LINK_NOT_READY', status: 409 },
+    });
+    expect(diagnostic.data.resources).toContainEqual({
+      kind: 'url',
+      url: 'https://account.uapkg.dev/settings/registries',
+      label: 'Registry settings',
+    });
   });
 
   it('uses non-leaking fallbacks for unknown server codes and network errors', () => {

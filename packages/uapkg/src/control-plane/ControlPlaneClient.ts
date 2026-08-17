@@ -13,6 +13,7 @@ import {
   OAuthScopeUnsupportedError,
   parseOAuthScopeTokens,
   type RegistryOperation,
+  type RegistryRequestDetail,
   type RegistryRequestStatus,
   type RegistryRequestSubmission,
   type RegistryRequestSummary,
@@ -116,6 +117,37 @@ const requestSummarySchema = z
   })
   .passthrough();
 
+const requestCheckIdSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(128)
+  .refine((value) => !hasUnsafeDisplayCharacter(value));
+const requestCheckReasonCodeSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(128)
+  .refine((value) => !hasUnsafeDisplayCharacter(value));
+const terminalFailureReasonCodeSchema = z.string().regex(/^[A-Z][A-Z0-9_]{0,127}$/u);
+const requestCheckSchema = z.object({
+  checkId: requestCheckIdSchema,
+  executionState: z.enum(['pending', 'running', 'retrying', 'blocked_by_dependency', 'completed']),
+  conclusion: z.enum(['success', 'failure', 'skipped']).optional(),
+  reasonCode: requestCheckReasonCodeSchema.optional(),
+});
+const terminalFailureSchema = z.object({
+  reasonCode: terminalFailureReasonCodeSchema,
+  attempts: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional(),
+  maxAttempts: z.number().int().positive().max(Number.MAX_SAFE_INTEGER).optional(),
+});
+const requestDetailResponseSchema = z.object({
+  ok: z.literal(true),
+  request: requestSummarySchema,
+  checks: z.array(requestCheckSchema).max(100).optional(),
+  terminalFailure: terminalFailureSchema.optional(),
+});
+
 export class ControlPlaneClient {
   private readonly apiBaseUrl: string;
 
@@ -214,6 +246,27 @@ export class ControlPlaneClient {
     return parsed.data.request;
   }
 
+  /**
+   * Reads the additive request-detail projection. The older
+   * `getRegistryRequest` method deliberately remains summary-only so callers
+   * compiled against the original response contract keep their behavior.
+   */
+  public async getRegistryRequestDetail(
+    credential: ControlPlaneCredential,
+    requestId: string,
+  ): Promise<RegistryRequestDetail> {
+    const value = await this.requestJson(credential, 'GET', `/v1/registry-requests/${encodeURIComponent(requestId)}`);
+    const parsed = requestDetailResponseSchema.safeParse(value);
+    if (!parsed.success) {
+      throw new ControlPlaneError('REGISTRY_REQUEST_RESPONSE_INVALID', 'The publishing request response was invalid.');
+    }
+    return {
+      request: parsed.data.request,
+      ...(parsed.data.checks ? { checks: parsed.data.checks } : {}),
+      ...(parsed.data.terminalFailure ? { terminalFailure: parsed.data.terminalFailure } : {}),
+    };
+  }
+
   public async listRegistryRequests(
     credential: ControlPlaneCredential,
     registryId: string,
@@ -305,6 +358,25 @@ export class ControlPlaneClient {
       return operation();
     }
   }
+}
+
+function hasUnsafeDisplayCharacter(value: string): boolean {
+  for (const character of value) {
+    const codePoint = character.codePointAt(0);
+    if (
+      codePoint !== undefined &&
+      (codePoint <= 0x1f ||
+        (codePoint >= 0x7f && codePoint <= 0x9f) ||
+        codePoint === 0x061c ||
+        codePoint === 0x200e ||
+        codePoint === 0x200f ||
+        (codePoint >= 0x2028 && codePoint <= 0x202e) ||
+        (codePoint >= 0x2066 && codePoint <= 0x2069))
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function boundedRequestSignal(signal?: AbortSignal): AbortSignal {

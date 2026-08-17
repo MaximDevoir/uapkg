@@ -2,7 +2,16 @@ import type { CompositionRoot } from '../app/CompositionRoot.js';
 import type { UAPKGOutputFormat } from '../cli/UAPKGCommandLine.js';
 import { describeControlPlaneError } from '../control-plane/AccountManager.js';
 import { ControlPlaneClient } from '../control-plane/ControlPlaneClient.js';
-import { ControlPlaneError, type RegistryRequestStatus } from '../control-plane/ControlPlaneTypes.js';
+import {
+  ControlPlaneError,
+  type RegistryRequestDetail,
+  type RegistryRequestStatus,
+} from '../control-plane/ControlPlaneTypes.js';
+import {
+  formatRegistryRequestTerminal,
+  isRegistryRequestSuccessStatus,
+  isRegistryRequestTerminalStatus,
+} from '../reporting/RegistryRequestTerminalFormatter.js';
 import type { Command } from './Command.js';
 
 export interface RequestsCommandOptions {
@@ -13,13 +22,6 @@ export interface RequestsCommandOptions {
   readonly watch: boolean;
   readonly outputFormat: UAPKGOutputFormat;
 }
-
-const TERMINAL_STATUSES = new Set<RegistryRequestStatus>([
-  'ready',
-  'ready_superseded',
-  'rejected',
-  'operationally_failed',
-]);
 
 export class RequestsCommand implements Command {
   public constructor(
@@ -44,31 +46,34 @@ export class RequestsCommand implements Command {
       }
 
       if (!this.options.requestId) throw new Error('`uapkg requests status` requires a request ID.');
-      let request = await client.getRegistryRequest(authentication.credential, this.options.requestId);
+      let detail = await client.getRegistryRequestDetail(authentication.credential, this.options.requestId);
       if (this.options.watch) {
         let lastStatus = '';
-        while (!TERMINAL_STATUSES.has(request.status)) {
-          if (this.options.outputFormat === 'text' && request.status !== lastStatus) {
+        while (!isRegistryRequestTerminalStatus(detail.request.status)) {
+          if (this.options.outputFormat === 'text' && detail.request.status !== lastStatus) {
             process.stdout.write(
-              `${request.id}: ${request.status}${request.currentStep ? ` (${request.currentStep})` : ''}\n`,
+              `${detail.request.id}: ${detail.request.status}${detail.request.currentStep ? ` (${detail.request.currentStep})` : ''}\n`,
             );
-            lastStatus = request.status;
+            lastStatus = detail.request.status;
           }
           await delay(2_000);
           try {
-            request = await client.getRegistryRequest(authentication.credential, this.options.requestId);
+            detail = await client.getRegistryRequestDetail(authentication.credential, this.options.requestId);
           } catch (error) {
             if (!(error instanceof ControlPlaneError) || error.status !== 401) throw error;
             this.root.accountManager.invalidateAccessCredentials(trust);
             authentication = await this.root.accountManager.getAccessCredential(trust, [
               'publishing.request.read.self',
             ]);
-            request = await client.getRegistryRequest(authentication.credential, this.options.requestId);
+            detail = await client.getRegistryRequestDetail(authentication.credential, this.options.requestId);
           }
         }
       }
-      this.printRequest(request, trust.alias);
-      return isSuccessStatus(request.status) || !TERMINAL_STATUSES.has(request.status) ? 0 : 1;
+      this.printRequest(detail, trust.alias);
+      return isRegistryRequestSuccessStatus(detail.request.status) ||
+        !isRegistryRequestTerminalStatus(detail.request.status)
+        ? 0
+        : 1;
     } catch (error) {
       process.stderr.write(`${describeControlPlaneError(error)}\n`);
       return 1;
@@ -97,31 +102,15 @@ export class RequestsCommand implements Command {
     }
   }
 
-  private printRequest(request: unknown, registryAlias: string): void {
-    const value = request as {
-      id: string;
-      status: RegistryRequestStatus;
-      currentStep?: string;
-      payload?: { packageName?: string; packageVersion?: string };
-    };
-    if (this.options.outputFormat === 'json') {
-      const ok = isSuccessStatus(value.status) || !TERMINAL_STATUSES.has(value.status);
-      process.stdout.write(`${JSON.stringify({ ok, registry: registryAlias, request })}\n`);
-      return;
-    }
-    process.stdout.write(`Request: ${value.id}\n`);
-    process.stdout.write(`Status: ${value.status}\n`);
-    if (value.currentStep) process.stdout.write(`Step: ${value.currentStep}\n`);
-    if (value.payload?.packageName) {
-      process.stdout.write(
-        `Package: ${value.payload.packageName}${value.payload.packageVersion ? `@${value.payload.packageVersion}` : ''}\n`,
-      );
-    }
+  private printRequest(detail: RegistryRequestDetail, registryAlias: string): void {
+    const output = formatRegistryRequestTerminal({
+      detail,
+      registryAlias,
+      outputFormat: this.options.outputFormat,
+      presentation: { kind: 'status' },
+    });
+    process.stdout.write(output.stdout);
   }
-}
-
-function isSuccessStatus(status: RegistryRequestStatus): boolean {
-  return status === 'ready' || status === 'ready_superseded';
 }
 
 function delay(milliseconds: number): Promise<void> {
