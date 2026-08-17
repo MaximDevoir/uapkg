@@ -18,7 +18,10 @@ import {
   type RegistryRequestStatus,
   type RegistryRequestSubmission,
 } from '../control-plane/ControlPlaneTypes.js';
-import { PublishIdempotencyStore } from '../control-plane/PublishIdempotencyStore.js';
+import {
+  createGitHubActionsPublishIdempotencyKey,
+  PublishIdempotencyStore,
+} from '../control-plane/PublishIdempotencyStore.js';
 import { InkPromptService } from '../prompts/InkPromptService.js';
 import type { Command } from './Command.js';
 
@@ -128,7 +131,15 @@ export class PublishCommand implements Command {
 
         const idempotencyStore = new PublishIdempotencyStore();
         const submissionDigest = PublishIdempotencyStore.submissionDigest('publish', submission);
-        const idempotencyKey = idempotencyStore.getOrCreate(submissionDigest, () => randomUUID());
+        const usesActionsIdempotency = authentication.kind === 'oidc';
+        const idempotencyKey = usesActionsIdempotency
+          ? createGitHubActionsPublishIdempotencyKey({
+              registryId: trust.registryId,
+              packageName: claims.name,
+              packageVersion: claims.version,
+              artifactSha256: artifact.sha256,
+            })
+          : idempotencyStore.getOrCreate(submissionDigest, () => randomUUID());
 
         const client = new ControlPlaneClient(trust.apiBaseUrl);
         let created: Awaited<ReturnType<ControlPlaneClient['submitRegistryRequest']>>;
@@ -147,7 +158,21 @@ export class PublishCommand implements Command {
           return 0;
         }
 
-        let request = await client.getRegistryRequest(authentication.credential, created.requestId);
+        const readRequest = async () => {
+          try {
+            return await client.getRegistryRequest(authentication.credential, created.requestId);
+          } catch (error) {
+            if (!(error instanceof ControlPlaneError) || error.status !== 401) throw error;
+            if (authentication.kind === 'gat') throw error;
+            if (authentication.kind === 'login') {
+              this.root.accountManager.invalidateAccessCredentials(trust);
+            }
+            authentication = await selector.select(authentication.kind, trust, ['publishing.request.read.self'], false);
+            return client.getRegistryRequest(authentication.credential, created.requestId);
+          }
+        };
+
+        let request = await readRequest();
         let previousStatus = '';
         const deadline = Date.now() + PUBLISH_WATCH_TIMEOUT_MS;
         while (!TERMINAL_STATUSES.has(request.status)) {
@@ -163,20 +188,10 @@ export class PublishCommand implements Command {
             previousStatus = request.status;
           }
           await delay(2_000);
-          try {
-            request = await client.getRegistryRequest(authentication.credential, created.requestId);
-          } catch (error) {
-            if (!(error instanceof ControlPlaneError) || error.status !== 401) throw error;
-            if (authentication.kind === 'gat') throw error;
-            if (authentication.kind === 'login') {
-              this.root.accountManager.invalidateAccessCredentials(trust);
-            }
-            authentication = await selector.select(authentication.kind, trust, ['publishing.request.read.self'], false);
-            request = await client.getRegistryRequest(authentication.credential, created.requestId);
-          }
+          request = await readRequest();
         }
 
-        idempotencyStore.clear(submissionDigest);
+        if (!usesActionsIdempotency) idempotencyStore.clear(submissionDigest);
 
         if (SUCCESS_STATUSES.has(request.status)) {
           let refreshWarning: string | undefined;

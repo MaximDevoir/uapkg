@@ -16,6 +16,41 @@ interface StoreFile {
   readonly entries: Readonly<Record<string, StoredEntry>>;
 }
 
+export interface GitHubActionsPublishCoordinates {
+  readonly registryId: string;
+  readonly packageName: string;
+  readonly packageVersion: string;
+  readonly artifactSha256: string;
+}
+
+/**
+ * Stable, non-secret key for one GitHub Actions publish job. A rerun keeps the
+ * same run ID and job name but changes GITHUB_RUN_ATTEMPT, so the attempt is
+ * deliberately excluded. Renewing an OIDC session therefore cannot change
+ * the request identity.
+ */
+export function createGitHubActionsPublishIdempotencyKey(
+  coordinates: GitHubActionsPublishCoordinates,
+  environment: NodeJS.ProcessEnv = process.env,
+): string {
+  const githubRunId = environment.GITHUB_RUN_ID?.trim();
+  const githubJob = environment.GITHUB_JOB?.trim();
+  if (!githubRunId || !githubJob) {
+    throw new Error(
+      'GitHub Actions OIDC publishing requires GITHUB_RUN_ID and GITHUB_JOB to derive a stable idempotency key.',
+    );
+  }
+  return `gha-${sha256OfCanonicalJson({
+    schemaVersion: 1,
+    registryId: coordinates.registryId,
+    packageName: coordinates.packageName,
+    packageVersion: coordinates.packageVersion,
+    artifactSha256: coordinates.artifactSha256,
+    githubRunId,
+    githubJob,
+  })}`;
+}
+
 /**
  * Persisted idempotency keys for logical registry-operation submissions.
  * One logical submission (operation + registry + payload) keeps one key

@@ -10,7 +10,8 @@ import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
 import { PublishCommand } from '../../src/commands/PublishCommand.js';
 import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSelector.js';
 import { ControlPlaneClient } from '../../src/control-plane/ControlPlaneClient.js';
-import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';
+import { ControlPlaneError, type RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';
+import { createGitHubActionsPublishIdempotencyKey } from '../../src/control-plane/PublishIdempotencyStore.js';
 
 const cleanups: string[] = [];
 let profileHome: string;
@@ -221,6 +222,126 @@ describe('PublishCommand (artifact-first)', () => {
     const secondKey = (submit.mock.calls[1]?.[3] as { idempotencyKey?: string }).idempotencyKey;
     expect(firstKey).toBeTruthy();
     expect(secondKey).toBe(firstKey);
+  });
+
+  it('derives a deterministic Actions idempotency key that excludes the run attempt', async () => {
+    vi.stubEnv('GITHUB_ACTIONS', 'true');
+    vi.stubEnv('GITHUB_RUN_ID', '987654321');
+    vi.stubEnv('GITHUB_JOB', 'publish');
+    vi.stubEnv('GITHUB_RUN_ATTEMPT', '1');
+    const trust = registryTrust();
+    const archivePath = await makeArchive({ name: 'example', version: '1.2.3', kind: 'plugin' });
+    const archiveBytes = await readFile(archivePath);
+    const artifactSha256 = `sha256:${createHash('sha256').update(archiveBytes).digest('hex')}`;
+    vi.spyOn(AuthenticationSelector.prototype, 'select').mockResolvedValue({
+      kind: 'oidc',
+      credential: { kind: 'bearer', accessToken: 'oidc-session' },
+    });
+    const submit = vi.spyOn(ControlPlaneClient.prototype, 'submitRegistryRequest').mockResolvedValue({
+      requestId: 'request-detached',
+      status: 'queued',
+      message: 'queued',
+    });
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const options = {
+      repository: 'acme/example',
+      tag: 'v1.2.3',
+      asset: 'package.tgz',
+      assetPath: archivePath,
+      auth: 'oidc' as const,
+      detach: true,
+      outputFormat: 'json' as const,
+    };
+
+    await expect(new PublishCommand(publishRoot(trust), options).execute()).resolves.toBe(0);
+    vi.stubEnv('GITHUB_RUN_ATTEMPT', '2');
+    await expect(new PublishCommand(publishRoot(trust), options).execute()).resolves.toBe(0);
+
+    const expected = createGitHubActionsPublishIdempotencyKey(
+      {
+        registryId: trust.registryId,
+        packageName: 'example',
+        packageVersion: '1.2.3',
+        artifactSha256,
+      },
+      {
+        GITHUB_RUN_ID: '987654321',
+        GITHUB_JOB: 'publish',
+        GITHUB_RUN_ATTEMPT: '999',
+      },
+    );
+    const firstKey = (submit.mock.calls[0]?.[3] as { idempotencyKey?: string }).idempotencyKey;
+    const rerunKey = (submit.mock.calls[1]?.[3] as { idempotencyKey?: string }).idempotencyKey;
+    expect(firstKey).toBe(expected);
+    expect(firstKey).toMatch(/^gha-[0-9a-f]{64}$/);
+    expect(rerunKey).toBe(firstKey);
+    expect(
+      createGitHubActionsPublishIdempotencyKey(
+        {
+          registryId: trust.registryId,
+          packageName: 'example',
+          packageVersion: '1.2.3',
+          artifactSha256: `sha256:${'f'.repeat(64)}`,
+        },
+        { GITHUB_RUN_ID: '987654321', GITHUB_JOB: 'publish' },
+      ),
+    ).not.toBe(firstKey);
+  });
+
+  it('re-exchanges an expired OIDC session while reading request status', async () => {
+    vi.stubEnv('GITHUB_ACTIONS', 'true');
+    vi.stubEnv('GITHUB_RUN_ID', '12345');
+    vi.stubEnv('GITHUB_JOB', 'publish');
+    const trust = registryTrust();
+    const archivePath = await makeArchive({ name: 'example', version: '1.2.3', kind: 'plugin' });
+    const select = vi
+      .spyOn(AuthenticationSelector.prototype, 'select')
+      .mockResolvedValueOnce({
+        kind: 'oidc',
+        credential: { kind: 'bearer', accessToken: 'oidc-session-one' },
+      })
+      .mockResolvedValueOnce({
+        kind: 'oidc',
+        credential: { kind: 'bearer', accessToken: 'oidc-session-two' },
+      });
+    vi.spyOn(ControlPlaneClient.prototype, 'submitRegistryRequest').mockResolvedValue({
+      requestId: 'request-ready',
+      status: 'queued',
+      message: 'queued',
+    });
+    const getRequest = vi
+      .spyOn(ControlPlaneClient.prototype, 'getRegistryRequest')
+      .mockRejectedValueOnce(new ControlPlaneError('OIDC_SESSION_EXPIRED', 'Session expired.', 401))
+      .mockResolvedValueOnce({
+        id: 'request-ready',
+        registryId: trust.registryId,
+        kind: 'publish',
+        status: 'ready',
+      });
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+
+    await expect(
+      new PublishCommand(publishRoot(trust), {
+        repository: 'acme/example',
+        tag: 'v1.2.3',
+        asset: 'package.tgz',
+        assetPath: archivePath,
+        auth: 'oidc',
+        detach: false,
+        outputFormat: 'json',
+      }).execute(),
+    ).resolves.toBe(0);
+
+    expect(select).toHaveBeenNthCalledWith(
+      1,
+      'oidc',
+      trust,
+      ['publishing.request.create', 'publishing.request.read.self'],
+      true,
+    );
+    expect(select).toHaveBeenNthCalledWith(2, 'oidc', trust, ['publishing.request.read.self'], false);
+    expect(getRequest).toHaveBeenNthCalledWith(1, { kind: 'bearer', accessToken: 'oidc-session-one' }, 'request-ready');
+    expect(getRequest).toHaveBeenNthCalledWith(2, { kind: 'bearer', accessToken: 'oidc-session-two' }, 'request-ready');
   });
 });
 
