@@ -22,6 +22,7 @@ import {
   createGitHubActionsPublishIdempotencyKey,
   PublishIdempotencyStore,
 } from '../control-plane/PublishIdempotencyStore.js';
+import { publishRequestDiagnosticForError } from '../control-plane/PublishRequestErrorMapper.js';
 import { InkPromptService } from '../prompts/InkPromptService.js';
 import type { Command } from './Command.js';
 
@@ -148,6 +149,21 @@ export class PublishCommand implements Command {
             idempotencyKey,
             otp: requestOtp,
           });
+        } catch (error) {
+          if (this.options.outputFormat === 'json') throw error;
+          this.root.diagnostics.reportOne(
+            publishRequestDiagnosticForError(error, {
+              packageName: claims.name,
+              packageVersion: claims.version,
+              registryAlias: trust.alias,
+              registryName: trust.registryName,
+              registryIssuer: trust.issuer,
+              credentialKind: authentication.kind,
+              ...(owner ? { requestedOwner: owner } : {}),
+              repository: source.repository,
+            }),
+          );
+          return 1;
         } finally {
           // The request-scoped proof must not remain reachable while the CLI
           // polls, refreshes credentials, or watches the durable request.

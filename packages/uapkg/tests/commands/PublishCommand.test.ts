@@ -288,6 +288,116 @@ describe('PublishCommand (artifact-first)', () => {
     ).not.toBe(firstKey);
   });
 
+  it('reports a typed diagnostic when synchronous submission fails in text mode', async () => {
+    const trust = registryTrust();
+    const archivePath = await makeArchive({ name: 'example', version: '1.2.3', kind: 'plugin' });
+    vi.spyOn(AuthenticationSelector.prototype, 'select').mockResolvedValue({
+      kind: 'login',
+      credential: { kind: 'bearer', accessToken: 'memory-only-token' },
+    });
+    vi.spyOn(ControlPlaneClient.prototype, 'submitRegistryRequest').mockRejectedValue(
+      new ControlPlaneError(
+        'UNSCOPED_PACKAGE_OWNER_REQUIRED',
+        'Initial publication requires ownerOrganizationName.',
+        400,
+        { packageName: 'example' },
+      ),
+    );
+    const reportOne = vi.fn();
+    const root = publishRoot(trust);
+    Object.assign(root, { diagnostics: { reportOne } });
+    const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    await expect(
+      new PublishCommand(root, {
+        repository: 'acme/example',
+        assetPath: archivePath,
+        auth: 'login',
+        detach: true,
+        outputFormat: 'text',
+      }).execute(),
+    ).resolves.toBe(1);
+
+    expect(reportOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 'PUBLISH_REQUEST_FAILED',
+        message: expect.stringContaining('needs an owner organization'),
+        data: expect.objectContaining({
+          serverCode: 'UNSCOPED_PACKAGE_OWNER_REQUIRED',
+          status: 400,
+        }),
+      }),
+    );
+    expect(stderr).not.toHaveBeenCalled();
+  });
+
+  it('preserves the existing JSON-mode submission failure path', async () => {
+    const trust = registryTrust();
+    const archivePath = await makeArchive({ name: 'example', version: '1.2.3', kind: 'plugin' });
+    vi.spyOn(AuthenticationSelector.prototype, 'select').mockResolvedValue({
+      kind: 'login',
+      credential: { kind: 'bearer', accessToken: 'memory-only-token' },
+    });
+    vi.spyOn(ControlPlaneClient.prototype, 'submitRegistryRequest').mockRejectedValue(
+      new ControlPlaneError('UNSCOPED_PACKAGE_OWNER_REQUIRED', 'Existing JSON failure output.', 400),
+    );
+    const reportOne = vi.fn();
+    const root = publishRoot(trust);
+    Object.assign(root, { diagnostics: { reportOne } });
+    const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    await expect(
+      new PublishCommand(root, {
+        repository: 'acme/example',
+        assetPath: archivePath,
+        auth: 'login',
+        detach: true,
+        outputFormat: 'json',
+      }).execute(),
+    ).resolves.toBe(1);
+
+    expect(reportOne).not.toHaveBeenCalled();
+    expect(stderr.mock.calls.map(([value]) => String(value)).join('')).toBe(
+      'Existing JSON failure output. (UNSCOPED_PACKAGE_OWNER_REQUIRED)\n',
+    );
+  });
+
+  it('leaves status-polling failures on the existing outer error path', async () => {
+    const trust = registryTrust();
+    const archivePath = await makeArchive({ name: 'example', version: '1.2.3', kind: 'plugin' });
+    vi.spyOn(AuthenticationSelector.prototype, 'select').mockResolvedValue({
+      kind: 'login',
+      credential: { kind: 'bearer', accessToken: 'memory-only-token' },
+    });
+    vi.spyOn(ControlPlaneClient.prototype, 'submitRegistryRequest').mockResolvedValue({
+      requestId: 'request-polling',
+      status: 'queued',
+      message: 'queued',
+    });
+    vi.spyOn(ControlPlaneClient.prototype, 'getRegistryRequest').mockRejectedValue(
+      new ControlPlaneError('REQUEST_STATUS_UNAVAILABLE', 'Status polling failed.', 503),
+    );
+    const reportOne = vi.fn();
+    const root = publishRoot(trust);
+    Object.assign(root, { diagnostics: { reportOne } });
+    const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    await expect(
+      new PublishCommand(root, {
+        repository: 'acme/example',
+        assetPath: archivePath,
+        auth: 'login',
+        detach: false,
+        outputFormat: 'text',
+      }).execute(),
+    ).resolves.toBe(1);
+
+    expect(reportOne).not.toHaveBeenCalled();
+    expect(stderr.mock.calls.map(([value]) => String(value)).join('')).toBe(
+      'Status polling failed. (REQUEST_STATUS_UNAVAILABLE)\n',
+    );
+  });
+
   it('re-exchanges an expired OIDC session while reading request status', async () => {
     vi.stubEnv('GITHUB_ACTIONS', 'true');
     vi.stubEnv('GITHUB_RUN_ID', '12345');

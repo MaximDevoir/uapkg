@@ -13,6 +13,7 @@
 export { installerInkComponents } from './components/installerInkComponents.js';
 export { manifestInkComponents } from './components/manifestInkComponents.js';
 export { postinstallInkComponents } from './components/postinstallInkComponents.js';
+export { publishingInkComponents } from './components/publishingInkComponents.js';
 export { registryInkComponents } from './components/registryInkComponents.js';
 export { resolverInkComponents } from './components/resolverInkComponents.js';
 export { safetyInkComponents } from './components/safetyInkComponents.js';

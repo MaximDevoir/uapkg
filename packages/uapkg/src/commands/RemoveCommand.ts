@@ -33,7 +33,7 @@ export class RemoveCommand implements Command {
       return 1;
     }
 
-    const missing = result.diagnostics.some((d) => d.code === 'DEPENDENCY_NOT_FOUND');
+    const missing = result.diagnostics.some((diagnostic) => diagnostic.code === 'DEPENDENCY_NOT_FOUND');
 
     if (result.diagnostics.length > 0 && this.options.outputFormat === 'text') {
       this.root.diagnostics.reportAll(result.diagnostics);

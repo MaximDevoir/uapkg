@@ -3,6 +3,7 @@ import { installerInkComponents } from '../components/installerInkComponents.js'
 import { manifestInkComponents } from '../components/manifestInkComponents.js';
 import { packInkComponents } from '../components/packInkComponents.js';
 import { postinstallInkComponents } from '../components/postinstallInkComponents.js';
+import { publishingInkComponents } from '../components/publishingInkComponents.js';
 import { registryInkComponents } from '../components/registryInkComponents.js';
 import { resolverInkComponents } from '../components/resolverInkComponents.js';
 import { safetyInkComponents } from '../components/safetyInkComponents.js';
@@ -25,6 +26,7 @@ export const defaultInkComponents: DiagnosticInkComponentMap = {
   ...manifestInkComponents,
   ...packInkComponents,
   ...postinstallInkComponents,
+  ...publishingInkComponents,
   ...registryInkComponents,
   ...resolverInkComponents,
   ...safetyInkComponents,

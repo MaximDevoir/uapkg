@@ -18,164 +18,167 @@ import type {
 } from '@uapkg/diagnostics';
 import type { FormatterMap } from '../../contracts/FormatterTypes.js';
 
-function header(d: Diagnostic): string {
-  return `[${d.level.toUpperCase()} ${d.code}]: ${d.message}`;
+function header(diagnostic: Diagnostic): string {
+  return `[${diagnostic.level.toUpperCase()} ${diagnostic.code}]: ${diagnostic.message}`;
 }
 
-function withHint(lines: string[], d: Diagnostic): string {
-  if (d.hint) lines.push(`  → ${d.hint}`);
+function withHint(lines: string[], diagnostic: Diagnostic): string {
+  if (diagnostic.hint) lines.push(`  → ${diagnostic.hint}`);
   return lines.join('\n');
 }
 
-function formatPathMismatch(d: Diagnostic): string {
-  const data = (d as RegistryToolsPathMismatchDiagnostic).data;
+function formatPathMismatch(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsPathMismatchDiagnostic).data;
   return withHint(
     [
-      header(d),
+      header(diagnostic),
       `  Package : ${data.packageName}`,
       `  Expected: ${data.expectedPath}`,
       `  Actual  : ${data.actualPath}`,
     ],
-    d,
+    diagnostic,
   );
 }
 
-function formatPackageSourceMismatch(d: Diagnostic): string {
-  const data = (d as RegistryToolsPackageSourceMismatchDiagnostic).data;
+function formatPackageSourceMismatch(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsPackageSourceMismatchDiagnostic).data;
   return withHint(
     [
-      header(d),
+      header(diagnostic),
       `  Package  : ${data.packageName}`,
       `  Existing : ${data.existing.type}:${data.existing.url}`,
       `  Requested: ${data.requested.type}:${data.requested.url}`,
     ],
-    d,
+    diagnostic,
   );
 }
 
-function formatVersionExists(d: Diagnostic): string {
-  const data = (d as RegistryToolsVersionExistsDiagnostic).data;
-  return withHint([header(d), `  Package: ${data.packageName}`, `  Version: ${data.version}`], d);
+function formatVersionExists(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsVersionExistsDiagnostic).data;
+  return withHint([header(diagnostic), `  Package: ${data.packageName}`, `  Version: ${data.version}`], diagnostic);
 }
 
-function formatVersionNotFound(d: Diagnostic): string {
-  const data = (d as RegistryToolsVersionNotFoundDiagnostic).data;
-  return withHint([header(d), `  Package: ${data.packageName}`, `  Version: ${data.version}`], d);
+function formatVersionNotFound(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsVersionNotFoundDiagnostic).data;
+  return withHint([header(diagnostic), `  Package: ${data.packageName}`, `  Version: ${data.version}`], diagnostic);
 }
 
-function formatPackageMissing(d: Diagnostic): string {
-  const data = (d as RegistryToolsPackageMissingDiagnostic).data;
-  return withHint([header(d), `  Package : ${data.packageName}`, `  Manifest: ${data.manifestPath}`], d);
+function formatPackageMissing(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsPackageMissingDiagnostic).data;
+  return withHint(
+    [header(diagnostic), `  Package : ${data.packageName}`, `  Manifest: ${data.manifestPath}`],
+    diagnostic,
+  );
 }
 
-function formatVersionsUnsorted(d: Diagnostic): string {
-  const data = (d as RegistryToolsVersionsUnsortedDiagnostic).data;
+function formatVersionsUnsorted(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsVersionsUnsortedDiagnostic).data;
   return withHint(
     [
-      header(d),
+      header(diagnostic),
       `  Package : ${data.packageName}`,
       `  Actual  : ${data.actual.join(', ')}`,
       `  Expected: ${data.expected.join(', ')}`,
     ],
-    d,
+    diagnostic,
   );
 }
 
-function formatExternalRegistryDenied(d: Diagnostic): string {
-  const data = (d as RegistryToolsExternalRegistryDeniedDiagnostic).data;
+function formatExternalRegistryDenied(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsExternalRegistryDeniedDiagnostic).data;
   return withHint(
     [
-      header(d),
+      header(diagnostic),
       `  Source     : ${data.packageName}@${data.version}`,
       `  Bucket     : ${data.bucket}`,
       `  Dependency : ${data.dependency}`,
       `  Registry   : ${data.registryName}`,
     ],
-    d,
+    diagnostic,
   );
 }
 
-function formatExternalRegistryNotAllowed(d: Diagnostic): string {
-  const data = (d as RegistryToolsExternalRegistryNotAllowedDiagnostic).data;
+function formatExternalRegistryNotAllowed(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsExternalRegistryNotAllowedDiagnostic).data;
   return withHint(
     [
-      header(d),
+      header(diagnostic),
       `  Source     : ${data.packageName}@${data.version}`,
       `  Bucket     : ${data.bucket}`,
       `  Dependency : ${data.dependency}`,
       `  Registry   : ${data.registryName}`,
       `  Allow-list : [${data.allowList.join(', ')}]`,
     ],
-    d,
+    diagnostic,
   );
 }
 
-function formatDependencyNotInRegistry(d: Diagnostic): string {
-  const data = (d as RegistryToolsDependencyNotInRegistryDiagnostic).data;
+function formatDependencyNotInRegistry(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsDependencyNotInRegistryDiagnostic).data;
   return withHint(
-    [header(d), `  Source     : ${data.packageName}@${data.version}`, `  Dependency : ${data.dependency}`],
-    d,
+    [header(diagnostic), `  Source     : ${data.packageName}@${data.version}`, `  Dependency : ${data.dependency}`],
+    diagnostic,
   );
 }
 
-function formatDependencyRangeUnreachable(d: Diagnostic): string {
-  const data = (d as RegistryToolsDependencyRangeUnreachableDiagnostic).data;
+function formatDependencyRangeUnreachable(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsDependencyRangeUnreachableDiagnostic).data;
   return withHint(
     [
-      header(d),
+      header(diagnostic),
       `  Source     : ${data.packageName}@${data.version}`,
       `  Dependency : ${data.dependency}`,
       `  Range      : ${data.range}`,
       `  Available  : ${data.availableVersions.length > 0 ? data.availableVersions.join(', ') : '(none)'}`,
     ],
-    d,
+    diagnostic,
   );
 }
 
-function formatRemovalDenied(d: Diagnostic): string {
-  const data = (d as RegistryToolsRemovalDeniedDiagnostic).data;
-  const lines = [header(d), `  Package: ${data.packageName}`];
+function formatRemovalDenied(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsRemovalDeniedDiagnostic).data;
+  const lines = [header(diagnostic), `  Package: ${data.packageName}`];
   if (data.version) lines.push(`  Version: ${data.version}`);
   lines.push(`  Policy : ${data.policy}`);
-  return withHint(lines, d);
+  return withHint(lines, diagnostic);
 }
 
-function formatIntegrityMismatch(d: Diagnostic): string {
-  const data = (d as RegistryToolsIntegrityMismatchDiagnostic).data;
+function formatIntegrityMismatch(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsIntegrityMismatchDiagnostic).data;
   return withHint(
     [
-      header(d),
+      header(diagnostic),
       `  File    : ${data.filePath}`,
       `  Expected: ${data.expectedHash} (${data.expectedSize} bytes)`,
       `  Actual  : ${data.actualHash} (${data.actualSize} bytes)`,
     ],
-    d,
+    diagnostic,
   );
 }
 
-function formatReleaseFileNameInvalid(d: Diagnostic): string {
-  const data = (d as RegistryToolsReleaseFileNameInvalidDiagnostic).data;
+function formatReleaseFileNameInvalid(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsReleaseFileNameInvalidDiagnostic).data;
   return withHint(
     [
-      header(d),
+      header(diagnostic),
       `  Source  : ${data.packageName}@${data.version}`,
       `  Name    : ${data.fileName}`,
       `  Accepted: ${data.accepted.join(', ')}`,
     ],
-    d,
+    diagnostic,
   );
 }
 
-function formatOfficialPolicyViolation(d: Diagnostic): string {
-  const data = (d as RegistryToolsOfficialPolicyViolationDiagnostic).data;
-  const lines = [header(d), `  Rule  : ${data.rule}`, `  Detail: ${data.detail}`];
+function formatOfficialPolicyViolation(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsOfficialPolicyViolationDiagnostic).data;
+  const lines = [header(diagnostic), `  Rule  : ${data.rule}`, `  Detail: ${data.detail}`];
   if (data.path) lines.push(`  Path  : ${data.path}`);
-  return withHint(lines, d);
+  return withHint(lines, diagnostic);
 }
 
-function formatUnknownKey(d: Diagnostic): string {
-  const data = (d as RegistryToolsUnknownKeyDiagnostic).data;
-  return withHint([header(d), `  At   : ${data.path}`, `  Key  : ${data.key}`], d);
+function formatUnknownKey(diagnostic: Diagnostic): string {
+  const data = (diagnostic as RegistryToolsUnknownKeyDiagnostic).data;
+  return withHint([header(diagnostic), `  At   : ${data.path}`, `  Key  : ${data.key}`], diagnostic);
 }
 
 export const registryToolsFormatters: FormatterMap = {

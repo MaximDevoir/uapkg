@@ -18,11 +18,11 @@ export function DiagnosticsListView({ diagnostics, registry }: DiagnosticsListVi
   if (diagnostics.length === 0) return null;
   return (
     <Box flexDirection="column">
-      {diagnostics.map((d, i) => {
+      {diagnostics.map((diagnostic, i) => {
         // Diagnostics don't carry stable ids; the (code, message, index) triple
         // is stable for a one-shot static render and unique within the list.
-        const key = `${d.code}:${i}:${d.message.length}`;
-        return <DiagnosticView key={key} diagnostic={d} registry={registry} />;
+        const key = `${diagnostic.code}:${i}:${diagnostic.message.length}`;
+        return <DiagnosticView key={key} diagnostic={diagnostic} registry={registry} />;
       })}
     </Box>
   );

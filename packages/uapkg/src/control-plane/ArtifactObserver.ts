@@ -67,7 +67,8 @@ export class ArtifactObserver {
       const response = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(120_000) });
       if (!response.ok || !response.body) {
         throw new Error(
-          `Unable to download the release asset (${response.status}). Confirm the GitHub Release "${releaseTag}" has an uploaded asset named "${assetName}" and that the repository is accessible without credentials.`,
+          `Unable to download the release asset (${response.status}). Confirm the GitHub Release "${releaseTag}" has an uploaded asset named "${assetName}" and that the repository is accessible without credentials.` +
+            `\nSee how to set these options manually using \`uapkg publish --help\`.`,
         );
       }
       await pipeline(

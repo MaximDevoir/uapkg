@@ -1,7 +1,7 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
 import { Box, Text } from 'ink';
 import type { ReactElement } from 'react';
-import type { IDiagnosticInkRegistry } from '../contracts/InkTypes.js';
+import type { DiagnosticBodyComponent, IDiagnosticInkRegistry } from '../contracts/InkTypes.js';
 import { HintLine } from '../primitives/HintLine.js';
 import { PlainTextBody } from '../primitives/PlainTextBody.js';
 import { SeverityBadge } from '../primitives/SeverityBadge.js';
@@ -22,7 +22,7 @@ export interface DiagnosticViewProps {
  * This component is pure — it neither reads config nor talks to I/O.
  */
 export function DiagnosticView({ diagnostic, registry }: DiagnosticViewProps): ReactElement {
-  const Body = registry.resolve(diagnostic.code) ?? PlainTextBody;
+  const Body: DiagnosticBodyComponent = registry.resolve(diagnostic.code) ?? PlainTextBody;
   return (
     <Box flexDirection="column" marginBottom={1}>
       <Box>
@@ -35,7 +35,7 @@ export function DiagnosticView({ diagnostic, registry }: DiagnosticViewProps): R
       <Box marginLeft={2} flexDirection="column">
         <Body diagnostic={diagnostic} />
       </Box>
-      {diagnostic.hint ? <HintLine hint={diagnostic.hint} /> : null}
+      {diagnostic.hint && !Body.rendersHint ? <HintLine hint={diagnostic.hint} /> : null}
     </Box>
   );
 }

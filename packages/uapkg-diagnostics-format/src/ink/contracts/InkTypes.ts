@@ -12,7 +12,10 @@ export interface DiagnosticBodyProps {
 }
 
 /** A React/Ink component that renders a diagnostic body. */
-export type DiagnosticBodyComponent = ComponentType<DiagnosticBodyProps>;
+export type DiagnosticBodyComponent = ComponentType<DiagnosticBodyProps> & {
+  /** The body renders the hint itself to control its position among resources. */
+  rendersHint?: boolean;
+};
 
 /**
  * Map of diagnostic code → body component. Any code **not** present in the

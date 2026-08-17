@@ -239,7 +239,9 @@ describe('verification-gated partial installation', () => {
     if (!result.ok) return;
     expect(result.value.failed).toEqual(['lying-pkg']);
     expect(result.value.installed).toEqual([]);
-    expect(result.diagnostics.some((d) => (d.code as string) === 'INSTALL_MANIFEST_CLAIMS_MISMATCH')).toBe(true);
+    expect(
+      result.diagnostics.some((diagnostic) => (diagnostic.code as string) === 'INSTALL_MANIFEST_CLAIMS_MISMATCH'),
+    ).toBe(true);
     expect(existsSync(join(manifestRoot, 'Plugins', 'lying-pkg'))).toBe(false);
   });
 
@@ -333,7 +335,7 @@ describe('verification-gated partial installation', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.failed).toEqual(['size-mismatch']);
-    expect(result.diagnostics.some((d) => (d.code as string) === 'INSTALL_SIZE_MISMATCH')).toBe(true);
+    expect(result.diagnostics.some((diagnostic) => (diagnostic.code as string) === 'INSTALL_SIZE_MISMATCH')).toBe(true);
   });
 
   it('fails a package whose bytes do not match the pinned hash', async () => {
@@ -384,9 +386,11 @@ describe('verification-gated partial installation', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.failed).toEqual(['private-pkg']);
-    expect(result.diagnostics.some((d) => (d.code as string) === 'INSTALL_PRIVATE_PACKAGE_IN_PUBLIC_REGISTRY')).toBe(
-      true,
-    );
+    expect(
+      result.diagnostics.some(
+        (diagnostic) => (diagnostic.code as string) === 'INSTALL_PRIVATE_PACKAGE_IN_PUBLIC_REGISTRY',
+      ),
+    ).toBe(true);
   });
 
   it('allows private: true from a private registry when the record agrees', async () => {

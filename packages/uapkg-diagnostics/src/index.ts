@@ -140,6 +140,15 @@ export {
   createPostinstallMarkerCorruptDiagnostic,
   createPostinstallPolicyDeniedDiagnostic,
 } from './postinstall/PostinstallDiagnostics.js';
+// --- Publishing family ---
+export type {
+  PublishDiagnosticFact,
+  PublishDiagnosticResource,
+  PublishingDiagnostic,
+  PublishRequestFailedDiagnostic,
+  PublishRequestFailedDiagnosticData,
+} from './publishing/PublishingDiagnostics.js';
+export { createPublishRequestFailedDiagnostic } from './publishing/PublishingDiagnostics.js';
 // --- Registry family ---
 export type {
   CacheCorruptDiagnostic,

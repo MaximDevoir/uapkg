@@ -1,4 +1,5 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
+import { formatPublishRequestFailed } from '@uapkg/diagnostics-format';
 import type { DiagnosticRenderer } from './DiagnosticRenderer.js';
 import type { TextSink } from './TextSink.js';
 
@@ -21,10 +22,14 @@ export class TextDiagnosticRenderer implements DiagnosticRenderer {
   public render(diagnostics: readonly Diagnostic[], stream: 'stdout' | 'stderr'): void {
     if (diagnostics.length === 0) return;
     const sink = stream === 'stderr' ? this.stderr : this.stdout;
-    for (const d of diagnostics) {
-      const icon = d.level === 'error' ? 'x' : d.level === 'warning' ? '!' : 'i';
-      sink.writeLine(`[${icon}] ${d.message}`);
-      if (d.hint) sink.writeLine(`  → ${d.hint}`);
+    for (const diagnostic of diagnostics) {
+      if (diagnostic.code === 'PUBLISH_REQUEST_FAILED') {
+        for (const line of formatPublishRequestFailed(diagnostic).split('\n')) sink.writeLine(line);
+        continue;
+      }
+      const icon = diagnostic.level === 'error' ? 'x' : diagnostic.level === 'warning' ? '!' : 'i';
+      sink.writeLine(`[${icon}] ${diagnostic.message}`);
+      if (diagnostic.hint) sink.writeLine(`  → ${diagnostic.hint}`);
     }
   }
 }

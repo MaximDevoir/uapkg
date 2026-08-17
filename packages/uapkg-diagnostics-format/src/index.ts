@@ -8,6 +8,10 @@ export { installerFormatters } from './formatters/installer/installerFormatters.
 export { manifestFormatters } from './formatters/manifest/manifestFormatters.js';
 export { formatPlainText } from './formatters/PlainTextFormatter.js';
 export { postinstallFormatters } from './formatters/postinstall/postinstallFormatters.js';
+export {
+  formatPublishRequestFailed,
+  publishingFormatters,
+} from './formatters/publishing/publishingFormatters.js';
 export { registryFormatters } from './formatters/registry/registryFormatters.js';
 export { registryToolsFormatters } from './formatters/registryTools/registryToolsFormatters.js';
 export { resolverFormatters } from './formatters/resolver/resolverFormatters.js';

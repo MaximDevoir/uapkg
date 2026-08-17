@@ -5,6 +5,7 @@ import type { InstallerDiagnostic } from './installer/InstallerDiagnostics.js';
 import type { ManifestDiagnostic } from './manifest/ManifestDiagnostics.js';
 import type { PackDiagnostic } from './pack/PackDiagnostics.js';
 import type { PostinstallDiagnostic } from './postinstall/PostinstallDiagnostics.js';
+import type { PublishingDiagnostic } from './publishing/PublishingDiagnostics.js';
 import type { RegistryDiagnostic } from './registry/RegistryDiagnostics.js';
 import type { RegistryToolsDiagnostic } from './registryTools/RegistryToolsDiagnostics.js';
 import type { ResolverDiagnostic } from './resolver/ResolverDiagnostics.js';
@@ -31,6 +32,7 @@ export type Diagnostic =
   | GeneralDiagnostic
   | InstallerDiagnostic
   | PostinstallDiagnostic
+  | PublishingDiagnostic
   | SafetyDiagnostic
   | SpecParseDiagnostic;
 

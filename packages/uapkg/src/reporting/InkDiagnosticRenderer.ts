@@ -1,4 +1,5 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
+import { formatPublishRequestFailed } from '@uapkg/diagnostics-format';
 import {
   createInkRegistry,
   type DiagnosticInkRegistry,
@@ -38,9 +39,13 @@ export class InkDiagnosticRenderer implements DiagnosticRenderer {
       instance.unmount();
     } catch {
       if (!this.fallback) return;
-      for (const d of diagnostics) {
-        this.fallback.writeLine(`[${d.level}] ${d.code}: ${d.message}`);
-        if (d.hint) this.fallback.writeLine(`  → ${d.hint}`);
+      for (const diagnostic of diagnostics) {
+        if (diagnostic.code === 'PUBLISH_REQUEST_FAILED') {
+          for (const line of formatPublishRequestFailed(diagnostic).split('\n')) this.fallback.writeLine(line);
+          continue;
+        }
+        this.fallback.writeLine(`[${diagnostic.level}] ${diagnostic.code}: ${diagnostic.message}`);
+        if (diagnostic.hint) this.fallback.writeLine(`  → ${diagnostic.hint}`);
       }
     }
   }
