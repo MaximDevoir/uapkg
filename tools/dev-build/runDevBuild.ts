@@ -46,7 +46,7 @@ const options = parseDevBuildOptions(mode, process.argv.slice(3));
 const orchestrator = new DevBuildOrchestrator(resolveWorkspaceRoot());
 
 if (mode === 'build') {
-  orchestrator.buildAll(options.buildMode ?? 'production');
+  orchestrator.buildAll(options.buildMode ?? 'development');
 } else if (mode === 'link') {
   orchestrator.link(options);
 } else if (mode === 'watch') {
