@@ -228,9 +228,6 @@ importers:
       tar:
         specifier: 7.5.13
         version: 7.5.13
-      undici:
-        specifier: 7.18.0
-        version: 7.18.0
 
   packages/uapkg-log:
     dependencies:
@@ -2436,10 +2433,6 @@ packages:
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
-  undici@7.18.0:
-    resolution: {integrity: sha512-CfPufgPFHCYu0W4h1NiKW9+tNJ39o3kWm7Cm29ET1enSJx+AERfz7A2wAr26aY0SZbYzZlTBQtcHy15o60VZfQ==}
-    engines: {node: '>=20.18.1'}
-
   universalify@0.1.2:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
@@ -4466,8 +4459,6 @@ snapshots:
   typescript@6.0.2: {}
 
   undici-types@7.18.2: {}
-
-  undici@7.18.0: {}
 
   universalify@0.1.2: {}
 

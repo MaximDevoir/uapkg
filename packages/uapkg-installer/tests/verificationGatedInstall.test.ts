@@ -26,6 +26,7 @@ interface RegistryFixtureVersion {
 }
 
 const artifacts = new Map<string, Buffer>();
+const redirects = new Map<string, string>();
 let server: Server;
 let baseUrl: string;
 const tempDirs: string[] = [];
@@ -33,6 +34,13 @@ const originalProfileHome = process.env.UAPKG_INTERNAL_CONFIG_CACHE_HOME;
 
 beforeAll(async () => {
   server = createServer((req, res) => {
+    const redirect = redirects.get(req.url ?? '');
+    if (redirect) {
+      res.statusCode = 302;
+      res.setHeader('location', redirect);
+      res.end();
+      return;
+    }
     const body = artifacts.get(req.url ?? '');
     if (!body) {
       res.statusCode = 404;
@@ -53,6 +61,7 @@ afterAll(async () => {
 
 afterEach(async () => {
   artifacts.clear();
+  redirects.clear();
   if (originalProfileHome === undefined) delete process.env.UAPKG_INTERNAL_CONFIG_CACHE_HOME;
   else process.env.UAPKG_INTERNAL_CONFIG_CACHE_HOME = originalProfileHome;
   await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
@@ -222,6 +231,32 @@ describe('verification-gated partial installation', () => {
     expect(result.value.incompleteClosure).toEqual([]);
     expect(existsSync(join(manifestRoot, 'Plugins', 'root-pkg', 'uapkg.json'))).toBe(true);
     expect(existsSync(join(manifestRoot, 'Plugins', 'child-pkg', 'uapkg.json'))).toBe(true);
+  });
+
+  it('installs a redirected archive only after size, digest, and packaged claims verify', async () => {
+    const directArtifact = await makeArtifact('redirected-pkg', '1.0.0', {
+      name: 'redirected-pkg',
+      version: '1.0.0',
+      kind: 'plugin',
+    });
+    const directPath = new URL(directArtifact.url).pathname;
+    const redirectPath = '/releases/download/v1.0.0/redirected-pkg-1.0.0.tgz';
+    redirects.set(redirectPath, directPath);
+    const artifact = { ...directArtifact, url: `${baseUrl}${redirectPath}` };
+    const fixtures = new Map<string, RegistryFixtureVersion>([[fixtureKey('redirected-pkg', '1.0.0'), { artifact }]]);
+    const lockfile = buildLockfile({
+      'redirected-pkg': { version: '1.0.0', sha256: artifact.sha256 },
+    });
+
+    const { result, manifestRoot } = await runInstall(fixtures, lockfile, ['redirected-pkg']);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.installed).toEqual(['redirected-pkg']);
+    expect(result.value.failed).toEqual([]);
+    expect(await readFile(join(manifestRoot, 'Plugins', 'redirected-pkg', 'payload.txt'), 'utf8')).toBe(
+      'content of redirected-pkg@1.0.0',
+    );
   });
 
   it('rejects a package whose archive declares a dependency the registry omitted', async () => {
