@@ -10,6 +10,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema/index.d.ts",
+      "default": "./dist/schema/index.js"
     }
   },
   "types": "./dist/index.d.ts",
@@ -18,7 +22,12 @@
     "@uapkg/diagnostics": "workspace:^",
     "@uapkg/package-manifest-schema": "workspace:^",
     "@uapkg/registry-schema": "workspace:^",
-    "tar": "7.5.13",
+    "tar": "7.5.13"
+  },
+  "peerDependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
     "zod": "4.3.6"
   },
   "scripts": {

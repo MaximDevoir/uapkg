@@ -18,7 +18,7 @@ export interface PackageNode {
   readonly version: string;
   readonly registry: string;
   readonly integrity: string;
-  readonly gitTree: string;
+  readonly gitTree?: string;
   readonly dependencies: ReadonlyMap<string, PackageNode>;
 }
 

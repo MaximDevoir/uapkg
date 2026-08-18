@@ -16,7 +16,12 @@
   "types": "./dist/index.d.ts",
   "dependencies": {
     "@uapkg/common-schema": "workspace:^",
-    "@uapkg/diagnostics": "workspace:^",
+    "@uapkg/diagnostics": "workspace:^"
+  },
+  "peerDependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
     "zod": "4.3.6"
   },
   "scripts": {

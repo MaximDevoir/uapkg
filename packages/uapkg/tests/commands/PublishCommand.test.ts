@@ -4,10 +4,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ok } from '@uapkg/diagnostics';
 import type { Manifest } from '@uapkg/package-manifest-schema';
+import { getRegistryRepoPath } from '@uapkg/registry-core';
 import { c as createTar } from 'tar';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
-import { PublishCommand } from '../../src/commands/PublishCommand.js';
+import { PublishCommand, readTrustedRegistryType } from '../../src/commands/PublishCommand.js';
 import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSelector.js';
 import { ControlPlaneClient } from '../../src/control-plane/ControlPlaneClient.js';
 import { ControlPlaneError, type RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';
@@ -20,6 +21,7 @@ beforeEach(async () => {
   profileHome = await mkdtemp(join(tmpdir(), 'uapkg-publish-profile-'));
   cleanups.push(profileHome);
   vi.stubEnv('UAPKG_INTERNAL_CONFIG_CACHE_HOME', profileHome);
+  await writeTrustedRegistryMeta('registry-cache', 'private');
 });
 
 afterEach(async () => {
@@ -39,6 +41,53 @@ async function makeArchive(manifest: Record<string, unknown>): Promise<string> {
   await createTar({ gzip: true, file: archivePath, cwd: dir, portable: true }, ['pack-root']);
   return archivePath;
 }
+
+async function writeTrustedRegistryMeta(
+  shortId: string,
+  registryType: 'public' | 'private',
+  schemaVersion = 1,
+): Promise<void> {
+  const metaDir = join(getRegistryRepoPath(shortId), '.uapkg');
+  await mkdir(metaDir, { recursive: true });
+  await writeFile(
+    join(metaDir, 'registry.meta.json'),
+    JSON.stringify({
+      schemaVersion,
+      registry: {
+        id: '00000000-0000-4000-a000-000000000020',
+        name: 'Official',
+        normalizedName: 'official',
+        registryType,
+        createdAt: 1_700_000_000,
+      },
+      owner: {
+        kind: 'organization',
+        id: '00000000-0000-4000-a000-000000000021',
+        name: 'UAPKG',
+        normalizedName: 'uapkg',
+      },
+      sourceOfTruth: { type: 'uapkg-service', apiBaseUrl: 'https://api.uapkg.dev/v1' },
+      generated: { generatedAt: 1_700_000_001, generatedBy: 'uapkg-registry-app' },
+      futureOptional: true,
+    }),
+    'utf8',
+  );
+}
+
+describe('trusted registry metadata for publishing', () => {
+  it('rejects both an absent metadata file and an unsupported present version', async () => {
+    await expect(readTrustedRegistryType('missing-meta')).rejects.toThrow('metadata is missing');
+
+    await writeTrustedRegistryMeta('future-meta', 'private', 2);
+    await expect(readTrustedRegistryType('future-meta')).rejects.toThrow('unsupported schema version');
+  });
+
+  it('reads the registry type through the shared metadata schema', async () => {
+    await writeTrustedRegistryMeta('valid-meta', 'public');
+
+    await expect(readTrustedRegistryType('valid-meta')).resolves.toBe('public');
+  });
+});
 
 describe('PublishCommand (artifact-first)', () => {
   it('lets a private packaged manifest reach trusted registry resolution before any policy call', async () => {

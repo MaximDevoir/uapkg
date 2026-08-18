@@ -10,4 +10,4 @@ export type AssetHash = Brand<string, 'AssetHash'>;
 export const AssetHashSchema = z
   .string()
   .regex(/^sha256:[a-f0-9]{64}$/, 'Must be "sha256:" followed by 64 lowercase hex characters')
-  .transform((v) => v as AssetHash);
+  .brand('AssetHash');

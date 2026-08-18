@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { normalizeUrl } from '@uapkg/common';
 import { getRegistryRepoPath } from '@uapkg/registry-core';
-import { z } from 'zod';
+import { RegistryMetaSchema } from '@uapkg/registry-schema';
 import type { CompositionRoot } from '../app/CompositionRoot.js';
 import {
   type RegistryTrust,
@@ -11,21 +11,6 @@ import {
   UAPKG_AUTHORIZATION_ISSUER,
   UAPKG_CONTROL_PLANE_API,
 } from './ControlPlaneTypes.js';
-
-const registryMetaSchema = z
-  .object({
-    schemaVersion: z.literal(1),
-    registry: z.object({
-      id: z.uuid(),
-      name: z.string().min(1),
-    }),
-    sourceOfTruth: z.object({
-      type: z.literal('uapkg-service'),
-      // Advisory only. The CLI deliberately does not use this URL.
-      apiBaseUrl: z.string().optional(),
-    }),
-  })
-  .passthrough();
 
 export class RegistryTrustResolver {
   public constructor(private readonly root: CompositionRoot) {}
@@ -63,7 +48,7 @@ export class RegistryTrustResolver {
     } catch (error) {
       throw new Error(`Registry metadata for "${alias}" is not valid JSON.`, { cause: error });
     }
-    const parsed = registryMetaSchema.safeParse(json);
+    const parsed = RegistryMetaSchema.safeParse(json);
     if (!parsed.success) {
       throw new Error(`Registry metadata for "${alias}" does not match the supported schema.`);
     }

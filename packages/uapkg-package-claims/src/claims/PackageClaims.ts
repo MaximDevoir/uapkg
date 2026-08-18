@@ -1,39 +1,8 @@
-import {
-  type PackageName,
-  PackageNameSchema,
-  type PackageVersion,
-  PackageVersionSchema,
-  type RegistryName,
-} from '@uapkg/common-schema';
+import { PackageNameSchema, PackageVersionSchema } from '@uapkg/common-schema';
 import { DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
 import { DependencyDeclarationSchema, normalizeDependencyDeclaration } from '@uapkg/package-manifest-schema';
 import { z } from 'zod';
-
-/**
- * A dependency claim: the canonical published form of a manifest dependency.
- * An absent `registry` means the dependency inherits the containing registry;
- * install-path overrides never appear in published claims.
- */
-export interface ClaimedDependency {
-  readonly version: string;
-  readonly registry?: RegistryName;
-}
-
-/**
- * Normalized publication claims extracted from a packaged `uapkg.json`.
- *
- * This is the permanent mandatory comparison core: `name`, `version`, the
- * three dependency buckets (absent buckets normalize to empty maps), and the
- * normalized `private` policy field (absent normalizes to `false`).
- */
-export interface PackageClaims {
-  readonly name: PackageName;
-  readonly version: PackageVersion;
-  readonly private: boolean;
-  readonly dependencies: Readonly<Record<string, ClaimedDependency>>;
-  readonly devDependencies: Readonly<Record<string, ClaimedDependency>>;
-  readonly peerDependencies: Readonly<Record<string, ClaimedDependency>>;
-}
+import { type ClaimedDependency, type PackageClaims, PackageClaimsSchema } from '../schema/PackageClaimsSchema.js';
 
 /**
  * Claims-focused manifest view: validates only the fields that publication
@@ -44,9 +13,9 @@ const ClaimsManifestSchema = z.looseObject({
   name: PackageNameSchema,
   version: PackageVersionSchema,
   private: z.boolean().optional(),
-  dependencies: z.record(z.string(), DependencyDeclarationSchema).optional(),
-  devDependencies: z.record(z.string(), DependencyDeclarationSchema).optional(),
-  peerDependencies: z.record(z.string(), DependencyDeclarationSchema).optional(),
+  dependencies: z.record(PackageNameSchema, DependencyDeclarationSchema).optional(),
+  devDependencies: z.record(PackageNameSchema, DependencyDeclarationSchema).optional(),
+  peerDependencies: z.record(PackageNameSchema, DependencyDeclarationSchema).optional(),
 });
 
 function normalizeBucket(
@@ -58,7 +27,7 @@ function normalizeBucket(
     const normalized = normalizeDependencyDeclaration(declaration);
     // `path` is a local install concern and is never part of published claims.
     result[name] = {
-      version: normalized.version as string,
+      version: normalized.version,
       ...(normalized.registry !== undefined ? { registry: normalized.registry } : {}),
     };
   }
@@ -84,12 +53,16 @@ export function normalizePackageClaims(rawManifest: unknown): Result<PackageClai
   }
 
   const manifest = parsed.data;
-  return ok({
-    name: manifest.name,
-    version: manifest.version,
-    private: manifest.private ?? false,
-    dependencies: normalizeBucket(manifest.dependencies),
-    devDependencies: normalizeBucket(manifest.devDependencies),
-    peerDependencies: normalizeBucket(manifest.peerDependencies),
-  });
+  return ok(
+    PackageClaimsSchema.parse({
+      name: manifest.name,
+      version: manifest.version,
+      private: manifest.private ?? false,
+      dependencies: normalizeBucket(manifest.dependencies),
+      devDependencies: normalizeBucket(manifest.devDependencies),
+      peerDependencies: normalizeBucket(manifest.peerDependencies),
+    }),
+  );
 }
+
+export type { ClaimedDependency, PackageClaims } from '../schema/PackageClaimsSchema.js';

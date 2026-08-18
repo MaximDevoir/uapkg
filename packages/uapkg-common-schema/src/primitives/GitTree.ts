@@ -9,4 +9,4 @@ export type GitTree = Brand<string, 'GitTree'>;
 export const GitTreeSchema = z
   .string()
   .regex(/^[0-9a-f]{40}$/, 'Must be a 40-character lowercase hex SHA')
-  .transform((v) => v as GitTree);
+  .brand('GitTree');

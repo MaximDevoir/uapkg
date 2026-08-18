@@ -5,7 +5,7 @@ import type { AssetHash, InstallPath, PackageName, PackageVersion, RegistryName 
 import { DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
 import type { Lockfile } from '@uapkg/package-manifest-schema';
 import { getRegistryRepoPath, type RegistryCore } from '@uapkg/registry-core';
-import type { RegistryVersion } from '@uapkg/registry-schema';
+import { RegistryMetaSchema, type RegistryType, type RegistryVersion } from '@uapkg/registry-schema';
 import type { InstallAction, InstallPlan, InstallSummary } from '../contracts/InstallerTypes.js';
 import type { DiskStateEntry } from './DiskStateInspector.js';
 
@@ -139,7 +139,7 @@ export class InstallPlanner {
       readonly downloadUrl: string;
       readonly sizeBytes?: number;
       readonly registryEntry: RegistryVersion;
-      readonly registryType?: 'public' | 'private';
+      readonly registryType?: RegistryType;
     }>
   > {
     const bag = new DiagnosticBag();
@@ -164,31 +164,61 @@ export class InstallPlanner {
       );
       return bag.toFailure();
     }
+    const registryType = await this.readRegistryType(registryResult.value.shortId);
+    if (!registryType.ok) {
+      bag.mergeArray(registryType.diagnostics);
+      return bag.toFailure();
+    }
+    if (registryType.value === 'public' && versionEntry.gitTree === undefined) {
+      bag.addError(
+        'INSTALL_PUBLIC_REGISTRY_GITTREE_REQUIRED',
+        `Public registry version "${name}@${locked.version}" does not include the required gitTree.`,
+        { packageName: name, version: locked.version, registry: locked.registry },
+      );
+      return bag.toFailure();
+    }
     return ok({
       downloadUrl: versionEntry.releaseFiles.package.url,
       sizeBytes: versionEntry.releaseFiles.package.integrity.size,
       registryEntry: versionEntry,
-      registryType: await this.readRegistryType(registryResult.value.shortId),
+      registryType: registryType.value,
     });
   }
 
   /**
    * Read the immutable registry type from the projected registry metadata.
-   * Absent files or fields yield undefined, which install verification treats
-   * with private-registry semantics (comparison only, no public policy rule).
+   * Missing, invalid, or unsupported metadata fails closed because package
+   * validation cannot safely choose public or private policy without it.
    */
-  private async readRegistryType(shortId: string): Promise<'public' | 'private' | undefined> {
+  private async readRegistryType(shortId: string): Promise<Result<RegistryType>> {
     const metaPath = join(getRegistryRepoPath(shortId), '.uapkg', 'registry.meta.json');
-    if (!existsSync(metaPath)) return undefined;
+    if (!existsSync(metaPath)) {
+      return invalidRegistryMetaResult(shortId, ['Required registry metadata file is missing.']);
+    }
     try {
       const raw = await readFile(metaPath, 'utf8');
-      const parsed = JSON.parse(raw) as { registry?: { registryType?: unknown } };
-      const value = parsed.registry?.registryType;
-      return value === 'public' || value === 'private' ? value : undefined;
-    } catch {
-      return undefined;
+      const parsed = RegistryMetaSchema.safeParse(JSON.parse(raw) as unknown);
+      if (!parsed.success) {
+        return invalidRegistryMetaResult(
+          shortId,
+          parsed.error.issues.map((issue) => issue.message),
+        );
+      }
+      return ok(parsed.data.registry.registryType);
+    } catch (error) {
+      return invalidRegistryMetaResult(shortId, [error instanceof Error ? error.message : String(error)]);
     }
   }
+}
+
+function invalidRegistryMetaResult(shortId: string, issues: readonly string[]): Result<never> {
+  const bag = new DiagnosticBag();
+  bag.addError(
+    'INSTALL_REGISTRY_META_INVALID',
+    `Registry metadata for cache "${shortId}" is invalid or uses an unsupported schema version.`,
+    { shortId, issues },
+  );
+  return bag.toFailure();
 }
 
 // Local aliases — avoid importing schema types directly to keep this file small.

@@ -15,7 +15,7 @@ export const PackageNameSchema = z
     /^(?:@[a-z0-9][a-z0-9-]*\/)?[a-z0-9][a-z0-9-]*$/,
     'Package name must be lowercase alphanumeric with hyphens, optionally scoped as @owner/package',
   )
-  .transform((v) => v as PackageName);
+  .brand('PackageName');
 
 /** True when the package name uses the `@owner/package` scoped form. */
 export function isScopedPackageName(name: string): boolean {

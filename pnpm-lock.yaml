@@ -24,6 +24,9 @@ importers:
       '@types/node':
         specifier: 25.5.2
         version: 25.5.2
+      '@types/semver':
+        specifier: 7.7.0
+        version: 7.7.0
       '@vitest/coverage-v8':
         specifier: 4.1.2
         version: 4.1.2(vitest@4.1.2(@types/node@25.5.2)(vite@7.3.1(@types/node@25.5.2)(tsx@4.21.0)(yaml@2.8.3)))
@@ -33,6 +36,9 @@ importers:
       nx:
         specifier: 22.6.4
         version: 22.6.4
+      semver:
+        specifier: 7.7.1
+        version: 7.7.1
       tsx:
         specifier: 4.21.0
         version: 4.21.0
@@ -90,6 +96,9 @@ importers:
       '@uapkg/registry-core':
         specifier: workspace:^
         version: link:../uapkg-registry-core
+      '@uapkg/registry-schema':
+        specifier: workspace:^
+        version: link:../uapkg-registry-schema
       esbuild:
         specifier: 0.28.0
         version: 0.28.0
@@ -152,13 +161,13 @@ importers:
       semver:
         specifier: 7.7.1
         version: 7.7.1
-      zod:
-        specifier: 4.3.6
-        version: 4.3.6
     devDependencies:
       '@types/semver':
         specifier: 7.7.0
         version: 7.7.0
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
 
   packages/uapkg-config:
     dependencies:
@@ -171,6 +180,7 @@ importers:
       '@uapkg/diagnostics':
         specifier: workspace:^
         version: link:../uapkg-diagnostics
+    devDependencies:
       zod:
         specifier: 4.3.6
         version: 4.3.6
@@ -277,6 +287,7 @@ importers:
       tar:
         specifier: 7.5.13
         version: 7.5.13
+    devDependencies:
       zod:
         specifier: 4.3.6
         version: 4.3.6
@@ -317,6 +328,7 @@ importers:
       '@uapkg/diagnostics':
         specifier: workspace:^
         version: link:../uapkg-diagnostics
+    devDependencies:
       zod:
         specifier: 4.3.6
         version: 4.3.6
@@ -354,6 +366,7 @@ importers:
       '@uapkg/diagnostics':
         specifier: workspace:^
         version: link:../uapkg-diagnostics
+    devDependencies:
       zod:
         specifier: 4.3.6
         version: 4.3.6

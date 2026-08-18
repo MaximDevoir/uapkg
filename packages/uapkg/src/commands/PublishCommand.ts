@@ -6,6 +6,7 @@ import { isAbsolute, join } from 'node:path';
 import { promisify } from 'node:util';
 import { readPackageClaimsFromArchive } from '@uapkg/package-claims';
 import { getRegistryRepoPath } from '@uapkg/registry-core';
+import { RegistryMetaSchema, type RegistryType } from '@uapkg/registry-schema';
 import type { CompositionRoot } from '../app/CompositionRoot.js';
 import type { UAPKGOutputFormat } from '../cli/UAPKGCommandLine.js';
 import { describeControlPlaneError } from '../control-plane/AccountManager.js';
@@ -293,16 +294,20 @@ export class PublishCommand implements Command {
 }
 
 /** Reads the installer-trusted registry type from the projected registry snapshot. */
-async function readTrustedRegistryType(cacheShortId: string): Promise<'public' | 'private' | undefined> {
+export async function readTrustedRegistryType(cacheShortId: string): Promise<RegistryType> {
   const metaPath = join(getRegistryRepoPath(cacheShortId), '.uapkg', 'registry.meta.json');
-  if (!existsSync(metaPath)) return undefined;
+  if (!existsSync(metaPath)) {
+    throw new Error('Trusted registry metadata is missing; registry policy cannot be determined.');
+  }
   try {
     const raw = await readFile(metaPath, 'utf8');
-    const parsed = JSON.parse(raw) as { registry?: { registryType?: unknown } };
-    const value = parsed.registry?.registryType;
-    return value === 'public' || value === 'private' ? value : undefined;
-  } catch {
-    return undefined;
+    const parsed = RegistryMetaSchema.safeParse(JSON.parse(raw) as unknown);
+    if (!parsed.success) {
+      throw new Error('metadata does not match a supported registry schema');
+    }
+    return parsed.data.registry.registryType;
+  } catch (error) {
+    throw new Error('Trusted registry metadata is invalid or uses an unsupported schema version.', { cause: error });
   }
 }
 

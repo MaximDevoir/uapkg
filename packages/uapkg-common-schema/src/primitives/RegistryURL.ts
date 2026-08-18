@@ -51,4 +51,4 @@ export const RegistryURLSchema = z
       });
     }
   })
-  .transform((v) => v as RegistryURL);
+  .brand('RegistryURL');

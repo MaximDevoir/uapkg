@@ -10,9 +10,11 @@ import {
   type Result,
 } from '@uapkg/diagnostics';
 import {
+  createPackageRegistryManifestSchema,
   getRegistryPackagePathSegments,
   type PackageRegistryManifest,
   PackageRegistryManifestSchema,
+  RegistryMetaSchema,
 } from '@uapkg/registry-schema';
 import { getRegistryRepoPath } from '../paths/RegistryPaths.js';
 
@@ -52,7 +54,12 @@ export class RegistryPackageReader {
       return bag.toFailure();
     }
 
-    const validated = PackageRegistryManifestSchema.safeParse(parseResult.value);
+    const registryType = await this.readRegistryType(bag);
+    if (bag.hasErrors()) return bag.toFailure();
+    const manifestSchema = registryType
+      ? createPackageRegistryManifestSchema(registryType)
+      : PackageRegistryManifestSchema;
+    const validated = manifestSchema.safeParse(parseResult.value);
     if (!validated.success) {
       const issues = validated.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`);
       bag.add(createSchemaInvalidDiagnostic(filePath, issues));
@@ -64,5 +71,42 @@ export class RegistryPackageReader {
 
   private resolveManifestPath(packageName: string): string {
     return join(getRegistryRepoPath(this.shortId), ...getRegistryPackagePathSegments(packageName));
+  }
+
+  /**
+   * Read the trusted context for registry-type-dependent package validation.
+   * Missing, invalid, and unsupported metadata all fail closed: registry type
+   * is required to select the correct package-record policy.
+   */
+  private async readRegistryType(bag: DiagnosticBag): Promise<'public' | 'private' | undefined> {
+    const metaPath = join(getRegistryRepoPath(this.shortId), '.uapkg', 'registry.meta.json');
+    if (!existsSync(metaPath)) {
+      bag.add(createSchemaInvalidDiagnostic(metaPath, ['Required registry metadata file is missing.']));
+      return undefined;
+    }
+
+    let raw: string;
+    try {
+      raw = await readFile(metaPath, 'utf-8');
+    } catch (error) {
+      bag.addError('CACHE_READ_ERROR', `Failed to read ${metaPath}: ${error}`, {
+        cachePath: metaPath,
+        reason: String(error),
+      });
+      return undefined;
+    }
+
+    const parseResult = safeJsonParse<unknown>(raw, metaPath);
+    if (!parseResult.ok) {
+      bag.mergeArray(parseResult.diagnostics);
+      return undefined;
+    }
+    const validated = RegistryMetaSchema.safeParse(parseResult.value);
+    if (!validated.success) {
+      const issues = validated.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`);
+      bag.add(createSchemaInvalidDiagnostic(metaPath, issues));
+      return undefined;
+    }
+    return validated.data.registry.registryType;
   }
 }

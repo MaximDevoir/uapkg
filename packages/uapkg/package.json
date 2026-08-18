@@ -33,6 +33,7 @@
     "@uapkg/package-manifest": "workspace:^",
     "@uapkg/package-manifest-schema": "workspace:^",
     "@uapkg/registry-core": "workspace:^",
+    "@uapkg/registry-schema": "workspace:^",
     "esbuild": "0.28.0",
     "ink": "6.8.0",
     "ink-select-input": "6.2.0",

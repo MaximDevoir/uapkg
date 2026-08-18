@@ -10,7 +10,7 @@ import type { Lockfile } from '@uapkg/package-manifest-schema';
 import type { RegistryCore } from '@uapkg/registry-core';
 import { PackageRegistryManifestSchema } from '@uapkg/registry-schema';
 import { c as createTar } from 'tar';
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { Installer } from '../src/core/Installer.js';
 
 interface FixtureArtifact {
@@ -23,6 +23,7 @@ interface RegistryFixtureVersion {
   readonly artifact: FixtureArtifact;
   readonly recordDependencies?: Record<string, string>;
   readonly recordPrivate?: boolean;
+  readonly omitGitTree?: boolean;
 }
 
 const artifacts = new Map<string, Buffer>();
@@ -53,6 +54,10 @@ beforeAll(async () => {
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
   baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+});
+
+beforeEach(async () => {
+  await writeRegistryMeta('testshortid', 'private');
 });
 
 afterAll(async () => {
@@ -119,7 +124,7 @@ function buildRegistryCore(fixtures: Map<string, RegistryFixtureVersion>, shortI
             const [name, version] = key.split('@@');
             if (name !== packageName) continue;
             versions[version] = {
-              gitTree: 'a'.repeat(40),
+              ...(fixture.omitGitTree ? {} : { gitTree: 'a'.repeat(40) }),
               private: fixture.recordPrivate ?? false,
               releaseFiles: {
                 package: {
@@ -172,14 +177,35 @@ function buildLockfile(
   return { lockfileVersion: 1, packages } as Lockfile;
 }
 
-async function writeRegistryMeta(shortId: string, registryType: 'public' | 'private'): Promise<void> {
+async function writeRegistryMeta(
+  shortId: string,
+  registryType: 'public' | 'private',
+  schemaVersion = 1,
+): Promise<void> {
   const profileRoot = await makeTempDir('uapkg-installer-profile-');
   process.env.UAPKG_INTERNAL_CONFIG_CACHE_HOME = profileRoot;
   const metaDir = join(profileRoot, 'registry', shortId, 'registry', '.uapkg');
   await mkdir(metaDir, { recursive: true });
   await writeFile(
     join(metaDir, 'registry.meta.json'),
-    JSON.stringify({ schemaVersion: 1, registry: { registryType } }),
+    JSON.stringify({
+      schemaVersion,
+      registry: {
+        id: '00000000-0000-4000-a000-000000000020',
+        name: 'Test registry',
+        normalizedName: 'test-registry',
+        registryType,
+        createdAt: 1_700_000_000,
+      },
+      owner: {
+        kind: 'organization',
+        id: '00000000-0000-4000-a000-000000000021',
+        name: 'Test owner',
+        normalizedName: 'test-owner',
+      },
+      sourceOfTruth: { type: 'uapkg-service', apiBaseUrl: 'https://api.uapkg.dev/v1' },
+      generated: { generatedAt: 1_700_000_001, generatedBy: 'uapkg-registry-app' },
+    }),
     'utf8',
   );
 }
@@ -446,6 +472,70 @@ describe('verification-gated partial installation', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.installed).toEqual(['private-ok']);
+  });
+
+  it('rejects a public registry version that omits gitTree', async () => {
+    const shortId = 'publicnotree';
+    await writeRegistryMeta(shortId, 'public');
+    const artifact = await makeArtifact('no-tree', '1.0.0', {
+      name: 'no-tree',
+      version: '1.0.0',
+      kind: 'plugin',
+    });
+    const fixtures = new Map<string, RegistryFixtureVersion>([
+      [fixtureKey('no-tree', '1.0.0'), { artifact, omitGitTree: true }],
+    ]);
+    const lockfile = buildLockfile({ 'no-tree': { version: '1.0.0', sha256: artifact.sha256 } });
+
+    const { result } = await runInstall(fixtures, lockfile, ['no-tree'], shortId);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(
+      result.diagnostics.some(
+        (diagnostic) => (diagnostic.code as string) === 'INSTALL_PUBLIC_REGISTRY_GITTREE_REQUIRED',
+      ),
+    ).toBe(true);
+  });
+
+  it('fails closed when the registry metadata file is absent', async () => {
+    const shortId = 'missingmeta';
+    const artifact = await makeArtifact('missing-meta-pkg', '1.0.0', {
+      name: 'missing-meta-pkg',
+      version: '1.0.0',
+      kind: 'plugin',
+    });
+    const fixtures = new Map<string, RegistryFixtureVersion>([[fixtureKey('missing-meta-pkg', '1.0.0'), { artifact }]]);
+    const lockfile = buildLockfile({
+      'missing-meta-pkg': { version: '1.0.0', sha256: artifact.sha256 },
+    });
+
+    const { result } = await runInstall(fixtures, lockfile, ['missing-meta-pkg'], shortId);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(
+      result.diagnostics.some((diagnostic) => (diagnostic.code as string) === 'INSTALL_REGISTRY_META_INVALID'),
+    ).toBe(true);
+  });
+
+  it('fails closed when registry metadata uses an unknown schema version', async () => {
+    const shortId = 'futuremeta';
+    await writeRegistryMeta(shortId, 'private', 2);
+    const artifact = await makeArtifact('future-meta-pkg', '1.0.0', {
+      name: 'future-meta-pkg',
+      version: '1.0.0',
+      kind: 'plugin',
+    });
+    const fixtures = new Map<string, RegistryFixtureVersion>([[fixtureKey('future-meta-pkg', '1.0.0'), { artifact }]]);
+    const lockfile = buildLockfile({
+      'future-meta-pkg': { version: '1.0.0', sha256: artifact.sha256 },
+    });
+
+    const { result } = await runInstall(fixtures, lockfile, ['future-meta-pkg'], shortId);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(
+      result.diagnostics.some((diagnostic) => (diagnostic.code as string) === 'INSTALL_REGISTRY_META_INVALID'),
+    ).toBe(true);
   });
 
   it('reports an incomplete closure for a verified parent whose child failed', async () => {

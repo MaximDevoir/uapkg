@@ -19,5 +19,6 @@ export {
   MANDATORY_CLAIM_KEYS,
   UNDERSTOOD_OPTIONAL_CLAIM_KEYS,
 } from './claims/ClaimsComparison.js';
-export { type ClaimedDependency, normalizePackageClaims, type PackageClaims } from './claims/PackageClaims.js';
+export { normalizePackageClaims } from './claims/PackageClaims.js';
 export { canonicalJsonStringify, parseJsonStrict, sha256OfCanonicalJson } from './json/CanonicalJson.js';
+export type { ClaimedDependency, PackageClaims } from './schema/index.js';

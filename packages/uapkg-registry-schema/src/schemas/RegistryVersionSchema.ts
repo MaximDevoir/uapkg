@@ -26,7 +26,9 @@ export const VersionMetaSchema = z.object({
  * client. The mandatory core itself stays strictly validated.
  */
 export const RegistryVersionSchema = z.object({
-  gitTree: GitTreeSchema,
+  // Required by public-registry policy, but structurally optional so trusted
+  // private registries can publish records without a public Git tree.
+  gitTree: GitTreeSchema.optional(),
   // Normalized packaged `private` claim; records predating the field read as false.
   private: z.boolean().default(false),
   meta: VersionMetaSchema.optional(),

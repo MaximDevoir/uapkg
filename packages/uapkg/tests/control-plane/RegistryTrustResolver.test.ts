@@ -39,11 +39,24 @@ describe('registry control-plane source identity', () => {
         registry: {
           id: '00000000-0000-4000-a000-000000000020',
           name: 'Official',
+          normalizedName: 'official',
+          registryType: 'public',
+          createdAt: 1_700_000_000,
           ...legacyFields,
+        },
+        owner: {
+          kind: 'organization',
+          id: '00000000-0000-4000-a000-000000000021',
+          name: 'UAPKG',
+          normalizedName: 'uapkg',
         },
         sourceOfTruth: {
           type: 'uapkg-service',
           apiBaseUrl: 'https://untrusted.example.invalid',
+        },
+        generated: {
+          generatedAt: 1_700_000_001,
+          generatedBy: 'uapkg-registry-app',
         },
         authorization: {
           issuer: 'https://untrusted.example.invalid/oauth',
@@ -81,5 +94,43 @@ describe('registry control-plane source identity', () => {
     });
     expect(JSON.stringify(trust)).not.toContain('untrusted.example.invalid');
     expect(trust).not.toHaveProperty('registryIdentifier');
+  });
+
+  it('rejects an unknown registry metadata schema version', async () => {
+    readFileMock.mockResolvedValue(
+      JSON.stringify({
+        schemaVersion: 2,
+        registry: {
+          id: '00000000-0000-4000-a000-000000000020',
+          name: 'Official',
+          normalizedName: 'official',
+          registryType: 'public',
+          createdAt: 1_700_000_000,
+        },
+        owner: {
+          kind: 'organization',
+          id: '00000000-0000-4000-a000-000000000021',
+          name: 'UAPKG',
+          normalizedName: 'uapkg',
+        },
+        sourceOfTruth: { type: 'uapkg-service', apiBaseUrl: 'https://api.uapkg.dev/v1' },
+        generated: { generatedAt: 1_700_000_001, generatedBy: 'uapkg-registry-app' },
+      }),
+    );
+    const root = {
+      config: { get: vi.fn().mockReturnValue('official') },
+      registryCore: {
+        getOrCreateRegistry: vi.fn().mockReturnValue({
+          ok: true,
+          value: {
+            shortId: 'cache-short-id',
+            descriptor: { url: 'https://github.com/uapkg/registry.git' },
+            ensureUpToDate: vi.fn().mockResolvedValue({ ok: true, value: 'Updated', diagnostics: [] }),
+          },
+        }),
+      },
+    } as unknown as CompositionRoot;
+
+    await expect(new RegistryTrustResolver(root).resolve()).rejects.toThrow('does not match the supported schema');
   });
 });

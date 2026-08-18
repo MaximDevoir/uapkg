@@ -9,5 +9,6 @@ export type VersionRange = Brand<string, 'VersionRange'>;
 
 export const VersionRangeSchema = z
   .string()
+  .min(1, 'Version range must not be empty')
   .refine((v) => validRange(v) !== null, { message: 'Invalid semver range' })
-  .transform((v) => v as VersionRange);
+  .brand('VersionRange');

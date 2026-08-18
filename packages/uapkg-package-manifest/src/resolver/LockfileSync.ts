@@ -30,7 +30,7 @@ export class LockfileSync {
       version: node.version,
       registry: node.registry,
       integrity: node.integrity,
-      gitTree: node.gitTree,
+      ...(node.gitTree !== undefined ? { gitTree: node.gitTree } : {}),
       dependencies: Object.keys(childDeps).length > 0 ? childDeps : undefined,
     } as LockDependency;
   }

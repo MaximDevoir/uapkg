@@ -7,6 +7,7 @@ export { getRegistryPackagePath, getRegistryPackagePathSegments } from './paths/
 // Schemas
 export { type Integrity, IntegritySchema } from './schemas/IntegritySchema.js';
 export {
+  createPackageRegistryManifestSchema,
   type PackageRegistryManifest,
   PackageRegistryManifestSchema,
 } from './schemas/PackageRegistryManifestSchema.js';
@@ -24,6 +25,12 @@ export {
   toRegistryDependencyDeclaration,
   toRegistryDependencyRecordDeclaration,
 } from './schemas/RegistryDependencySchema.js';
+export {
+  type RegistryMeta,
+  RegistryMetaSchema,
+  type RegistryType,
+  RegistryTypeSchema,
+} from './schemas/RegistryMetaSchema.js';
 export {
   type RegistryVersion,
   RegistryVersionSchema,

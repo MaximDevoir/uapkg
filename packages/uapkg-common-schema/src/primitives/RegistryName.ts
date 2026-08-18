@@ -6,10 +6,7 @@ import type { Brand } from '../brand/Brand.js';
  */
 export type RegistryName = Brand<string, 'RegistryName'>;
 
-export const RegistryNameSchema = z
-  .string()
-  .min(1, 'Registry name must not be empty')
-  .transform((v) => v as RegistryName);
+export const RegistryNameSchema = z.string().min(1, 'Registry name must not be empty').brand('RegistryName');
 
 /**
  * The machine-local alias that resolves to the user's configured default

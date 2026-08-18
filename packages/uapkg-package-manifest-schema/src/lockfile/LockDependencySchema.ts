@@ -8,7 +8,7 @@ export const LockDependencySchema = z.object({
   version: PackageVersionSchema,
   registry: RegistryNameSchema,
   integrity: AssetHashSchema,
-  gitTree: GitTreeSchema,
+  gitTree: GitTreeSchema.optional(),
   dependencies: z.record(z.string(), z.string()).optional(),
 });
 

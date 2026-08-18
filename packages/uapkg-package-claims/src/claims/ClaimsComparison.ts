@@ -121,7 +121,7 @@ function normalizeRegistryBucket(bucket: RegistryVersion['dependencies']): Reado
   if (!bucket) return result;
   for (const [name, dependency] of Object.entries(bucket)) {
     result[name] = {
-      version: dependency.version as string,
+      version: dependency.version,
       ...(dependency.registry !== undefined ? { registry: dependency.registry } : {}),
     };
   }

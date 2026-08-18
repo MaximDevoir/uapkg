@@ -11,4 +11,4 @@ export type OrgName = Brand<string, 'OrgName'>;
 export const OrgNameSchema = z
   .string()
   .regex(/^[a-z0-9][a-z0-9-_]*$/, 'Organization name must be lowercase alphanumeric with hyphens or underscores')
-  .transform((v) => v as OrgName);
+  .brand('OrgName');

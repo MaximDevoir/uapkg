@@ -187,7 +187,7 @@ export class LockfileSyncValidator {
 }
 
 interface RegistryVersionShape {
-  readonly gitTree: string;
+  readonly gitTree?: string;
   readonly releaseFiles: {
     readonly package: {
       readonly integrity: {

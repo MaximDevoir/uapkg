@@ -6,8 +6,4 @@ import type { Brand } from '../brand/Brand.js';
  */
 export type UnixTimestamp = Brand<number, 'UnixTimestamp'>;
 
-export const UnixTimestampSchema = z
-  .number()
-  .int()
-  .nonnegative()
-  .transform((v) => v as UnixTimestamp);
+export const UnixTimestampSchema = z.number().int().nonnegative().brand('UnixTimestamp');

@@ -1,5 +1,64 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { normalizePackageClaims } from '../src/index.js';
+import { ClaimedDependencySchema, PackageClaimsSchema } from '../src/schema/index.js';
+
+describe('package claims schemas', () => {
+  it('validates the canonical normalized claims representation', () => {
+    const parsed = PackageClaimsSchema.safeParse({
+      name: '@acme/tool',
+      version: '1.2.3',
+      private: false,
+      dependencies: { engine: { version: '^5.4.0' } },
+      devDependencies: {},
+      peerDependencies: {},
+    });
+    expect(parsed.success).toBe(true);
+  });
+
+  it('rejects invalid package identities and dependency ranges', () => {
+    expect(ClaimedDependencySchema.safeParse({ version: 'not-a-range' }).success).toBe(false);
+    expect(
+      PackageClaimsSchema.safeParse({
+        name: '@foo_bar/pkg',
+        version: '1.2.3',
+        private: false,
+        dependencies: {},
+        devDependencies: {},
+        peerDependencies: {},
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects unknown top-level and nested dependency members', () => {
+    expect(ClaimedDependencySchema.safeParse({ version: '^1.0.0', path: 'Plugins/Local' }).success).toBe(false);
+    expect(
+      PackageClaimsSchema.safeParse({
+        name: 'tool',
+        version: '1.2.3',
+        private: false,
+        dependencies: {},
+        devDependencies: {},
+        peerDependencies: {},
+        futureClaim: true,
+      }).success,
+    ).toBe(false);
+  });
+
+  it('exposes package-name record keys to generated JSON Schema', () => {
+    const schema = z.toJSONSchema(PackageClaimsSchema) as {
+      properties?: {
+        dependencies?: {
+          propertyNames?: { pattern?: string; maxLength?: number };
+        };
+      };
+    };
+    expect(schema.properties?.dependencies?.propertyNames).toMatchObject({
+      maxLength: 214,
+      pattern: '^(?:@[a-z0-9][a-z0-9-]*\\/)?[a-z0-9][a-z0-9-]*$',
+    });
+  });
+});
 
 describe('normalizePackageClaims', () => {
   it('normalizes the mandatory core with defaults', () => {
