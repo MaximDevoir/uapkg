@@ -18,6 +18,7 @@ import {
   type DependencyMap,
   normalizePackedTarball,
   publishBundle,
+  readPackedManifest,
   resolveRuntimeClosure,
   selectConsumerRoots,
   validatePackedManifest,
@@ -202,6 +203,43 @@ describe('publish-shaped bundle identity', () => {
     normalizePackedTarball(first);
     normalizePackedTarball(second);
     expect(readFileSync(first)).toEqual(readFileSync(second));
+  });
+
+  it('reads the packed manifest in-process without a platform archive command', () => {
+    const directory = temporaryDirectory('uapkg-bundle-manifest-');
+    const tarball = path.join(directory, 'common-schema.tgz');
+    writeFileSync(
+      tarball,
+      minimalPackageTarball({
+        name: '@uapkg/common-schema',
+        version: '1.3.0',
+        dependencies: { '@uapkg/diagnostics': '^1.3.0' },
+      }),
+    );
+
+    const manifest = (() => {
+      const originalPath = process.env.PATH;
+      process.env.PATH = '';
+      try {
+        return readPackedManifest(tarball, {
+          name: '@uapkg/common-schema',
+          version: '1.3.0',
+        });
+      } finally {
+        if (originalPath === undefined) {
+          delete process.env.PATH;
+        } else {
+          process.env.PATH = originalPath;
+        }
+      }
+    })();
+
+    expect(manifest).toEqual({
+      name: '@uapkg/common-schema',
+      version: '1.3.0',
+      dependencies: { '@uapkg/diagnostics': '^1.3.0' },
+      optionalDependencies: {},
+    });
   });
 
   it('rejects workspace ranges that were not rewritten by pnpm pack', () => {

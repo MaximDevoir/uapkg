@@ -558,12 +558,14 @@ function writeTarSizeAndChecksum(header: Buffer, size: number): void {
 /**
  * pnpm supplies the publish manifest rewrite, but its dependency key iteration can vary by graph traversal order.
  * Canonicalize only the packed package.json and retain every other publish tar entry/header byte.
+ * Return the manifest parsed from those exact bytes so validation never needs a platform archive command.
  */
-export function normalizePackedTarball(tarballPath: string): void {
+export function normalizePackedTarball(tarballPath: string): unknown {
   const rawTar = gunzipSync(readFileSync(tarballPath));
   const output: Buffer[] = [];
   let offset = 0;
   let manifestCount = 0;
+  let packedManifest: unknown;
   while (offset + 512 <= rawTar.length) {
     const originalHeader = rawTar.subarray(offset, offset + 512);
     if (originalHeader.every((byte) => byte === 0)) {
@@ -580,6 +582,7 @@ export function normalizePackedTarball(tarballPath: string): void {
     const type = String.fromCharCode(header[156] || 48);
     if (type === '0' && tarEntryName(header) === 'package/package.json') {
       const parsed = JSON.parse(body.toString('utf8')) as unknown;
+      packedManifest = parsed;
       body = Buffer.from(JSON.stringify(sortedJsonValue(parsed), null, 2), 'utf8');
       writeTarSizeAndChecksum(header, body.length);
       manifestCount += 1;
@@ -599,6 +602,7 @@ export function normalizePackedTarball(tarballPath: string): void {
   compressed.fill(0, 4, 8);
   compressed[9] = 0xff;
   writeFileSync(tarballPath, compressed);
+  return packedManifest;
 }
 
 export function computeBundleDigest(data: ConsumerBundleManifestData): string {
@@ -655,14 +659,11 @@ export function validatePackedManifest(
   };
 }
 
-function readPackedManifest(tarballPath: string, expectedPackage: WorkspacePackage): PackedManifest {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(runCaptured('tar', ['-xOf', tarballPath, 'package/package.json'], expectedPackage.directory));
-  } catch (error) {
-    throw new Error(`Unable to inspect packed manifest for ${expectedPackage.name}`, { cause: error });
-  }
-  return validatePackedManifest(parsed, expectedPackage);
+export function readPackedManifest(
+  tarballPath: string,
+  expectedPackage: Pick<WorkspacePackage, 'name' | 'version'>,
+): PackedManifest {
+  return validatePackedManifest(normalizePackedTarball(tarballPath), expectedPackage);
 }
 
 export function verifyCompletePackedClosure(packages: readonly BundlePackage[]): void {
@@ -708,7 +709,6 @@ function packClosure(closure: readonly WorkspacePackage[], temporaryDirectory: s
   for (const pkg of [...closure].sort((left, right) => left.name.localeCompare(right.name))) {
     const temporaryTarball = path.join(temporaryDirectory, `${packed.length}.tgz`);
     runPnpmCaptured(['--dir', pkg.directory, 'pack', '--out', temporaryTarball], pkg.directory);
-    normalizePackedTarball(temporaryTarball);
     const packedManifest = readPackedManifest(temporaryTarball, pkg);
     const tarballDigest = sha256(readFileSync(temporaryTarball));
     const file = createContentAddressedFilename(pkg.name, pkg.version, tarballDigest);
