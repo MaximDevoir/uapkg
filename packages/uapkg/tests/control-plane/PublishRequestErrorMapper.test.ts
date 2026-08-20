@@ -254,6 +254,16 @@ describe('publishRequestDiagnosticForError', () => {
     }
   });
 
+  it('describes only active trusted-publisher policy fields for OIDC authority denial', () => {
+    const diagnostic = publishRequestDiagnosticForError(
+      new ControlPlaneError('TRUSTED_PUBLISHER_NOT_AUTHORIZED', 'unsafe', 403),
+      { ...context, credentialKind: 'oidc' },
+    );
+
+    expect(diagnostic.hint).toContain('repository, workflow, and optional GitHub Environment');
+    expect(diagnostic.hint).not.toMatch(/\bevent\b|\bref\b/u);
+  });
+
   it('shows submitted and trusted repositories for an OIDC mismatch', () => {
     const diagnostic = publishRequestDiagnosticForError(
       new ControlPlaneError('OIDC_SOURCE_REPOSITORY_MISMATCH', 'unsafe', 403, {

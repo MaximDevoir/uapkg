@@ -272,7 +272,7 @@ const publishingAuthorityDeniedSpec = defineSpec(emptyDetailsSchema, (_details, 
     case 'oidc':
       return {
         message: 'This GitHub Actions workflow does not currently have publishing authority for the package.',
-        hint: 'Check the package’s trusted-publisher repository, workflow, ref, event, and environment settings, then run the workflow again.',
+        hint: 'Check the package’s trusted-publisher repository, workflow, and optional GitHub Environment setting, then run the workflow again.',
         resources: ['trusted-publishers'],
       };
     case 'gat':
@@ -524,7 +524,7 @@ export const PUBLISH_SUBMISSION_ERROR_CATALOG = {
   OIDC_SOURCE_REPOSITORY_MISMATCH: oidcRepositorySpec,
   TRUSTED_PUBLISHER_NOT_AUTHORIZED: fixedSpec(
     'This GitHub Actions workflow is not authorized to publish the package.',
-    'Check the package’s trusted-publisher repository, workflow, event, ref, and environment settings, then rerun the workflow.',
+    'Check the package’s trusted-publisher repository, workflow, and optional GitHub Environment setting, then rerun the workflow.',
     ['trusted-publishers'],
   ),
 
