@@ -508,7 +508,7 @@ export const PUBLISH_SUBMISSION_ERROR_CATALOG = {
   // GitHub Actions trusted publishing.
   OIDC_SESSION_INVALID: fixedSpec(
     'The GitHub Actions publishing session expired or is no longer trusted.',
-    'Run the workflow again. If it still fails, verify that the trusted-publisher rule and repository connection are active.',
+    'Run the workflow again. If it still fails, verify that the package still has an active trusted-publisher rule for this repository and workflow.',
     ['trusted-publishers'],
   ),
   OIDC_PROVIDER_UNAVAILABLE: fixedSpec(

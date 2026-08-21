@@ -16,6 +16,7 @@ const trust: RegistryTrust = {
   resource: 'https://api.uapkg.dev/v1/registries/registry-id',
   cacheShortId: 'short-id',
 };
+const target = { registryId: trust.registryId, packageName: 'example' };
 
 afterEach(() => {
   delete process.env.UAPKG_TOKEN;
@@ -41,7 +42,10 @@ describe('AuthenticationSelector', () => {
       () => true,
     );
 
-    await expect(selector.select('auto', trust, ['publishing.request.create'], false)).rejects.toThrow('OIDC rejected');
+    await expect(selector.select('auto', trust, ['publishing.request.create'], false, target)).rejects.toThrow(
+      'OIDC rejected',
+    );
+    expect(oidc.exchange).toHaveBeenCalledWith(trust, target);
     expect(account.hasGrant).not.toHaveBeenCalled();
   });
 
@@ -64,7 +68,7 @@ describe('AuthenticationSelector', () => {
       () => true,
     );
 
-    await expect(selector.select('auto', trust, ['publishing.request.create'], false)).rejects.toThrow(
+    await expect(selector.select('auto', trust, ['publishing.request.create'], false, target)).rejects.toThrow(
       'identity-token endpoint is unavailable',
     );
     expect(account.hasGrant).not.toHaveBeenCalled();
@@ -88,6 +92,21 @@ describe('AuthenticationSelector', () => {
     await expect(selector.select('auto', trust, ['publishing.request.create'], false)).rejects.toThrow(
       'saved grant revoked',
     );
+  });
+
+  it('fails locally when OIDC is selected without an exact package target', async () => {
+    const oidc = { isAvailable: () => true, exchange: vi.fn() };
+    const selector = new AuthenticationSelector(
+      { hasGrant: vi.fn(), getAccessCredential: vi.fn() } as unknown as AccountManager,
+      prompts(),
+      oidc as unknown as GitHubActionsOidcCredentialProvider,
+      () => true,
+    );
+
+    await expect(selector.select('oidc', trust, ['publishing.request.create'], false)).rejects.toThrow(
+      'requires a target package',
+    );
+    expect(oidc.exchange).not.toHaveBeenCalled();
   });
 
   it('uses an explicitly supplied environment GAT only after higher-priority modes are unavailable', async () => {

@@ -30,6 +30,7 @@ const exchangeErrorSchema = z.strictObject({
 
 export type GitHubActionsOidcErrorCode =
   | 'OIDC_CONTROL_PLANE_UNTRUSTED'
+  | 'OIDC_EXCHANGE_TARGET_INVALID'
   | 'OIDC_GITHUB_CONTEXT_UNAVAILABLE'
   | 'OIDC_GITHUB_ENDPOINT_INVALID'
   | 'OIDC_GITHUB_TOKEN_REQUEST_FAILED'
@@ -65,6 +66,12 @@ export interface GitHubActionsOidcCredentialProviderOptions {
   readonly maxRetryDelayMs?: number;
 }
 
+/** Package selector bound into every UAPKG OIDC exchange. */
+export interface GitHubActionsOidcTarget {
+  readonly registryId: string;
+  readonly packageName: string;
+}
+
 type OidcEndpoint = 'github' | 'exchange';
 
 export class GitHubActionsOidcCredentialProvider {
@@ -92,11 +99,18 @@ export class GitHubActionsOidcCredentialProvider {
     );
   }
 
-  public async exchange(trust: RegistryTrust): Promise<string> {
+  public async exchange(trust: RegistryTrust, target: GitHubActionsOidcTarget): Promise<string> {
     if (trust.apiBaseUrl !== UAPKG_CONTROL_PLANE_API) {
       throw new GitHubActionsOidcError(
         'OIDC_CONTROL_PLANE_UNTRUSTED',
         `UAPKG v1 OIDC exchange is pinned to ${UAPKG_CONTROL_PLANE_API}.`,
+      );
+    }
+    const packageName = target.packageName.trim();
+    if (target.registryId !== trust.registryId || !packageName) {
+      throw new GitHubActionsOidcError(
+        'OIDC_EXCHANGE_TARGET_INVALID',
+        'GitHub Actions OIDC requires the exact trusted registry and packaged package name.',
       );
     }
     const requestUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
@@ -135,7 +149,7 @@ export class GitHubActionsOidcCredentialProvider {
     }
 
     const exchangeResponse = await this.fetchWithRetry(
-      new URL('/v1/github-user-app/oidc/github-actions/exchange', trust.apiBaseUrl),
+      new URL('/v1/oidc/github-actions/exchange', trust.apiBaseUrl),
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -143,6 +157,10 @@ export class GitHubActionsOidcCredentialProvider {
           provider: 'github_actions',
           audience: UAPKG_GITHUB_OIDC_AUDIENCE,
           idToken: githubValue.data.value,
+          target: {
+            registryId: target.registryId,
+            packageName,
+          },
         }),
       },
       'exchange',

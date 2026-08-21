@@ -59,10 +59,11 @@ export class PackageLifecycleCommand implements Command {
 
       const trust = await this.root.registryTrustResolver.resolve(this.options.registry);
       const selector = new AuthenticationSelector(this.root.accountManager, new InkPromptService());
+      const oidcTarget = { registryId: trust.registryId, packageName: packageName.trim() };
       const requestedScopes = this.options.detach
         ? (['publishing.request.create'] as const)
         : (['publishing.request.create', 'publishing.request.read.self'] as const);
-      let authentication = await selector.select(this.options.auth, trust, requestedScopes, true);
+      let authentication = await selector.select(this.options.auth, trust, requestedScopes, true, oidcTarget);
       let requestOtp = authentication.otp;
       authentication = { kind: authentication.kind, credential: authentication.credential };
 
@@ -119,7 +120,13 @@ export class PackageLifecycleCommand implements Command {
           if (authentication.kind === 'login') {
             this.root.accountManager.invalidateAccessCredentials(trust);
           }
-          authentication = await selector.select(authentication.kind, trust, ['publishing.request.read.self'], false);
+          authentication = await selector.select(
+            authentication.kind,
+            trust,
+            ['publishing.request.read.self'],
+            false,
+            oidcTarget,
+          );
           detail = await client.getRegistryRequestDetail(authentication.credential, created.requestId);
         }
       }

@@ -149,7 +149,10 @@ describe('PublishCommand (artifact-first)', () => {
 
     await expect(command.execute()).resolves.toBe(0);
 
-    expect(select).toHaveBeenCalledWith('login', trust, ['publishing.request.create'], true);
+    expect(select).toHaveBeenCalledWith('login', trust, ['publishing.request.create'], true, {
+      registryId: trust.registryId,
+      packageName: 'example',
+    });
   });
 
   it('submits archive-derived claims and observed integrity to the dedicated publish route', async () => {
@@ -211,6 +214,7 @@ describe('PublishCommand (artifact-first)', () => {
       trust,
       ['publishing.request.create', 'publishing.request.read.self'],
       true,
+      { registryId: trust.registryId, packageName: 'example' },
     );
     expect(submit).toHaveBeenCalledWith(
       expect.anything(),
@@ -574,8 +578,12 @@ describe('PublishCommand (artifact-first)', () => {
       trust,
       ['publishing.request.create', 'publishing.request.read.self'],
       true,
+      { registryId: trust.registryId, packageName: 'example' },
     );
-    expect(select).toHaveBeenNthCalledWith(2, 'oidc', trust, ['publishing.request.read.self'], false);
+    expect(select).toHaveBeenNthCalledWith(2, 'oidc', trust, ['publishing.request.read.self'], false, {
+      registryId: trust.registryId,
+      packageName: 'example',
+    });
     expect(getRequest).toHaveBeenNthCalledWith(1, { kind: 'bearer', accessToken: 'oidc-session-one' }, 'request-ready');
     expect(getRequest).toHaveBeenNthCalledWith(2, { kind: 'bearer', accessToken: 'oidc-session-two' }, 'request-ready');
   });

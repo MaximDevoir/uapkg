@@ -13,6 +13,7 @@ const trust: RegistryTrust = {
   resource: 'https://api.uapkg.dev/v1/registries/00000000-0000-4000-a000-000000000020',
   cacheShortId: 'registry-cache',
 };
+const target = { registryId: trust.registryId, packageName: 'example' };
 
 beforeEach(() => {
   vi.stubEnv('GITHUB_ACTIONS', 'true');
@@ -33,7 +34,7 @@ describe('GitHubActionsOidcCredentialProvider', () => {
       .mockResolvedValueOnce(Response.json({ ok: true, token: 'uapkg-session-secret', expiresAt: 2_000_000_000 }));
     const provider = new GitHubActionsOidcCredentialProvider({ fetch: fetchMock, maxAttempts: 1 });
 
-    await expect(provider.exchange(trust)).resolves.toBe('uapkg-session-secret');
+    await expect(provider.exchange(trust, target)).resolves.toBe('uapkg-session-secret');
 
     const githubRequest = fetchMock.mock.calls[0];
     expect(String(githubRequest?.[0])).toContain('audience=uapkg');
@@ -43,7 +44,7 @@ describe('GitHubActionsOidcCredentialProvider', () => {
       signal: expect.any(AbortSignal),
     });
     const exchangeRequest = fetchMock.mock.calls[1];
-    expect(String(exchangeRequest?.[0])).toBe('https://api.uapkg.dev/v1/github-user-app/oidc/github-actions/exchange');
+    expect(String(exchangeRequest?.[0])).toBe('https://api.uapkg.dev/v1/oidc/github-actions/exchange');
     expect(exchangeRequest?.[1]).toMatchObject({
       method: 'POST',
       redirect: 'error',
@@ -53,6 +54,7 @@ describe('GitHubActionsOidcCredentialProvider', () => {
       provider: 'github_actions',
       audience: 'uapkg',
       idToken: 'github-identity-secret',
+      target,
     });
   });
 
@@ -71,7 +73,7 @@ describe('GitHubActionsOidcCredentialProvider', () => {
       maxRetryDelayMs: 5_000,
     });
 
-    await expect(provider.exchange(trust)).resolves.toBe('uapkg-session-secret');
+    await expect(provider.exchange(trust, target)).resolves.toBe('uapkg-session-secret');
 
     expect(sleep.mock.calls).toEqual([[2_000], [5_000]]);
     expect(fetchMock).toHaveBeenCalledTimes(4);
@@ -81,7 +83,7 @@ describe('GitHubActionsOidcCredentialProvider', () => {
     const fetchMock = vi.fn<typeof fetch>().mockRejectedValue(new DOMException('timed out', 'TimeoutError'));
     const provider = new GitHubActionsOidcCredentialProvider({ fetch: fetchMock, maxAttempts: 1 });
 
-    await expect(provider.exchange(trust)).rejects.toMatchObject({
+    await expect(provider.exchange(trust, target)).rejects.toMatchObject({
       code: 'OIDC_GITHUB_TOKEN_REQUEST_TIMEOUT',
       message: 'Timed out while requesting a GitHub Actions OIDC identity token.',
     });
@@ -95,7 +97,7 @@ describe('GitHubActionsOidcCredentialProvider', () => {
       maxResponseBytes: 32,
     });
 
-    await expect(provider.exchange(trust)).rejects.toMatchObject({
+    await expect(provider.exchange(trust, target)).rejects.toMatchObject({
       code: 'OIDC_GITHUB_TOKEN_RESPONSE_TOO_LARGE',
     });
   });
@@ -108,7 +110,7 @@ describe('GitHubActionsOidcCredentialProvider', () => {
     );
     const provider = new GitHubActionsOidcCredentialProvider({ fetch: fetchMock, maxAttempts: 1 });
 
-    await expect(provider.exchange(trust)).rejects.toMatchObject({
+    await expect(provider.exchange(trust, target)).rejects.toMatchObject({
       code: 'OIDC_GITHUB_TOKEN_RESPONSE_INVALID',
     });
   });
@@ -132,11 +134,24 @@ describe('GitHubActionsOidcCredentialProvider', () => {
       );
     const provider = new GitHubActionsOidcCredentialProvider({ fetch: fetchMock, maxAttempts: 1 });
 
-    await expect(provider.exchange(trust)).rejects.toMatchObject({
+    await expect(provider.exchange(trust, target)).rejects.toMatchObject({
       code: 'OIDC_IDENTITY_REJECTED',
       message: 'The workload identity was rejected.',
       status: 401,
       details: { retryable: false },
     });
+  });
+
+  it('rejects a target that is missing or belongs to another registry before requesting a JWT', async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    const provider = new GitHubActionsOidcCredentialProvider({ fetch: fetchMock, maxAttempts: 1 });
+
+    await expect(provider.exchange(trust, { registryId: 'different', packageName: 'example' })).rejects.toMatchObject({
+      code: 'OIDC_EXCHANGE_TARGET_INVALID',
+    });
+    await expect(provider.exchange(trust, { registryId: trust.registryId, packageName: '   ' })).rejects.toMatchObject({
+      code: 'OIDC_EXCHANGE_TARGET_INVALID',
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

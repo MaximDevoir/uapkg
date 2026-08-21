@@ -3,7 +3,10 @@ import type { PromptService } from '../prompts/PromptService.js';
 import type { AccountManager } from './AccountManager.js';
 import type { ControlPlaneCredential } from './ControlPlaneClient.js';
 import type { ControlPlaneAuthMode, RegistryTrust, UAPKGCliScope } from './ControlPlaneTypes.js';
-import { GitHubActionsOidcCredentialProvider } from './GitHubActionsOidcCredentialProvider.js';
+import {
+  GitHubActionsOidcCredentialProvider,
+  type GitHubActionsOidcTarget,
+} from './GitHubActionsOidcCredentialProvider.js';
 
 export interface SelectedAuthentication {
   readonly kind: 'oidc' | 'login' | 'gat';
@@ -24,9 +27,13 @@ export class AuthenticationSelector {
     trust: RegistryTrust,
     scopes: readonly UAPKGCliScope[],
     requireRequestOtp: boolean,
+    oidcTarget?: GitHubActionsOidcTarget,
   ): Promise<SelectedAuthentication> {
     if (mode === 'oidc' || (mode === 'auto' && this.oidc.isAvailable())) {
-      const accessToken = await this.oidc.exchange(trust);
+      if (!oidcTarget) {
+        throw new Error('GitHub Actions OIDC requires a target package resolved from the requested operation.');
+      }
+      const accessToken = await this.oidc.exchange(trust, oidcTarget);
       return { kind: 'oidc', credential: { kind: 'bearer', accessToken } };
     }
 

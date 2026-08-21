@@ -100,6 +100,7 @@ describe('PackageLifecycleCommand request-scoped OTP', () => {
       trust,
       ['publishing.request.create', 'publishing.request.read.self'],
       true,
+      { registryId: trust.registryId, packageName: 'example' },
     );
     expect(observed).toEqual([
       {
