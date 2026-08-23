@@ -6,10 +6,7 @@
 // ---------------------------------------------------------------------------
 
 // Aggregator
-export {
-  getRegistryToolsAggregator,
-  RegistryToolsAggregator,
-} from './aggregator/RegistryToolsAggregator.js';
+export { getRegistryToolsAggregator, RegistryToolsAggregator } from './aggregator/RegistryToolsAggregator.js';
 
 // Contracts
 export type {

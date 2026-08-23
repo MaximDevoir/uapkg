@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { UAPKGCommandLineParser } from '../../src/cli/parsing/UAPKGCommandLineParser.js';
 
 describe('UAPKG registry command parsing', () => {

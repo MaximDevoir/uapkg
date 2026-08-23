@@ -1,6 +1,6 @@
 import type { RegistryIdentifier } from '@uapkg/common-schema';
 import type { Diagnostic } from '@uapkg/diagnostics';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { Registry } from '../src/registry/Registry.js';
 
 describe('Registry unreachable diagnostics', () => {

@@ -1,7 +1,7 @@
 import { createPublishRequestFailedDiagnostic } from '@uapkg/diagnostics';
 import { renderToString } from 'ink';
 import { createElement } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import {
   createFormatterRegistry,
   defaultFormatters,
@@ -24,7 +24,11 @@ function publishFailure() {
       ],
       resources: [
         { kind: 'command', command: 'uapkg publish --help' },
-        { kind: 'url', label: 'Access tokens', url: 'https://account.example/settings/access-tokens' },
+        {
+          kind: 'url',
+          label: 'Access tokens',
+          url: 'https://account.example/settings/access-tokens',
+        },
       ],
     },
     'Publish for "other-org", or use a token created for "acme".',

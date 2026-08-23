@@ -9,7 +9,7 @@ import {
 
 export interface ResolvedConfigSchemaPath {
   readonly path: string;
-  readonly schema: z.ZodTypeAny;
+  readonly schema: z.ZodType;
   readonly kind: ConfigSchemaNodeKind;
 }
 
@@ -20,13 +20,13 @@ export interface ResolvedConfigSchemaPath {
  * avoiding duplicated hardcoded key maps.
  */
 export class ConfigSchemaRuntime {
-  private readonly root: z.ZodTypeAny;
+  private readonly root: z.ZodType;
 
-  public constructor(rootSchema: z.ZodTypeAny) {
+  public constructor(rootSchema: z.ZodType) {
     this.root = unwrapConfigSchema(rootSchema);
   }
 
-  public getRootSchema(): z.ZodTypeAny {
+  public getRootSchema(): z.ZodType {
     return this.root;
   }
 
@@ -65,7 +65,7 @@ export class ConfigSchemaRuntime {
     };
   }
 
-  public getSchemaAtPath(pathToProperty: string): z.ZodTypeAny | null {
+  public getSchemaAtPath(pathToProperty: string): z.ZodType | null {
     return this.resolvePath(pathToProperty)?.schema ?? null;
   }
 

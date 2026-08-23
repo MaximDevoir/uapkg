@@ -6,7 +6,7 @@ import { ok } from '@uapkg/diagnostics';
 import type { Manifest } from '@uapkg/package-manifest-schema';
 import { getRegistryRepoPath } from '@uapkg/registry-core';
 import { c as createTar } from 'tar';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
 import { PublishCommand, readTrustedRegistryType } from '../../src/commands/PublishCommand.js';
 import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSelector.js';
@@ -193,6 +193,7 @@ describe('PublishCommand (artifact-first)', () => {
       repository: 'manifest/repository',
       asset: 'manifest.tgz',
     });
+    const resolveTrust = vi.spyOn(root.registryTrustResolver, 'resolve');
     Object.assign(root.registryTrustResolver, { forceRefresh });
     const command = new PublishCommand(root, {
       registry: 'cli-registry',
@@ -208,7 +209,7 @@ describe('PublishCommand (artifact-first)', () => {
 
     await expect(command.execute()).resolves.toBe(0);
 
-    expect(root.registryTrustResolver.resolve).toHaveBeenCalledWith('cli-registry');
+    expect(resolveTrust).toHaveBeenCalledWith('cli-registry');
     expect(select).toHaveBeenCalledWith(
       'login',
       trust,
@@ -346,8 +347,10 @@ describe('PublishCommand (artifact-first)', () => {
     await expect(new PublishCommand(publishRoot(trust), options).execute()).resolves.toBe(0);
     await expect(new PublishCommand(publishRoot(trust), options).execute()).resolves.toBe(0);
 
-    const firstKey = (submit.mock.calls[0]?.[3] as { idempotencyKey?: string }).idempotencyKey;
-    const secondKey = (submit.mock.calls[1]?.[3] as { idempotencyKey?: string }).idempotencyKey;
+    const firstOptions = submit.mock.calls[0]?.[3] as { idempotencyKey?: string } | undefined;
+    const secondOptions = submit.mock.calls[1]?.[3] as { idempotencyKey?: string } | undefined;
+    const firstKey = firstOptions?.idempotencyKey;
+    const secondKey = secondOptions?.idempotencyKey;
     expect(firstKey).toBeTruthy();
     expect(secondKey).toBe(firstKey);
   });
@@ -398,8 +401,10 @@ describe('PublishCommand (artifact-first)', () => {
         GITHUB_RUN_ATTEMPT: '999',
       },
     );
-    const firstKey = (submit.mock.calls[0]?.[3] as { idempotencyKey?: string }).idempotencyKey;
-    const rerunKey = (submit.mock.calls[1]?.[3] as { idempotencyKey?: string }).idempotencyKey;
+    const firstOptions = submit.mock.calls[0]?.[3] as { idempotencyKey?: string } | undefined;
+    const rerunOptions = submit.mock.calls[1]?.[3] as { idempotencyKey?: string } | undefined;
+    const firstKey = firstOptions?.idempotencyKey;
+    const rerunKey = rerunOptions?.idempotencyKey;
     expect(firstKey).toBe(expected);
     expect(firstKey).toMatch(/^gha-[0-9a-f]{64}$/);
     expect(rerunKey).toBe(firstKey);

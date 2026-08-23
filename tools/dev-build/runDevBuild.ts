@@ -1,8 +1,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseDevBuildOptions } from './DevBuildOptions';
-import { DevBuildOrchestrator } from './DevBuildOrchestrator';
-import type { DevBuildMode } from './types';
+import { parseDevBuildOptions } from './DevBuildOptions.ts';
+import { DevBuildOrchestrator } from './DevBuildOrchestrator.ts';
+import type { DevBuildMode } from './types.ts';
 
 function resolveWorkspaceRoot() {
   const currentFile = fileURLToPath(import.meta.url);

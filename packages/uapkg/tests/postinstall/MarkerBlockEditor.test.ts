@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { MarkerBlockEditor } from '../../src/postinstall/markers/MarkerBlockEditor.js';
 
 const PLUGIN = 'plug';

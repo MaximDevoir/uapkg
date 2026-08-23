@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { INTERNAL_BUILD_MODE_ENV, INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { createConfig } from '../src';
 
 const temporaryDirectories: string[] = [];
@@ -68,7 +68,10 @@ describe('createConfig', () => {
     expect(config.get('registries.default.url')).toBe('https://example.com/local');
     expect(config.get('registries.default.ref')).toEqual({ type: 'branch', value: 'main' });
     expect(config.trace('registries.default.url')).toEqual([
-      expect.objectContaining({ source: 'default', value: 'https://github.com/uapkg/registry-dev-tmp' }),
+      expect.objectContaining({
+        source: 'default',
+        value: 'https://github.com/uapkg/registry-dev-tmp',
+      }),
       expect.objectContaining({ source: 'global', value: 'https://example.com/global' }),
       expect.objectContaining({ source: 'local', value: 'https://example.com/local' }),
     ]);

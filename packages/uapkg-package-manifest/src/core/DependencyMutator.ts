@@ -46,14 +46,14 @@ export class DependencyMutator {
     const bucket: DependencyBucket = options.bucket ?? 'dependencies';
     const next: Manifest = {
       ...manifest,
-      [bucket]: { ...(manifest[bucket] ?? {}), [name]: declaration },
+      [bucket]: { ...manifest[bucket], [name]: declaration },
     } as Manifest;
 
     if (options.pin && next.kind === 'project') {
       const project = next as ProjectManifest;
       return {
         ...project,
-        overrides: { ...(project.overrides ?? {}), [name]: declaration },
+        overrides: { ...project.overrides, [name]: declaration },
       } as Manifest;
     }
 
@@ -118,7 +118,7 @@ export class DependencyMutator {
     const declaration = toDependencyDeclaration(dep) as unknown as Dependency;
     return {
       ...project,
-      overrides: { ...(project.overrides ?? {}), [name]: declaration },
+      overrides: { ...project.overrides, [name]: declaration },
     } as Manifest;
   }
 }

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import * as oauth from 'oauth4webapi';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { AccountManager } from '../../src/control-plane/AccountManager.js';
 import { ControlPlaneClient } from '../../src/control-plane/ControlPlaneClient.js';
 
@@ -108,7 +108,9 @@ describe('control-plane DPoP requests', () => {
       const proof = headers.get('dpop');
       if (!proof) throw new Error('missing DPoP proof');
       proofs.push(proof);
-      expect(String(init?.body)).toContain('token=refresh-token');
+      const body = init?.body;
+      const serializedBody = typeof body === 'string' ? body : body instanceof URLSearchParams ? body.toString() : '';
+      expect(serializedBody).toContain('token=refresh-token');
       if (proofs.length === 1) {
         return new Response(JSON.stringify({ error: 'use_dpop_nonce' }), {
           status: 400,

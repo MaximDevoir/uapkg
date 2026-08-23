@@ -28,7 +28,6 @@ export interface WorkspacePackage {
   name: string;
   version: string;
   directory: string;
-  projectName: string;
   dependencies: DependencyMap;
   optionalDependencies: DependencyMap;
 }
@@ -152,55 +151,19 @@ interface CommandInvocation {
   prefixArgs: string[];
 }
 
-let cachedPnpmInvocation: CommandInvocation | undefined;
-
-function pnpmInvocation(): CommandInvocation {
-  if (cachedPnpmInvocation) {
-    return cachedPnpmInvocation;
-  }
-
-  const npmExecPath = process.env.npm_execpath;
-  if (npmExecPath && /pnpm/i.test(npmExecPath) && existsSync(npmExecPath)) {
-    cachedPnpmInvocation = { command: process.execPath, prefixArgs: [npmExecPath] };
-    return cachedPnpmInvocation;
-  }
-
-  if (process.platform === 'win32') {
-    const shims = runCaptured('where.exe', ['pnpm.cmd'], process.cwd())
-      .split(/\r?\n/)
-      .map((entry) => entry.trim())
-      .filter(Boolean);
-    for (const shim of shims) {
-      const shimDirectory = path.dirname(shim);
-      const contents = readFileSync(shim, 'utf8');
-      const relativeEntrypoints = [...contents.matchAll(/%dp0%\\([^"\r\n]+\.(?:mjs|cjs|js))/gi)].map(
-        (match) => match[1],
-      );
-      for (const relativeEntrypoint of relativeEntrypoints) {
-        if (!relativeEntrypoint) {
-          continue;
-        }
-        const entrypoint = path.resolve(shimDirectory, relativeEntrypoint);
-        if (existsSync(entrypoint)) {
-          cachedPnpmInvocation = { command: process.execPath, prefixArgs: [entrypoint] };
-          return cachedPnpmInvocation;
-        }
-      }
-    }
-    throw new Error('Unable to locate the pnpm JavaScript entrypoint from pnpm.cmd');
-  }
-
-  cachedPnpmInvocation = { command: 'pnpm', prefixArgs: [] };
-  return cachedPnpmInvocation;
+function vitePlusInvocation(): CommandInvocation {
+  return process.platform === 'win32'
+    ? { command: 'cmd.exe', prefixArgs: ['/d', '/s', '/c', 'vp'] }
+    : { command: 'vp', prefixArgs: [] };
 }
 
-function runPnpmCaptured(args: readonly string[], cwd: string): string {
-  const invocation = pnpmInvocation();
+function runVitePlusCaptured(args: readonly string[], cwd: string): string {
+  const invocation = vitePlusInvocation();
   return runCaptured(invocation.command, [...invocation.prefixArgs, ...args], cwd);
 }
 
-function runPnpmInherited(args: readonly string[], cwd: string): void {
-  const invocation = pnpmInvocation();
+function runVitePlusInherited(args: readonly string[], cwd: string): void {
+  const invocation = vitePlusInvocation();
   runInherited(invocation.command, [...invocation.prefixArgs, ...args], cwd);
 }
 
@@ -334,7 +297,7 @@ export function assertGitIdentityUnchanged(before: GitIdentity, after: GitIdenti
   }
 }
 
-interface PnpmWorkspaceEntry {
+interface WorkspaceListEntry {
   name?: unknown;
   version?: unknown;
   path?: unknown;
@@ -343,16 +306,16 @@ interface PnpmWorkspaceEntry {
 export function discoverWorkspacePackages(workspaceRoot: string): Map<string, WorkspacePackage> {
   let listed: unknown;
   try {
-    listed = JSON.parse(runPnpmCaptured(['-r', 'list', '--depth', '-1', '--json'], workspaceRoot));
+    listed = JSON.parse(runVitePlusCaptured(['pm', 'list', '-r', '--depth', '0', '--json'], workspaceRoot));
   } catch (error) {
-    throw new Error('Unable to discover pnpm workspace packages', { cause: error });
+    throw new Error('Unable to discover Vite+ workspace packages', { cause: error });
   }
   if (!Array.isArray(listed)) {
-    throw new Error('pnpm workspace listing was not an array');
+    throw new Error('Vite+ workspace listing was not an array');
   }
 
   const packages = new Map<string, WorkspacePackage>();
-  for (const rawEntry of listed as PnpmWorkspaceEntry[]) {
+  for (const rawEntry of listed as WorkspaceListEntry[]) {
     if (typeof rawEntry.name !== 'string' || !rawEntry.name.startsWith('@uapkg/')) {
       continue;
     }
@@ -360,14 +323,9 @@ export function discoverWorkspacePackages(workspaceRoot: string): Map<string, Wo
       throw new Error(`Workspace package ${rawEntry.name} has no path`);
     }
     const manifest = readJsonObject(path.join(rawEntry.path, 'package.json'), `workspace package ${rawEntry.name}`);
-    const projectPath = path.join(rawEntry.path, 'project.json');
-    const project = existsSync(projectPath)
-      ? readJsonObject(projectPath, `Nx project for ${rawEntry.name}`)
-      : undefined;
     const name = asOptionalString(manifest.name, `${rawEntry.name}.name`);
     const version = asOptionalString(manifest.version, `${rawEntry.name}.version`);
-    const projectName = project ? asOptionalString(project.name, `${rawEntry.name} Nx project name`) : name;
-    if (!name || name !== rawEntry.name || !version || !projectName) {
+    if (!name || name !== rawEntry.name || !version) {
       throw new Error(`Workspace metadata is incomplete or inconsistent for ${rawEntry.name}`);
     }
     if (packages.has(name)) {
@@ -377,7 +335,6 @@ export function discoverWorkspacePackages(workspaceRoot: string): Map<string, Wo
       name,
       version,
       directory: path.resolve(rawEntry.path),
-      projectName,
       dependencies: readDependencyMap(manifest.dependencies, `${name}.dependencies`),
       optionalDependencies: readDependencyMap(manifest.optionalDependencies, `${name}.optionalDependencies`),
     });
@@ -556,7 +513,7 @@ function writeTarSizeAndChecksum(header: Buffer, size: number): void {
 }
 
 /**
- * pnpm supplies the publish manifest rewrite, but its dependency key iteration can vary by graph traversal order.
+ * The package manager supplies the publish manifest rewrite, but dependency key iteration can vary by graph traversal order.
  * Canonicalize only the packed package.json and retain every other publish tar entry/header byte.
  * Return the manifest parsed from those exact bytes so validation never needs a platform archive command.
  */
@@ -644,7 +601,9 @@ export function validatePackedManifest(
     const dependencies = readDependencyMap(manifest[field], `packed ${expectedPackage.name}.${field}`);
     for (const [dependency, range] of Object.entries(dependencies)) {
       if (range.startsWith('workspace:')) {
-        throw new Error(`pnpm did not rewrite ${expectedPackage.name}'s workspace range for ${dependency}: ${range}`);
+        throw new Error(
+          `Vite+ package manager did not rewrite ${expectedPackage.name}'s workspace range for ${dependency}: ${range}`,
+        );
       }
     }
   }
@@ -696,19 +655,28 @@ export function verifyBundleFiles(outputDirectory: string, packages: readonly Bu
   }
 }
 
+export function createClosureBuildCommands(closure: readonly WorkspacePackage[]): string[][] {
+  const packages = [...new Set(closure.map((pkg) => pkg.name))].sort();
+  const libraryPackages = packages.filter((name) => name !== '@uapkg/cli');
+  const commands = libraryPackages.map((name) => ['run', '--cache', '-w', `pack:${name.slice('@uapkg/'.length)}`]);
+  if (packages.includes('@uapkg/cli')) {
+    commands.push(['run', '--cache', '-w', 'cli:build', '--', '--production']);
+  }
+
+  return commands;
+}
+
 function buildClosure(workspaceRoot: string, closure: readonly WorkspacePackage[]): void {
-  const projects = [...new Set(closure.map((pkg) => pkg.projectName))].sort();
-  runPnpmInherited(
-    ['exec', 'nx', 'run-many', '--target=build', `--projects=${projects.join(',')}`, '--outputStyle=static'],
-    workspaceRoot,
-  );
+  for (const command of createClosureBuildCommands(closure)) {
+    runVitePlusInherited(command, workspaceRoot);
+  }
 }
 
 function packClosure(closure: readonly WorkspacePackage[], temporaryDirectory: string): BundlePackage[] {
   const packed: BundlePackage[] = [];
   for (const pkg of [...closure].sort((left, right) => left.name.localeCompare(right.name))) {
     const temporaryTarball = path.join(temporaryDirectory, `${packed.length}.tgz`);
-    runPnpmCaptured(['--dir', pkg.directory, 'pack', '--out', temporaryTarball], pkg.directory);
+    runVitePlusCaptured(['pm', 'pack', '--out', temporaryTarball], pkg.directory);
     const packedManifest = readPackedManifest(temporaryTarball, pkg);
     const tarballDigest = sha256(readFileSync(temporaryTarball));
     const file = createContentAddressedFilename(pkg.name, pkg.version, tarballDigest);

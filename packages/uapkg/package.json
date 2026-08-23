@@ -1,8 +1,14 @@
 {
   "name": "@uapkg/cli",
   "version": "1.3.0",
-  "type": "module",
-  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MaximDevoir/uapkg.git",
+    "directory": "packages/uapkg"
+  },
   "bin": {
     "uapkg": "./dist/cli.js"
   },
@@ -10,13 +16,22 @@
     "dist",
     "README.md"
   ],
+  "type": "module",
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
-  "types": "./dist/index.d.ts",
+  "scripts": {
+    "uapkg": "vp run -w --cache cli:build -- --development && vp exec node dist/cli.js",
+    "build": "node build/runCliBuild.ts",
+    "prepack": "vp run -w --cache cli:build -- --production && vp run verify:production-build",
+    "build:watch": "vp pack --watch --on-success \"vp exec node build/finalizeCliBuild.ts --development\"",
+    "verify:production-build": "vp exec node build/verifyProductionBuild.ts"
+  },
   "dependencies": {
     "@amplication/csharp-ast": "0.1.0",
     "@napi-rs/keyring": "1.3.0",
@@ -46,24 +61,7 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
-    "tar": "7.5.13",
-    "@types/react": "19.2.14"
-  },
-  "scripts": {
-    "uapkg": "pnpm nx run uapkg:build:development && node dist/cli.js",
-    "build": "tsx build/runCliBuild.ts",
-    "prepack": "pnpm run build -- --production && pnpm run verify:production-build",
-    "build:watch": "pnpm nx watch --projects uapkg --includeDependentProjects --initialRun -- pnpm nx run uapkg:build:development",
-    "verify:production-build": "tsx build/verifyProductionBuild.ts",
-    "lint": "biome lint .",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --config vitest.config.ts",
-    "test:coverage": "vitest run --coverage --config vitest.config.ts",
-    "test:watch": "vitest --config vitest.config.ts"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/MaximDevoir/uapkg.git",
-    "directory": "packages/uapkg"
+    "@types/react": "19.2.14",
+    "tar": "7.5.13"
   }
 }

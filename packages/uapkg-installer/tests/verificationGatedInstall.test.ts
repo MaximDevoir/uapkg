@@ -10,7 +10,7 @@ import type { Lockfile } from '@uapkg/package-manifest-schema';
 import type { RegistryCore } from '@uapkg/registry-core';
 import { PackageRegistryManifestSchema } from '@uapkg/registry-schema';
 import { c as createTar } from 'tar';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { Installer } from '../src/core/Installer.js';
 
 interface FixtureArtifact {
@@ -129,7 +129,10 @@ function buildRegistryCore(fixtures: Map<string, RegistryFixtureVersion>, shortI
               releaseFiles: {
                 package: {
                   url: fixture.artifact.url,
-                  integrity: { hash: `sha256:${fixture.artifact.sha256}`, size: fixture.artifact.size },
+                  integrity: {
+                    hash: `sha256:${fixture.artifact.sha256}`,
+                    size: fixture.artifact.size,
+                  },
                 },
               },
               ...(fixture.recordDependencies ? { dependencies: fixture.recordDependencies } : {}),
@@ -217,7 +220,10 @@ async function runInstall(
   shortId = 'testshortid',
 ) {
   const manifestRoot = await makeTempDir('uapkg-installer-root-');
-  const installer = new Installer({ registryCore: buildRegistryCore(fixtures, shortId), config: buildConfig() });
+  const installer = new Installer({
+    registryCore: buildRegistryCore(fixtures, shortId),
+    config: buildConfig(),
+  });
   const result = await installer.execute(lockfile, null, { manifestRoot, rootDependencies });
   return { result, manifestRoot };
 }
@@ -244,7 +250,11 @@ describe('verification-gated partial installation', () => {
       [fixtureKey('child-pkg', '1.0.0'), { artifact: childArtifact }],
     ]);
     const lockfile = buildLockfile({
-      'root-pkg': { version: '1.0.0', sha256: rootArtifact.sha256, dependencies: { 'child-pkg': '1.0.0' } },
+      'root-pkg': {
+        version: '1.0.0',
+        sha256: rootArtifact.sha256,
+        dependencies: { 'child-pkg': '1.0.0' },
+      },
       'child-pkg': { version: '1.0.0', sha256: childArtifact.sha256 },
     });
 
@@ -325,7 +335,11 @@ describe('verification-gated partial installation', () => {
       [fixtureKey('injected-dep', '1.0.0'), { artifact: injectedArtifact }],
     ]);
     const lockfile = buildLockfile({
-      'clean-parent': { version: '1.0.0', sha256: parentArtifact.sha256, dependencies: { 'injected-dep': '1.0.0' } },
+      'clean-parent': {
+        version: '1.0.0',
+        sha256: parentArtifact.sha256,
+        dependencies: { 'injected-dep': '1.0.0' },
+      },
       'injected-dep': { version: '1.0.0', sha256: injectedArtifact.sha256 },
     });
 
@@ -368,8 +382,16 @@ describe('verification-gated partial installation', () => {
       [fixtureKey('shared-dep', '1.0.0'), { artifact: sharedArtifact }],
     ]);
     const lockfile = buildLockfile({
-      'bad-parent': { version: '1.0.0', sha256: badParentArtifact.sha256, dependencies: { 'shared-dep': '1.0.0' } },
-      'good-parent': { version: '1.0.0', sha256: goodParentArtifact.sha256, dependencies: { 'shared-dep': '1.0.0' } },
+      'bad-parent': {
+        version: '1.0.0',
+        sha256: badParentArtifact.sha256,
+        dependencies: { 'shared-dep': '1.0.0' },
+      },
+      'good-parent': {
+        version: '1.0.0',
+        sha256: goodParentArtifact.sha256,
+        dependencies: { 'shared-dep': '1.0.0' },
+      },
       'shared-dep': { version: '1.0.0', sha256: sharedArtifact.sha256 },
     });
 
@@ -390,7 +412,9 @@ describe('verification-gated partial installation', () => {
     const fixtures = new Map<string, RegistryFixtureVersion>([
       [fixtureKey('size-mismatch', '1.0.0'), { artifact: { ...artifact, size: artifact.size + 1 } }],
     ]);
-    const lockfile = buildLockfile({ 'size-mismatch': { version: '1.0.0', sha256: artifact.sha256 } });
+    const lockfile = buildLockfile({
+      'size-mismatch': { version: '1.0.0', sha256: artifact.sha256 },
+    });
 
     const { result } = await runInstall(fixtures, lockfile, ['size-mismatch']);
     expect(result.ok).toBe(true);
@@ -407,7 +431,9 @@ describe('verification-gated partial installation', () => {
     });
     const fixtures = new Map<string, RegistryFixtureVersion>([[fixtureKey('hash-mismatch', '1.0.0'), { artifact }]]);
     // Lockfile pins a different digest than the served bytes.
-    const lockfile = buildLockfile({ 'hash-mismatch': { version: '1.0.0', sha256: 'c'.repeat(64) } });
+    const lockfile = buildLockfile({
+      'hash-mismatch': { version: '1.0.0', sha256: 'c'.repeat(64) },
+    });
 
     const { result, manifestRoot } = await runInstall(fixtures, lockfile, ['hash-mismatch']);
     expect(result.ok).toBe(true);
@@ -420,7 +446,9 @@ describe('verification-gated partial installation', () => {
     const garbage = Buffer.from('this is definitely not a gzip archive');
     const artifact = serveRawArtifact('corrupt-pkg', '1.0.0', garbage);
     const fixtures = new Map<string, RegistryFixtureVersion>([[fixtureKey('corrupt-pkg', '1.0.0'), { artifact }]]);
-    const lockfile = buildLockfile({ 'corrupt-pkg': { version: '1.0.0', sha256: artifact.sha256 } });
+    const lockfile = buildLockfile({
+      'corrupt-pkg': { version: '1.0.0', sha256: artifact.sha256 },
+    });
 
     const { result } = await runInstall(fixtures, lockfile, ['corrupt-pkg']);
     expect(result.ok).toBe(true);
@@ -441,7 +469,9 @@ describe('verification-gated partial installation', () => {
     const fixtures = new Map<string, RegistryFixtureVersion>([
       [fixtureKey('private-pkg', '1.0.0'), { artifact, recordPrivate: true }],
     ]);
-    const lockfile = buildLockfile({ 'private-pkg': { version: '1.0.0', sha256: artifact.sha256 } });
+    const lockfile = buildLockfile({
+      'private-pkg': { version: '1.0.0', sha256: artifact.sha256 },
+    });
 
     const { result } = await runInstall(fixtures, lockfile, ['private-pkg'], shortId);
     expect(result.ok).toBe(true);

@@ -72,14 +72,14 @@ export async function readPackagedManifest(
   } catch (err) {
     bag.addError(
       'CLAIMS_ARCHIVE_READ_ERROR',
-      `Failed to read archive ${archivePath}: ${err instanceof Error ? err.message : err}`,
+      `Failed to read archive ${archivePath}: ${err instanceof Error ? err.message : String(err)}`,
       { archivePath, reason: String(err) },
     );
     return bag.toFailure();
   }
 
   if (oversizedEntry !== null) {
-    bag.addError('CLAIMS_MANIFEST_TOO_LARGE', `Packaged manifest ${oversizedEntry} exceeds ${maxBytes} bytes`, {
+    bag.addError('CLAIMS_MANIFEST_TOO_LARGE', `Packaged manifest ${String(oversizedEntry)} exceeds ${maxBytes} bytes`, {
       archivePath,
       entryPath: oversizedEntry,
       maxBytes,

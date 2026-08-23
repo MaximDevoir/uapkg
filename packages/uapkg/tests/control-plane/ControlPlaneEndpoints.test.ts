@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { UAPKG_BUILD_METADATA } from '../../src/build/BuildMetadata.js';
 import {
   controlPlaneEndpointsForBuildMode,

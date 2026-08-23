@@ -1,11 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { GlobalUapkgSnapshot, SavedGlobalUapkgState } from './types';
+import type { GlobalUapkgSnapshot, SavedGlobalUapkgState } from './types.ts';
 
 export class GlobalUapkgSnapshotStore {
   private readonly snapshotPath: string;
+  private readonly workspaceRoot: string;
 
-  constructor(private readonly workspaceRoot: string) {
+  constructor(workspaceRoot: string) {
+    this.workspaceRoot = workspaceRoot;
     this.snapshotPath = path.join(this.workspaceRoot, 'tools', 'dev-build', '.state', 'global-uapkg-state.json');
   }
 

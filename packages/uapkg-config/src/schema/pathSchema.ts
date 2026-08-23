@@ -1,5 +1,5 @@
 import { createParseErrorDiagnostic, fail, ok, type Result } from '@uapkg/diagnostics';
-import type { ZodTypeAny } from 'zod';
+import type { ZodType } from 'zod';
 import { getConfigSchemaRuntime } from './runtime/ConfigSchemaRuntimeProvider.js';
 
 const runtime = getConfigSchemaRuntime();
@@ -20,7 +20,7 @@ export function isLeafConfigPath(pathToProperty: string): boolean {
   return runtime.isLeafPath(pathToProperty);
 }
 
-export function getConfigSchemaAtPath(pathToProperty: string): ZodTypeAny | null {
+export function getConfigSchemaAtPath(pathToProperty: string): ZodType | null {
   return runtime.getSchemaAtPath(pathToProperty);
 }
 

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
 import type { UAPKGWhoamiField } from '../../src/cli/UAPKGCommandLine.js';
 import { WhoamiCommand } from '../../src/commands/WhoamiCommand.js';

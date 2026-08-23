@@ -13,8 +13,6 @@ permissions:
 jobs:
   verify:
     uses: ./.github/workflows/_verify.yml
-    with:
-      node-versions: '["24"]'
 
   release:
     needs: verify
@@ -22,19 +20,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: voidzero-dev/setup-vp@313600b80b104eadebb9111787d37a2e83e014ca # v1.17.0
         with:
-          node-version: 24
-          cache: pnpm
+          node-version-file: .node-version
+          cache: true
+          run-install: false
 
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run build -- --production
-      - run: pnpm --dir packages/uapkg run verify:production-build
+      - run: vp install --frozen-lockfile
+      - run: vp run build -- --production
+      - run: vp -C packages/uapkg run verify:production-build
 
       - name: Create Release Pull Request or Release
         uses: changesets/action@v1
         with:
-          publish: pnpm release
+          publish: vp run release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

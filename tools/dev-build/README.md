@@ -1,30 +1,29 @@
 # dev-build tooling
 
-This folder contains local development tooling executed directly with `tsx`.
+This folder contains the custom UAPKG development-build orchestration. Invoke
+it through the repository's local Vite+ toolchain.
 
 ## Commands
 
-```json
-{
-  "build": "tsx tools/dev-build/runDevBuild.ts build",
-  "build:link": "tsx tools/dev-build/runDevBuild.ts link",
-  "build:watch": "tsx tools/dev-build/runDevBuild.ts watch",
-  "build:unlink": "tsx tools/dev-build/runDevBuild.ts unlink",
-  "build:status": "tsx tools/dev-build/runDevBuild.ts status",
-  "build:clean": "tsx tools/dev-build/runDevBuild.ts clean",
-  "clean:all": "tsx tools/dev-build/runDevBuild.ts cleanAll"
-}
+```sh
+vp run build
+vp run build:link
+vp run build:watch
+vp run build:unlink
+vp run build:status
+vp run build:clean
+vp run clean:all
 ```
 
 ## Behavior
 
-- `build`: build the monorepo in production mode by default. Pass `--development` or `--production` to select the mode explicitly.
-- `build:link`: build `uapkg` in development mode, globally register only `packages/uapkg` as `@uapkg/cli`, and write global command shims in `pnpm bin --global` so `uapkg` works from any terminal.
-- `build:watch`: immediately run `build:link`, then watch only `uapkg` with `--includeDependentProjects` and relink a development build on changes.
+- `build`: build the monorepo in development mode by default. Pass `--development` or `--production` to select the mode explicitly.
+- `build:link`: build `uapkg` in development mode, globally register only `packages/uapkg` as `@uapkg/cli`, and write global command shims in `vp exec pnpm bin --global` so `uapkg` works from any terminal.
+- `build:watch`: immediately run `build:link`, then watch the CLI and its workspace dependency closure and relink a development build on changes.
 - `build:unlink`: remove the active global dev link and restore only safe previous state.
 - `build:status`: inspect snapshot state, current global state, both persistent profile roots, global-bin/path health, and binary resolution.
-- `build:clean`: remove build artifacts (`dist`, `build`, `coverage`, Nx cache/workspace-data, `*.tsbuildinfo`) across root and workspace packages.
-- `clean:all`: run unlink with force, then run `build:clean`, remove workspace `node_modules`, remove workspace `.pnpm-store` directories, and prune pnpm store metadata. User profile state is retained.
+- `build:clean`: remove package `dist`, root/package coverage, Vite Task cache, and TypeScript build-info artifacts.
+- `clean:all`: run unlink with force, then run `build:clean`, remove workspace `node_modules`, remove workspace `.pnpm-store` directories, and prune the Vite+-managed pnpm store metadata. User profile state is retained.
 
 Snapshot file:
 
@@ -32,19 +31,25 @@ Snapshot file:
 
 ## Force options
 
-- `pnpm run build:link -- --force`
-- `pnpm run build:unlink -- --force`
+- `vp run build:link -- --force`
+- `vp run build:unlink -- --force`
 
 `--force` allows overriding conservative defaults, but external dev links are still never auto-restored.
 
 ## Build modes
 
-- `pnpm run build` and `pnpm run build -- --production` produce production artifacts.
-- `pnpm run build -- --development` produces a development-stamped CLI artifact.
+- `vp run build` and `vp run build -- --development` produce development-stamped CLI artifacts.
+- `vp run build -- --production` produces production artifacts.
 - `--development` and `--production` are mutually exclusive.
 - `build:link` and `build:watch` always use development mode and reject either build-mode flag.
 
 The development banner is embedded in the built CLI rather than its global command shim. It is written to stderr so commands with machine-readable or `--json` stdout remain pipeable.
+
+## Package artifact contract
+
+Vite+ Pack/tsdown preserves the complete library JavaScript and declaration tree and emits source maps for implementation-bearing modules. It deliberately omits meaningless maps for generated CLI files, re-export-only facades, and runtime-empty type-only modules; the build does not synthesize empty maps for those outputs.
+
+Each package's `tsconfig.pack.json` limits declaration generation to that package's source tree and clears the workspace-only TypeScript path aliases. The aliases remain active for clean-checkout typechecking, while TypeScript 7's native declaration generator treats built workspace dependencies as external packages. Cached Vite Task entries also declare only that package's `dist` tree as output, preventing temporary or concurrently observed files from being restored into source directories.
 
 The generated launcher also stamps the built-in `default` registry before it
 imports the CLI:
@@ -111,19 +116,19 @@ credential. Headless jobs must provision Git independently through
 
 ## Running from Anywhere
 
-After `build:link`, `uapkg` is expected to resolve from the pnpm global bin directory, not from the monorepo root.
+After `build:link`, `uapkg` is expected to resolve from the Vite+-managed pnpm global bin directory, not from the monorepo root.
 
 Quick checks:
 
 ```powershell
-pnpm run build:link
-pnpm run build:status
-pnpm bin --global
+vp run build:link
+vp run build:status
+vp exec pnpm bin --global
 where.exe uapkg
 ```
 
 If `build:status` shows `Global Bin In PATH: no`, add the printed global bin directory to your user `PATH` and open a new terminal.
-With pnpm 11, `pnpm setup` performs that PATH update; close and reopen CMD.exe afterward.
+With pnpm 11, `vp exec pnpm setup` performs that PATH update; close and reopen CMD.exe afterward.
 If `where.exe uapkg` lists another package manager's shim first, move the pnpm global bin directory earlier in `PATH`.
 
 ## Do Not
@@ -131,13 +136,20 @@ If `where.exe uapkg` lists another package manager's shim first, move the pnpm g
 - Do not globally link `@uapkg/config`, `@uapkg/pack`, `@uapkg/diagnostics`, or any other internal packages.
 - Do not use repo-local `.pnpm-global`; use real pnpm global state.
 - Do not overwrite the restore snapshot on repeated `build:link` unless `--force` is explicitly passed.
-- Do not use `pnpm link --global`; pnpm 11 replaced it with `pnpm add --global .`.
-- Do not use `pnpm unlink --global`; use `pnpm remove --global`.
-- Do not manually maintain package lists that Nx can derive.
+- Do not run the package manager's global link or unlink commands directly; use `vp run build:link` and `vp run build:unlink` so snapshot restoration remains safe.
+- Do not manually maintain package lists that Vite Task can derive from the workspace dependency graph.
 
 ## CI Rule
 
-CI must use normal install/build/typecheck/test flows only.
+CI must use the managed Vite+ install, check, test, and explicit production-build flows:
+
+```sh
+vp install --frozen-lockfile
+vp check
+vp test run
+vp run build -- --production
+vp -C packages/uapkg run verify:production-build
+```
 
 CI must not run:
 
@@ -148,15 +160,15 @@ CI must not run:
 
 ## Acceptance Tests
 
-- `pnpm run build:link` globally registers `@uapkg/cli` from `packages/uapkg`.
-- `pnpm list -g --depth 0` shows `@uapkg/cli` sourced from `<workspace>/packages/uapkg`.
+- `vp run build:link` globally registers `@uapkg/cli` from `packages/uapkg`.
+- `vp exec pnpm list -g --depth 0` shows `@uapkg/cli` sourced from `<workspace>/packages/uapkg`.
 - `where.exe uapkg` resolves from `pnpm bin --global` after linking.
 - Running `build:link` twice does not overwrite the original snapshot.
 - `build:status` prints both `~/.uapkg` and `~/.uapkg-development` profile roots.
-- `pnpm run build:unlink` restores published `@uapkg/cli@<version>` if that was the prior state.
+- `vp run build:unlink` restores published `@uapkg/cli@<version>` if that was the prior state.
 - If prior state was another dev link, unlink removes current link but does not restore the external link.
-- `pnpm run build:watch` does not contain a manually maintained project list.
-- `pnpm run build:watch` performs an initial development link before waiting for changes.
-- `pnpm run build:clean` removes build outputs and leaves install state untouched.
-- `pnpm run clean:all` removes install/build state from root and workspace packages while retaining both user profiles.
+- `vp run build:watch` does not contain a manually maintained project list.
+- `vp run build:watch` performs an initial development link before waiting for changes.
+- `vp run build:clean` removes build outputs and leaves install state untouched.
+- `vp run clean:all` removes install/build state from root and workspace packages while retaining both user profiles.
 - CI typecheck still passes without global links.

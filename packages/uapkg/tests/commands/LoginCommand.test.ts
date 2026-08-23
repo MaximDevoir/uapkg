@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
 import { LoginCommand } from '../../src/commands/LoginCommand.js';
 import { LoginError, type LoginOptions, type LoginResult } from '../../src/control-plane/AccountManager.js';
@@ -31,7 +31,10 @@ describe('LoginCommand', () => {
       options.onProgress?.({ type: 'approval-received' });
       options.onProgress?.({ type: 'saving-local-credentials' });
       options.onProgress?.({ type: 'confirming-with-service' });
-      return { grant: savedGrant(), warnings: ['The previous remote grant could not be revoked.'] };
+      return {
+        grant: savedGrant(),
+        warnings: ['The previous remote grant could not be revoked.'],
+      };
     });
     const root = createRoot(login, jsonLines);
     const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
@@ -47,7 +50,11 @@ describe('LoginCommand', () => {
 
     expect(login).toHaveBeenCalledWith(
       trust,
-      expect.objectContaining({ deviceName: 'workstation', reauthorize: true, onProgress: expect.any(Function) }),
+      expect.objectContaining({
+        deviceName: 'workstation',
+        reauthorize: true,
+        onProgress: expect.any(Function),
+      }),
     );
     expect(stdout).not.toHaveBeenCalled();
     expect(jsonLines).toHaveLength(1);

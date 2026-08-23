@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { createConfig } from '../src/index.js';
 import { configSchema } from '../src/schema/configSchema.js';
 import { ConfigCliValueParser } from '../src/schema/runtime/ConfigCliValueParser.js';
@@ -18,17 +18,16 @@ afterEach(() => {
 });
 
 describe('registry URL safety', () => {
-  it.each([
-    'ssh://git@github.com/uapkg/registry.git',
-    'git@github.com:uapkg/registry.git',
-    '../registries/team',
-  ])('allows Git-owned credential and local-path forms: %s', (url) => {
-    const config = createIsolatedConfig();
+  it.each(['ssh://git@github.com/uapkg/registry.git', 'git@github.com:uapkg/registry.git', '../registries/team'])(
+    'allows Git-owned credential and local-path forms: %s',
+    (url) => {
+      const config = createIsolatedConfig();
 
-    const result = config.set('registries.team.url', url, { scope: 'global' });
+      const result = config.set('registries.team.url', url, { scope: 'global' });
 
-    expect(result.ok).toBe(true);
-  });
+      expect(result.ok).toBe(true);
+    },
+  );
 
   it.each([
     'https://token@github.com/uapkg/registry',
@@ -55,7 +54,9 @@ describe('registry URL safety', () => {
     fs.mkdirSync(profile, { recursive: true });
     fs.writeFileSync(
       path.join(profile, 'config.json'),
-      JSON.stringify({ registries: { private: { url: 'https://user:super-secret@example.test/registry' } } }),
+      JSON.stringify({
+        registries: { private: { url: 'https://user:super-secret@example.test/registry' } },
+      }),
       'utf8',
     );
     vi.stubEnv(INTERNAL_PROFILE_HOME_ENV, profile);

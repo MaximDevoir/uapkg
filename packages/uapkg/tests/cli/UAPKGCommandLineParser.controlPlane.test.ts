@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { UAPKGCommandLineParser } from '../../src/cli/parsing/UAPKGCommandLineParser.js';
 
 const WHOAMI_FIELDS = ['username', 'user-id', 'registry', 'registry-id'] as const;

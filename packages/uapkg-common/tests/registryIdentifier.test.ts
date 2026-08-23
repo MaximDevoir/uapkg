@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { computeRegistryIdentifier, computeRegistryIdentifierShort, normalizeUrl } from '../src/index.js';
 
 describe('normalizeUrl', () => {

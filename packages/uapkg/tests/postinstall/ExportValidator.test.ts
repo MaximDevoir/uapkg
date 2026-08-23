@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { ExportValidator } from '../../src/postinstall/loader/ExportValidator.js';
 
 const v = new ExportValidator();

@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { type CreateConsumerBundleOptions, createConsumerBundle } from './ConsumerBundle';
+import { type CreateConsumerBundleOptions, createConsumerBundle } from './ConsumerBundle.ts';
 
 interface CliOptions {
   consumer?: string;
@@ -16,7 +16,7 @@ interface CliOptions {
 const USAGE = `Create a publish-shaped UAPKG dependency bundle for an npm consumer.
 
 Usage:
-  pnpm deps:consumer-bundle -- --consumer <package.json> --output <directory> [options]
+  vp run consumer:bundle -- --consumer <package.json> --output <directory> [options]
 
 Options:
   --root <@uapkg/name>       Select a declared runtime root (repeatable; defaults to all)

@@ -36,9 +36,6 @@ export { RegistryMetadataReader } from './registry/RegistryMetadataReader.js';
 export { RegistryPackageReader } from './registry/RegistryPackageReader.js';
 export { evaluateSyncPolicy } from './registry/RegistrySyncPolicy.js';
 export { RegistryUpdater } from './registry/RegistryUpdater.js';
-export {
-  redactRegistryUrlSecrets,
-  sanitizeRegistryUrlForDisplay,
-} from './registry/RegistryUrlSanitizer.js';
+export { redactRegistryUrlSecrets, sanitizeRegistryUrlForDisplay } from './registry/RegistryUrlSanitizer.js';
 export { type ResolvedVersion, resolveVersion } from './resolution/PackageResolver.js';
 export { SemverSelectionPolicy } from './resolution/SemverSelectionPolicy.js';

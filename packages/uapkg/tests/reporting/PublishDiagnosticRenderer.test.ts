@@ -1,6 +1,6 @@
 import { createPublishRequestFailedDiagnostic, type Diagnostic } from '@uapkg/diagnostics';
 import { formatPublishRequestFailed } from '@uapkg/diagnostics-format';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { InkDiagnosticRenderer } from '../../src/reporting/InkDiagnosticRenderer.js';
 import { TextDiagnosticRenderer } from '../../src/reporting/TextDiagnosticRenderer.js';
 import { MemoryTextSink } from '../_fakes/MemoryTextSink.js';

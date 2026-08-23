@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { MarkerBlockService } from '../../src/postinstall/markers/MarkerBlockService.js';
 
 const svc = new MarkerBlockService();

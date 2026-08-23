@@ -8,6 +8,7 @@
     "noEmit": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "verbatimModuleSyntax": true,
@@ -27,6 +28,7 @@
       "@uapkg/package-manifest-schema": ["./packages/uapkg-package-manifest-schema/src/index.ts"],
       "@uapkg/package-manifest": ["./packages/uapkg-package-manifest/src/index.ts"],
       "@uapkg/package-claims": ["./packages/uapkg-package-claims/src/index.ts"],
+      "@uapkg/package-claims/schema": ["./packages/uapkg-package-claims/src/schema/index.ts"],
       "@uapkg/installer": ["./packages/uapkg-installer/src/index.ts"],
       "@uapkg/cli": ["./packages/uapkg/src/index.ts"]
     }

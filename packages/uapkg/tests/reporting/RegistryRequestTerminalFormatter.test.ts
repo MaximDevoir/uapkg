@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import type { RegistryRequestDetail } from '../../src/control-plane/ControlPlaneTypes.js';
 import { formatRegistryRequestTerminal } from '../../src/reporting/RegistryRequestTerminalFormatter.js';
 

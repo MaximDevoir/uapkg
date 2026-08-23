@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { PathUtils } from './PathUtils';
-import type { ProcessRunner } from './ProcessRunner';
-import type { CurrentGlobalUapkgState } from './types';
+import { PathUtils } from './PathUtils.ts';
+import type { ProcessRunner } from './ProcessRunner.ts';
+import type { CurrentGlobalUapkgState } from './types.ts';
 
 const CLI_PACKAGE_NAME = '@uapkg/cli';
 
@@ -21,11 +21,12 @@ interface PnpmGlobalInstallManifest {
 
 export class GlobalUapkgStateService {
   private readonly pathUtils: PathUtils;
+  private readonly runner: ProcessRunner;
+  private readonly workspaceRoot: string;
 
-  constructor(
-    private readonly runner: ProcessRunner,
-    private readonly workspaceRoot: string,
-  ) {
+  constructor(runner: ProcessRunner, workspaceRoot: string) {
+    this.runner = runner;
+    this.workspaceRoot = workspaceRoot;
     this.pathUtils = new PathUtils();
   }
 
@@ -43,8 +44,8 @@ export class GlobalUapkgStateService {
 
   detectCurrentState(): CurrentGlobalUapkgState {
     const { stdout } = this.runner.runAndCapture(
-      'pnpm',
-      ['list', '--global', '--depth', '0', '--json'],
+      'vp',
+      ['exec', 'pnpm', 'list', '--global', '--depth', '0', '--json'],
       this.workspaceRoot,
     );
 
@@ -70,15 +71,17 @@ export class GlobalUapkgStateService {
   }
 
   removeGlobalUapkg(ignoreFailure = true) {
-    this.runner.runAndCapture('pnpm', ['remove', '--global', CLI_PACKAGE_NAME], this.workspaceRoot, { ignoreFailure });
+    this.runner.runAndCapture('vp', ['exec', 'pnpm', 'remove', '--global', CLI_PACKAGE_NAME], this.workspaceRoot, {
+      ignoreFailure,
+    });
   }
 
   installPublishedGlobal(version: string) {
-    this.runner.run('pnpm', ['add', '--global', `${CLI_PACKAGE_NAME}@${version}`], this.workspaceRoot);
+    this.runner.run('vp', ['exec', 'pnpm', 'add', '--global', `${CLI_PACKAGE_NAME}@${version}`], this.workspaceRoot);
   }
 
   linkCurrentWorkspaceCli() {
-    this.runner.run('pnpm', ['add', '--global', '.'], this.getCliPackageDirectory());
+    this.runner.run('vp', ['exec', 'pnpm', 'add', '--global', '.'], this.getCliPackageDirectory());
   }
 
   private tryParseList(rawJson: string): PnpmGlobalListRoot[] {

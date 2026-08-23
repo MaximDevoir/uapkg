@@ -1,9 +1,9 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { INTERNAL_BUILD_MODE_ENV, INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import {
   createBuildMetadata,
   DEVELOPMENT_BANNER_TEXT,
@@ -31,12 +31,26 @@ function createTemporaryPackage() {
     }),
     'utf8',
   );
-  const commonLink = path.join(packageRoot, 'node_modules', '@uapkg', 'common');
-  mkdirSync(path.dirname(commonLink), { recursive: true });
-  symlinkSync(
-    path.resolve(resolveCliBuildPaths().packageRoot, '..', 'uapkg-common'),
-    commonLink,
-    process.platform === 'win32' ? 'junction' : 'dir',
+  const commonPackageRoot = path.join(packageRoot, 'node_modules', '@uapkg', 'common');
+  const commonDist = path.join(commonPackageRoot, 'dist');
+  mkdirSync(commonDist, { recursive: true });
+  writeFileSync(
+    path.join(commonPackageRoot, 'package.json'),
+    JSON.stringify({ name: '@uapkg/common', private: true, type: 'module', exports: './dist/index.js' }),
+    'utf8',
+  );
+  writeFileSync(
+    path.join(commonDist, 'index.js'),
+    `import os from 'node:os';
+import path from 'node:path';
+
+export const INTERNAL_BUILD_MODE_ENV = ${JSON.stringify(INTERNAL_BUILD_MODE_ENV)};
+export const INTERNAL_PROFILE_HOME_ENV = ${JSON.stringify(INTERNAL_PROFILE_HOME_ENV)};
+export function resolveUapkgProfileRoot(mode, homeDirectory = os.homedir()) {
+  return path.join(homeDirectory, mode === 'development' ? '.uapkg-development' : '.uapkg');
+}
+`,
+    'utf8',
   );
 
   const paths = resolveCliBuildPaths(packageRoot);
@@ -213,34 +227,38 @@ describe('stamped CLI artifacts', () => {
 
     await expect(verifyProductionBuild(paths)).rejects.toThrow('Expected mode "production", received "development"');
   });
+
+  it('rejects a launcher without the portable Node shebang', async () => {
+    const paths = createTemporaryPackage();
+    writeFileSync(paths.launcherPath, readFileSync(paths.launcherPath, 'utf8').replace('#!/usr/bin/env node\n', ''));
+
+    await expect(verifyBuiltCli(paths, createBuildMetadata('production', '2.3.4'))).rejects.toThrow(
+      'must begin with #!/usr/bin/env node',
+    );
+  });
+
+  it.skipIf(process.platform === 'win32')('rejects a non-executable POSIX launcher', async () => {
+    const paths = createTemporaryPackage();
+    chmodSync(paths.launcherPath, 0o644);
+
+    await expect(verifyBuiltCli(paths, createBuildMetadata('production', '2.3.4'))).rejects.toThrow(
+      'must have mode 0755',
+    );
+  });
 });
 
 describe('build wiring', () => {
-  it('keeps development and production Nx cache entries distinct and guards prepack', () => {
+  it('uses managed Node directly inside Vite Task because local Vite+ 0.2.9 lacks vp node', () => {
     const packageRoot = resolveCliBuildPaths().packageRoot;
-    const project = JSON.parse(readFileSync(path.join(packageRoot, 'project.json'), 'utf8')) as {
-      targets?: {
-        build?: {
-          cache?: boolean;
-          outputs?: string[];
-          defaultConfiguration?: string;
-          configurations?: Record<string, { command?: string }>;
-        };
-      };
-    };
     const packageJson = JSON.parse(readFileSync(path.join(packageRoot, 'package.json'), 'utf8')) as {
       scripts?: Record<string, string>;
     };
 
-    expect(project.targets?.build).toMatchObject({
-      cache: true,
-      outputs: ['{projectRoot}/dist'],
-      defaultConfiguration: 'production',
-      configurations: {
-        development: { command: 'pnpm run build -- --development' },
-        production: { command: 'pnpm run build -- --production' },
-      },
-    });
-    expect(packageJson.scripts?.prepack).toBe('pnpm run build -- --production && pnpm run verify:production-build');
+    expect(packageJson.scripts?.build).toBe('node build/runCliBuild.ts');
+    expect(packageJson.scripts?.build).not.toContain('vp node');
+    expect(packageJson.scripts?.['verify:production-build']).toBe('vp exec node build/verifyProductionBuild.ts');
+    expect(packageJson.scripts?.prepack).toBe(
+      'vp run -w --cache cli:build -- --production && vp run verify:production-build',
+    );
   });
 });

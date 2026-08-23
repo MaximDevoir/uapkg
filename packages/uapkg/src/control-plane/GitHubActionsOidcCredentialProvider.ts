@@ -94,8 +94,8 @@ export class GitHubActionsOidcCredentialProvider {
   public isAvailable(): boolean {
     return Boolean(
       process.env.GITHUB_ACTIONS === 'true' ||
-        process.env.ACTIONS_ID_TOKEN_REQUEST_URL ||
-        process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN,
+      process.env.ACTIONS_ID_TOKEN_REQUEST_URL ||
+      process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN,
     );
   }
 

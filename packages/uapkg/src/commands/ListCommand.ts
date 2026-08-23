@@ -56,8 +56,8 @@ export class ListCommand implements Command {
     const lockfile = lockfileResult.value;
     const manifest = manifestResult.value;
     const declared = Object.keys({
-      ...(manifest.dependencies ?? {}),
-      ...(manifest.devDependencies ?? {}),
+      ...manifest.dependencies,
+      ...manifest.devDependencies,
     });
 
     if (this.options.outputFormat === 'json') {

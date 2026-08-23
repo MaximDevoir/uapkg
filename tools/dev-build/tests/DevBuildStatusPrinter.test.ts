@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { DevBuildStatusPrinter, resolveUapkgProfileRoots } from '../DevBuildStatusPrinter';
 
 afterEach(() => {
@@ -37,5 +37,16 @@ describe('DevBuildStatusPrinter', () => {
 
     expect(output).toContain('Production Profile Root: D:\\Profiles\\.uapkg');
     expect(output).toContain('Development Profile Root: D:\\Profiles\\.uapkg-development');
+  });
+
+  it('routes manual external-link restoration through the local Vite+ toolchain', () => {
+    const output: string[] = [];
+    vi.spyOn(console, 'log').mockImplementation((message?: unknown) => {
+      output.push(String(message));
+    });
+
+    new DevBuildStatusPrinter().printExternalLinkNotRestored('D:\\other-uapkg');
+
+    expect(output).toContain('[dev-build]   vp exec pnpm add --global .');
   });
 });

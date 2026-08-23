@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { ControlPlaneError } from '../../src/control-plane/ControlPlaneTypes.js';
 import {
   PUBLISH_SUBMISSION_ERROR_CATALOG,
@@ -41,7 +41,11 @@ describe('publishRequestDiagnosticForError', () => {
           { kind: 'registry', value: 'Official (official)' },
         ]),
         resources: expect.arrayContaining([
-          { kind: 'command', command: 'uapkg publish --owner <organization>', label: expect.any(String) },
+          {
+            kind: 'command',
+            command: 'uapkg publish --owner <organization>',
+            label: expect.any(String),
+          },
           { kind: 'command', command: 'uapkg publish --help', label: expect.any(String) },
         ]),
       },
@@ -213,7 +217,10 @@ describe('publishRequestDiagnosticForError', () => {
       { ...context, requestedOwner: 'safe-local-owner' },
     );
 
-    expect(diagnostic.data.facts).toContainEqual({ kind: 'requested-owner', value: 'safe-local-owner' });
+    expect(diagnostic.data.facts).toContainEqual({
+      kind: 'requested-owner',
+      value: 'safe-local-owner',
+    });
     expect(diagnostic.data.facts).not.toContainEqual(expect.objectContaining({ kind: 'allowed-owner' }));
     expect(JSON.stringify(diagnostic)).not.toContain('server-requested-owner');
     expect(JSON.stringify(diagnostic)).not.toContain(oversizedOwner);
@@ -229,7 +236,10 @@ describe('publishRequestDiagnosticForError', () => {
       { ...context, requestedOwner: 'safe-local-owner' },
     );
 
-    expect(diagnostic.data.facts).toContainEqual({ kind: 'requested-owner', value: 'safe-local-owner' });
+    expect(diagnostic.data.facts).toContainEqual({
+      kind: 'requested-owner',
+      value: 'safe-local-owner',
+    });
     expect(diagnostic.data.facts).not.toContainEqual(expect.objectContaining({ kind: 'allowed-owner' }));
     expect(diagnostic.hint).toContain('Choose a UAPKG organization namespace where you can publish');
   });
@@ -238,21 +248,24 @@ describe('publishRequestDiagnosticForError', () => {
     ['login', 'Your account', undefined],
     ['gat', 'granular access token', 'Access token settings'],
     ['oidc', 'GitHub Actions workflow', 'Trusted publishers'],
-  ] as const)('tailors a generic authority denial to a %s credential', (credentialKind, expectedMessage, expectedResourceLabel) => {
-    const diagnostic = publishRequestDiagnosticForError(
-      new ControlPlaneError('REGISTRY_WRITE_DENIED_REBAC', 'unsafe', 403),
-      { ...context, credentialKind },
-    );
-
-    expect(diagnostic.message).toContain(expectedMessage);
-    if (expectedResourceLabel) {
-      expect(diagnostic.data.resources).toContainEqual(
-        expect.objectContaining({ kind: 'url', label: expectedResourceLabel }),
+  ] as const)(
+    'tailors a generic authority denial to a %s credential',
+    (credentialKind, expectedMessage, expectedResourceLabel) => {
+      const diagnostic = publishRequestDiagnosticForError(
+        new ControlPlaneError('REGISTRY_WRITE_DENIED_REBAC', 'unsafe', 403),
+        { ...context, credentialKind },
       );
-    } else {
-      expect(diagnostic.data.resources).not.toContainEqual(expect.objectContaining({ kind: 'url' }));
-    }
-  });
+
+      expect(diagnostic.message).toContain(expectedMessage);
+      if (expectedResourceLabel) {
+        expect(diagnostic.data.resources).toContainEqual(
+          expect.objectContaining({ kind: 'url', label: expectedResourceLabel }),
+        );
+      } else {
+        expect(diagnostic.data.resources).not.toContainEqual(expect.objectContaining({ kind: 'url' }));
+      }
+    },
+  );
 
   it('describes only active trusted-publisher policy fields for OIDC authority denial', () => {
     const diagnostic = publishRequestDiagnosticForError(
@@ -372,7 +385,10 @@ describe('publishRequestDiagnosticForError', () => {
       { ...context, credentialKind: 'gat', requestedOwner: 'safe-local-owner' },
     );
 
-    expect(diagnostic.data.facts).toContainEqual({ kind: 'requested-owner', value: 'safe-local-owner' });
+    expect(diagnostic.data.facts).toContainEqual({
+      kind: 'requested-owner',
+      value: 'safe-local-owner',
+    });
     const renderedData = JSON.stringify(diagnostic);
     expect(renderedData).not.toContain('bad');
     expect(renderedData).not.toContain('secret-token');
@@ -399,7 +415,9 @@ describe('publishRequestDiagnosticForError', () => {
   it('gives every cataloged code a problem, remediation, and publish help resource', () => {
     for (const serverCode of Object.keys(PUBLISH_SUBMISSION_ERROR_CATALOG)) {
       const diagnostic = publishRequestDiagnosticForError(
-        new ControlPlaneError(serverCode, 'server prose must not be used', 400, { arbitrary: 'private-value' }),
+        new ControlPlaneError(serverCode, 'server prose must not be used', 400, {
+          arbitrary: 'private-value',
+        }),
         context,
       );
       expect(diagnostic.message, serverCode).toBeTruthy();
@@ -444,7 +462,9 @@ describe('publishRequestDiagnosticForError', () => {
 
   it('uses non-leaking fallbacks for unknown server codes and network errors', () => {
     const unknown = publishRequestDiagnosticForError(
-      new ControlPlaneError('FUTURE_SERVER_FAILURE', 'authorization=secret', 503, { bearerToken: 'secret' }),
+      new ControlPlaneError('FUTURE_SERVER_FAILURE', 'authorization=secret', 503, {
+        bearerToken: 'secret',
+      }),
       context,
     );
     const network = publishRequestDiagnosticForError(new TypeError('request included secret credential'), context);

@@ -1,6 +1,6 @@
 import { PackageNameSchema, PackageVersionSchema } from '@uapkg/common-schema';
 import { RegistryVersionSchema } from '@uapkg/registry-schema';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { claimsFromRegistryVersion, compareClaims, normalizePackageClaims, type PackageClaims } from '../src/index.js';
 
 const NAME = PackageNameSchema.parse('my-plugin');
@@ -81,7 +81,9 @@ describe('compareClaims', () => {
   });
 
   it('compares explicit external registry aliases', () => {
-    const packaged = packagedClaims({ dependencies: { foo: { version: '^1.0.0', registry: 'internal' } } });
+    const packaged = packagedClaims({
+      dependencies: { foo: { version: '^1.0.0', registry: 'internal' } },
+    });
     const matching = claimsFromRegistryVersion(
       NAME,
       VERSION,

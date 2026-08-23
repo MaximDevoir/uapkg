@@ -2,7 +2,7 @@ import { readFile, unlink } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { gzipSync } from 'node:zlib';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { PackageDownloader } from '../src/core/PackageDownloader.js';
 
 type RequestHandler = (request: IncomingMessage, response: ServerResponse) => void;
@@ -42,7 +42,10 @@ async function startServer(handler: RequestHandler): Promise<string> {
 
 async function downloadBytes(
   url: string,
-  options: { readonly retries: number; readonly timeoutMs: number } = { retries: 0, timeoutMs: 5_000 },
+  options: { readonly retries: number; readonly timeoutMs: number } = {
+    retries: 0,
+    timeoutMs: 5_000,
+  },
 ): Promise<Buffer> {
   const result = await downloader.download('test-package', url, options);
   expect(result.ok).toBe(true);
@@ -178,7 +181,10 @@ describe('PackageDownloader', () => {
       response.end();
     });
 
-    const result = await downloader.download('test-package', `${baseUrl}/a`, { retries: 0, timeoutMs: 5_000 });
+    const result = await downloader.download('test-package', `${baseUrl}/a`, {
+      retries: 0,
+      timeoutMs: 5_000,
+    });
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -212,7 +218,10 @@ describe('PackageDownloader', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     for (const url of ['file:///tmp/package.tgz', 'http://user:secret@example.test/package.tgz']) {
-      const result = await downloader.download('test-package', url, { retries: 2, timeoutMs: 5_000 });
+      const result = await downloader.download('test-package', url, {
+        retries: 2,
+        timeoutMs: 5_000,
+      });
       expect(result.ok).toBe(false);
       if (result.ok) continue;
       expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toEqual([
@@ -226,7 +235,11 @@ describe('PackageDownloader', () => {
 
   it('rejects an HTTPS-to-HTTP redirect', async () => {
     const fetchMock = vi.fn(
-      async () => new Response(null, { status: 302, headers: { location: 'http://example.test/package.tgz' } }),
+      async () =>
+        new Response(null, {
+          status: 302,
+          headers: { location: 'http://example.test/package.tgz' },
+        }),
     );
     vi.stubGlobal('fetch', fetchMock);
 
@@ -406,7 +419,10 @@ describe('PackageDownloader', () => {
     vi.stubGlobal('fetch', fetchMock);
     const originalUrl = 'https://github.com/example/project/releases/download/v1/package.tgz';
 
-    const result = await downloader.download('test-package', originalUrl, { retries: 0, timeoutMs: 5_000 });
+    const result = await downloader.download('test-package', originalUrl, {
+      retries: 0,
+      timeoutMs: 5_000,
+    });
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -420,7 +436,10 @@ describe('PackageDownloader', () => {
     const safeUrl = 'https://github.com/example/project/releases/download/v1/package.tgz';
     const signedUrl = `${safeUrl}?jwt=initial-secret-value#private-fragment`;
 
-    const result = await downloader.download('test-package', signedUrl, { retries: 0, timeoutMs: 5_000 });
+    const result = await downloader.download('test-package', signedUrl, {
+      retries: 0,
+      timeoutMs: 5_000,
+    });
 
     expect(result.ok).toBe(false);
     if (result.ok) return;

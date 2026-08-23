@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { GlobalUapkgStateService } from '../GlobalUapkgStateService';
 import { ProcessRunner } from '../ProcessRunner';
 
@@ -127,7 +127,11 @@ describe('GlobalUapkgStateService', () => {
     service.linkCurrentWorkspaceCli();
 
     expect(run).toHaveBeenCalledOnce();
-    expect(run).toHaveBeenCalledWith('pnpm', ['add', '--global', '.'], path.join(workspaceRoot, 'packages', 'uapkg'));
+    expect(run).toHaveBeenCalledWith(
+      'vp',
+      ['exec', 'pnpm', 'add', '--global', '.'],
+      path.join(workspaceRoot, 'packages', 'uapkg'),
+    );
   });
 
   it('removes and restores the scoped CLI package', () => {
@@ -137,10 +141,13 @@ describe('GlobalUapkgStateService', () => {
     service.removeGlobalUapkg();
     service.installPublishedGlobal('1.2.3');
 
-    expect(runAndCapture).toHaveBeenCalledWith('pnpm', ['remove', '--global', '@uapkg/cli'], workspaceRoot, {
-      ignoreFailure: true,
-    });
-    expect(run).toHaveBeenCalledWith('pnpm', ['add', '--global', '@uapkg/cli@1.2.3'], workspaceRoot);
+    expect(runAndCapture).toHaveBeenCalledWith(
+      'vp',
+      ['exec', 'pnpm', 'remove', '--global', '@uapkg/cli'],
+      workspaceRoot,
+      { ignoreFailure: true },
+    );
+    expect(run).toHaveBeenCalledWith('vp', ['exec', 'pnpm', 'add', '--global', '@uapkg/cli@1.2.3'], workspaceRoot);
   });
 
   it('treats malformed pnpm list JSON as no global CLI installation', () => {
@@ -148,7 +155,11 @@ describe('GlobalUapkgStateService', () => {
     const { service, runAndCapture } = makeService(workspaceRoot, '{not-json');
 
     expect(service.detectCurrentState()).toEqual({ kind: 'none' });
-    expect(runAndCapture).toHaveBeenCalledWith('pnpm', ['list', '--global', '--depth', '0', '--json'], workspaceRoot);
+    expect(runAndCapture).toHaveBeenCalledWith(
+      'vp',
+      ['exec', 'pnpm', 'list', '--global', '--depth', '0', '--json'],
+      workspaceRoot,
+    );
   });
 });
 

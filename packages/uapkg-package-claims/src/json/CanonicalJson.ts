@@ -13,9 +13,13 @@ export function parseJsonStrict(text: string, sourceLabel = 'json'): Result<unkn
   try {
     value = JSON.parse(text);
   } catch (err) {
-    bag.addError('CLAIMS_JSON_INVALID', `Failed to parse ${sourceLabel}: ${err instanceof Error ? err.message : err}`, {
-      source: sourceLabel,
-    });
+    bag.addError(
+      'CLAIMS_JSON_INVALID',
+      `Failed to parse ${sourceLabel}: ${err instanceof Error ? err.message : String(err)}`,
+      {
+        source: sourceLabel,
+      },
+    );
     return bag.toFailure();
   }
 

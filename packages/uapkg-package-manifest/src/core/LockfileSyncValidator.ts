@@ -160,9 +160,9 @@ export class LockfileSyncValidator {
 
   private collectDeclaredDependencies(manifest: Manifest): Record<string, Dependency> {
     return {
-      ...(manifest.dependencies ?? {}),
-      ...(manifest.devDependencies ?? {}),
-      ...(manifest.peerDependencies ?? {}),
+      ...manifest.dependencies,
+      ...manifest.devDependencies,
+      ...manifest.peerDependencies,
     };
   }
 

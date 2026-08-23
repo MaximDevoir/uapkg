@@ -2,7 +2,7 @@ import { access, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promi
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { AuthMetadataStore } from '../../src/control-plane/AuthMetadataStore.js';
 import type { RegistryGrantMetadata } from '../../src/control-plane/ControlPlaneTypes.js';
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { redactRegistryUrlSecrets, sanitizeRegistryUrlForDisplay } from '../src/registry/RegistryUrlSanitizer.js';
 
 describe('registry URL diagnostic safety', () => {

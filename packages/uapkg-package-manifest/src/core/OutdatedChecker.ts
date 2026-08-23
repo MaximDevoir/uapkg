@@ -42,7 +42,7 @@ export class OutdatedChecker {
     const bag = new DiagnosticBag();
     const rows: OutdatedEntry[] = [];
 
-    const declared = { ...(manifest.dependencies ?? {}), ...(manifest.devDependencies ?? {}) };
+    const declared = { ...manifest.dependencies, ...manifest.devDependencies };
     const overrides = manifest.kind === 'project' ? (manifest.overrides ?? {}) : {};
     const pkgs = lockfile.packages as Record<string, { version: PackageVersion; registry: RegistryName }>;
 

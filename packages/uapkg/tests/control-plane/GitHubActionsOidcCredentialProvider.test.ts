@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';
 import { GitHubActionsOidcCredentialProvider } from '../../src/control-plane/GitHubActionsOidcCredentialProvider.js';
 
@@ -14,6 +14,11 @@ const trust: RegistryTrust = {
   cacheShortId: 'registry-cache',
 };
 const target = { registryId: trust.registryId, packageName: 'example' };
+
+function requestUrl(input: string | URL | Request): string {
+  if (typeof input === 'string') return input;
+  return input instanceof URL ? input.href : input.url;
+}
 
 beforeEach(() => {
   vi.stubEnv('GITHUB_ACTIONS', 'true');
@@ -37,20 +42,30 @@ describe('GitHubActionsOidcCredentialProvider', () => {
     await expect(provider.exchange(trust, target)).resolves.toBe('uapkg-session-secret');
 
     const githubRequest = fetchMock.mock.calls[0];
-    expect(String(githubRequest?.[0])).toContain('audience=uapkg');
+    expect(githubRequest?.[0] === undefined ? undefined : requestUrl(githubRequest[0])).toContain('audience=uapkg');
     expect(githubRequest?.[1]).toMatchObject({
       redirect: 'error',
       headers: { authorization: 'Bearer github-request-secret' },
       signal: expect.any(AbortSignal),
     });
     const exchangeRequest = fetchMock.mock.calls[1];
-    expect(String(exchangeRequest?.[0])).toBe('https://api.uapkg.dev/v1/oidc/github-actions/exchange');
+    expect(exchangeRequest?.[0] === undefined ? undefined : requestUrl(exchangeRequest[0])).toBe(
+      'https://api.uapkg.dev/v1/oidc/github-actions/exchange',
+    );
     expect(exchangeRequest?.[1]).toMatchObject({
       method: 'POST',
       redirect: 'error',
       signal: expect.any(AbortSignal),
     });
-    expect(JSON.parse(String(exchangeRequest?.[1]?.body))).toEqual({
+    const exchangeBody = exchangeRequest?.[1]?.body;
+    const serializedExchangeBody =
+      typeof exchangeBody === 'string'
+        ? exchangeBody
+        : exchangeBody instanceof URLSearchParams
+          ? exchangeBody.toString()
+          : undefined;
+    expect(serializedExchangeBody).toBeDefined();
+    expect(JSON.parse(serializedExchangeBody ?? 'null')).toEqual({
       provider: 'github_actions',
       audience: 'uapkg',
       idToken: 'github-identity-secret',

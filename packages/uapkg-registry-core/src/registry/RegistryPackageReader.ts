@@ -41,7 +41,7 @@ export class RegistryPackageReader {
     try {
       raw = await readFile(filePath, 'utf-8');
     } catch (err) {
-      bag.addError('CACHE_READ_ERROR', `Failed to read ${filePath}: ${err}`, {
+      bag.addError('CACHE_READ_ERROR', `Failed to read ${filePath}: ${String(err)}`, {
         cachePath: filePath,
         reason: String(err),
       });
@@ -89,7 +89,7 @@ export class RegistryPackageReader {
     try {
       raw = await readFile(metaPath, 'utf-8');
     } catch (error) {
-      bag.addError('CACHE_READ_ERROR', `Failed to read ${metaPath}: ${error}`, {
+      bag.addError('CACHE_READ_ERROR', `Failed to read ${metaPath}: ${String(error)}`, {
         cachePath: metaPath,
         reason: String(error),
       });

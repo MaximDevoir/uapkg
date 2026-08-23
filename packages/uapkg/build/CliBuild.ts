@@ -1,10 +1,9 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
+import { chmodSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { UAPKGBuildMode } from '@uapkg/common';
-import type { UAPKGBuildMetadata } from '../src/build/BuildMetadata.js';
+import type { UAPKGBuildMetadata } from '../src/build/BuildMetadata.ts';
 
 export const DEVELOPMENT_BANNER_TEXT = 'DEVELOPMENT BUILD';
 
@@ -168,7 +167,22 @@ function runBuiltCli(paths: CliBuildPaths): SpawnResult {
   };
 }
 
+function verifyLauncherContract(paths: CliBuildPaths): void {
+  const launcher = readFileSync(paths.launcherPath, 'utf8');
+  if (!launcher.startsWith('#!/usr/bin/env node\n')) {
+    throw new Error('[uapkg-build] Built CLI launcher must begin with #!/usr/bin/env node');
+  }
+
+  if (process.platform !== 'win32') {
+    const executableMode = statSync(paths.launcherPath).mode & 0o777;
+    if (executableMode !== 0o755) {
+      throw new Error(`[uapkg-build] Built CLI launcher must have mode 0755; received 0${executableMode.toString(8)}`);
+    }
+  }
+}
+
 export async function verifyBuiltCli(paths: CliBuildPaths, expected: UAPKGBuildMetadata): Promise<void> {
+  verifyLauncherContract(paths);
   const metadataUrl = pathToFileURL(paths.metadataPath);
   metadataUrl.searchParams.set('verification', `${process.pid}-${Date.now()}-${Math.random()}`);
   const imported = (await import(metadataUrl.href)) as { readonly UAPKG_BUILD_METADATA?: unknown };
@@ -205,28 +219,35 @@ function readPackageVersion(packageRoot: string): string {
   return packageJson.version;
 }
 
-function runTypeScriptBuild(paths: CliBuildPaths): void {
-  const require = createRequire(import.meta.url);
-  const tscPath = require.resolve('typescript/bin/tsc');
-  const result = spawnSync(process.execPath, [tscPath, '-p', path.join(paths.packageRoot, 'tsconfig.build.json')], {
+function runVitePlusPack(paths: CliBuildPaths): void {
+  const command = process.platform === 'win32' ? 'cmd.exe' : 'vp';
+  const args = process.platform === 'win32' ? ['/d', '/s', '/c', 'vp', 'pack'] : ['pack'];
+  const result = spawnSync(command, args, {
     cwd: paths.packageRoot,
     stdio: 'inherit',
   });
 
   if (result.error) {
-    throw new Error(`[uapkg-build] Could not start TypeScript: ${result.error.message}`);
+    throw new Error(`[uapkg-build] Could not start Vite+ Pack: ${result.error.message}`);
   }
   if (result.status !== 0) {
-    throw new Error(`[uapkg-build] TypeScript exited with ${String(result.status)}`);
+    throw new Error(`[uapkg-build] Vite+ Pack exited with ${String(result.status)}`);
   }
 }
 
-export async function buildCli(mode: UAPKGBuildMode, paths = resolveCliBuildPaths()): Promise<UAPKGBuildMetadata> {
+export async function finalizeCliBuild(
+  mode: UAPKGBuildMode,
+  paths = resolveCliBuildPaths(),
+): Promise<UAPKGBuildMetadata> {
   const metadata = createBuildMetadata(mode, readPackageVersion(paths.packageRoot));
-  runTypeScriptBuild(paths);
   writeBuildArtifacts(paths, metadata);
   await verifyBuiltCli(paths, metadata);
   return metadata;
+}
+
+export async function buildCli(mode: UAPKGBuildMode, paths = resolveCliBuildPaths()): Promise<UAPKGBuildMetadata> {
+  runVitePlusPack(paths);
+  return finalizeCliBuild(mode, paths);
 }
 
 export async function verifyProductionBuild(paths = resolveCliBuildPaths()): Promise<void> {

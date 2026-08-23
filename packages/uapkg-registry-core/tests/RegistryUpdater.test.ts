@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { ok, type Result } from '@uapkg/diagnostics';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import type { RegistryDescriptor } from '../src/contracts/RegistryCoreTypes.js';
 import { RegistryUpdater } from '../src/registry/RegistryUpdater.js';
 

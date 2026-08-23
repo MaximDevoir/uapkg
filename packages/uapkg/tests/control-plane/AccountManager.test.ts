@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
 import * as oauth from 'oauth4webapi';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
   AccountManager,
   controlPlaneDiagnosticForError,
@@ -48,6 +48,18 @@ const account = {
 const immediateGrantLock: RegistryGrantLock = {
   withLock: async (_issuer, _registryId, operation) => operation(),
 };
+
+function requestUrl(input: string | URL | Request): string {
+  if (typeof input === 'string') return input;
+  return input instanceof URL ? input.href : input.url;
+}
+
+function requestBodyParameters(init?: RequestInit): URLSearchParams {
+  if (!(init?.body instanceof URLSearchParams)) {
+    throw new TypeError('Expected request body to be URLSearchParams.');
+  }
+  return init.body;
+}
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -428,7 +440,7 @@ describe('AccountManager', () => {
     let callbackResponse: Promise<LoopbackHttpResponse> | undefined;
     let tokenRequestSignal: AbortSignal | undefined;
     const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = String(input);
+      const url = requestUrl(input);
       if (url.endsWith('/.well-known/openid-configuration')) {
         return Response.json(authorizationServerMetadata());
       }
@@ -491,7 +503,7 @@ describe('AccountManager', () => {
     let callbackResponse: Promise<LoopbackHttpResponse> | undefined;
     const grantId = '22222222-2222-4222-8222-222222222222';
     const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = String(input);
+      const url = requestUrl(input);
       if (url.endsWith('/.well-known/openid-configuration')) {
         return Response.json(authorizationServerMetadata());
       }
@@ -521,7 +533,10 @@ describe('AccountManager', () => {
         expect(metadata.value?.grantId).toBe(grantId);
         await expect(memory.store.get(metadata.value?.refreshTokenReference ?? '')).resolves.toBe('new-refresh-token');
         await expect(new DPoPKeyStore(memory.store).load(metadata.value?.keyReference ?? '')).resolves.toBeDefined();
-        return Response.json({ ok: true, grant: { id: grantId, status: 'active', replacesGrantId: null } });
+        return Response.json({
+          ok: true,
+          grant: { id: grantId, status: 'active', replacesGrantId: null },
+        });
       }
       throw new Error(`Unexpected request: ${url}`);
     });
@@ -573,7 +588,7 @@ describe('AccountManager', () => {
     const confirmationMethods: string[] = [];
     const grantId = '55555555-5555-4555-8555-555555555555';
     const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = String(input);
+      const url = requestUrl(input);
       if (url.endsWith('/.well-known/openid-configuration')) {
         return Response.json(authorizationServerMetadata());
       }
@@ -584,7 +599,10 @@ describe('AccountManager', () => {
         nonce = body.get('nonce') ?? '';
         expect(body.get('replace_grant_id')).toBeNull();
         return Response.json(
-          { request_uri: 'urn:ietf:params:oauth:request_uri:lost-confirmation-response', expires_in: 90 },
+          {
+            request_uri: 'urn:ietf:params:oauth:request_uri:lost-confirmation-response',
+            expires_in: 90,
+          },
           { status: 201 },
         );
       }
@@ -700,7 +718,7 @@ describe('AccountManager', () => {
     const revokedTokens: string[] = [];
     const grantId = '77777777-7777-4777-8777-777777777777';
     const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = String(input);
+      const url = requestUrl(input);
       if (url.endsWith('/.well-known/openid-configuration')) {
         return Response.json(authorizationServerMetadata());
       }
@@ -712,7 +730,10 @@ describe('AccountManager', () => {
         expect(body.get('replace_grant_id')).toBe(previous.grantId);
         expect(body.get('device_name')).toBe('renamed workstation');
         return Response.json(
-          { request_uri: 'urn:ietf:params:oauth:request_uri:cleanup-after-success', expires_in: 90 },
+          {
+            request_uri: 'urn:ietf:params:oauth:request_uri:cleanup-after-success',
+            expires_in: 90,
+          },
           { status: 201 },
         );
       }
@@ -737,7 +758,7 @@ describe('AccountManager', () => {
         });
       }
       if (url === `${trust.issuer}/revocation`) {
-        revokedTokens.push((init?.body as URLSearchParams).get('token') ?? '');
+        revokedTokens.push(requestBodyParameters(init).get('token') ?? '');
         return new Response(null, { status: 200 });
       }
       throw new Error(`Unexpected request: ${url}`);
@@ -761,7 +782,10 @@ describe('AccountManager', () => {
     const accessTokenCache = (manager as unknown as { accessTokenCache: Map<string, unknown> }).accessTokenCache;
     accessTokenCache.set(`${trust.issuer}|${trust.registryId}|${previous.grantId}|identity.self.read`, {});
 
-    const result = await manager.login(trust, { deviceName: 'renamed workstation', reauthorize: true });
+    const result = await manager.login(trust, {
+      deviceName: 'renamed workstation',
+      reauthorize: true,
+    });
 
     expect(result).toMatchObject({ grant: { grantId }, warnings: [] });
     await expect(callbackResponse).resolves.toMatchObject({
@@ -802,7 +826,7 @@ describe('AccountManager', () => {
     const revokedTokens: string[] = [];
     const pendingGrantId = '88888888-8888-4888-8888-888888888888';
     const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = String(input);
+      const url = requestUrl(input);
       if (url.endsWith('/.well-known/openid-configuration')) {
         return Response.json(authorizationServerMetadata());
       }
@@ -835,7 +859,7 @@ describe('AccountManager', () => {
         return cliLoginConfirmationResponse(pendingGrantId, 'pending', previous.grantId);
       }
       if (url === `${trust.issuer}/revocation`) {
-        revokedTokens.push((init?.body as URLSearchParams).get('token') ?? '');
+        revokedTokens.push(requestBodyParameters(init).get('token') ?? '');
         return new Response(null, { status: 200 });
       }
       throw new Error(`Unexpected request: ${url}`);
@@ -887,7 +911,7 @@ describe('AccountManager', () => {
     let revocationRequests = 0;
     const grantId = '66666666-6666-4666-8666-666666666666';
     const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = String(input);
+      const url = requestUrl(input);
       if (url.endsWith('/.well-known/openid-configuration')) {
         return Response.json(authorizationServerMetadata());
       }
@@ -897,7 +921,10 @@ describe('AccountManager', () => {
         state = body.get('state') ?? '';
         nonce = body.get('nonce') ?? '';
         return Response.json(
-          { request_uri: 'urn:ietf:params:oauth:request_uri:ambiguous-confirmation', expires_in: 90 },
+          {
+            request_uri: 'urn:ietf:params:oauth:request_uri:ambiguous-confirmation',
+            expires_in: 90,
+          },
           { status: 201 },
         );
       }
@@ -984,7 +1011,7 @@ describe('AccountManager', () => {
     const progress: LoginProgressEvent[] = [];
     const grantId = '44444444-4444-4444-8444-444444444444';
     const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = String(input);
+      const url = requestUrl(input);
       if (url.endsWith('/.well-known/openid-configuration')) {
         return Response.json(authorizationServerMetadata());
       }
@@ -1029,7 +1056,7 @@ describe('AccountManager', () => {
         );
       }
       if (url === `${trust.issuer}/revocation`) {
-        revokedTokens.push((init?.body as URLSearchParams).get('token') ?? '');
+        revokedTokens.push(requestBodyParameters(init).get('token') ?? '');
         return new Response(null, { status: 200 });
       }
       throw new Error(`Unexpected request: ${url}`);
@@ -1094,7 +1121,7 @@ describe('AccountManager', () => {
     let callbackResponse: Promise<LoopbackHttpResponse> | undefined;
     const revokedTokens: string[] = [];
     const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-      const url = String(input);
+      const url = requestUrl(input);
       if (url.endsWith('/.well-known/openid-configuration')) {
         return Response.json(authorizationServerMetadata());
       }
@@ -1105,7 +1132,10 @@ describe('AccountManager', () => {
         nonce = body.get('nonce') ?? '';
         expect(body.get('replace_grant_id')).toBe(previous.grantId);
         return Response.json(
-          { request_uri: 'urn:ietf:params:oauth:request_uri:failed-reauthorization', expires_in: 90 },
+          {
+            request_uri: 'urn:ietf:params:oauth:request_uri:failed-reauthorization',
+            expires_in: 90,
+          },
           { status: 201 },
         );
       }
@@ -1122,7 +1152,7 @@ describe('AccountManager', () => {
         return cliLoginConfirmationResponse('33333333-3333-4333-8333-333333333333', 'pending', previous.grantId);
       }
       if (url === `${trust.issuer}/revocation`) {
-        revokedTokens.push((init?.body as URLSearchParams).get('token') ?? '');
+        revokedTokens.push(requestBodyParameters(init).get('token') ?? '');
         return new Response(null, { status: 200 });
       }
       throw new Error(`Unexpected request: ${url}`);

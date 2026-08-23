@@ -3,9 +3,7 @@ ATCTests.generated.xml
 !.env.sample
 **/*.actual.json
 
-/.nx-cache
-/.nx/cache
-/.nx/workspace-data
+/.vite-hooks/_
 /.pnpm-global
 /uapkg
 /uapkg.cmd

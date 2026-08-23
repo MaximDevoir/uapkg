@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import type {
   Diagnostic,
   DiagnosticByCode,
@@ -18,7 +18,11 @@ describe('Publishing diagnostics', () => {
     ];
     const resources: PublishDiagnosticResource[] = [
       { kind: 'command', command: 'uapkg publish --help' },
-      { kind: 'url', label: 'Access tokens', url: 'https://account.example/settings/access-tokens' },
+      {
+        kind: 'url',
+        label: 'Access tokens',
+        url: 'https://account.example/settings/access-tokens',
+      },
     ];
 
     const diagnostic: PublishRequestFailedDiagnostic = createPublishRequestFailedDiagnostic(

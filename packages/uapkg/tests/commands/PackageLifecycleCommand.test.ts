@@ -1,9 +1,14 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
 import { PackageLifecycleCommand } from '../../src/commands/PackageLifecycleCommand.js';
 import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSelector.js';
 import { type RegistryTrust, UAPKG_CONTROL_PLANE_API } from '../../src/control-plane/ControlPlaneTypes.js';
 import { PublishIdempotencyStore } from '../../src/control-plane/PublishIdempotencyStore.js';
+
+function requestUrl(input: string | URL | Request): string {
+  if (typeof input === 'string') return input;
+  return input instanceof URL ? input.href : input.url;
+}
 
 afterEach(() => {
   vi.useRealTimers();
@@ -38,7 +43,7 @@ describe('PackageLifecycleCommand request-scoped OTP', () => {
         const method = init?.method ?? 'GET';
         observed.push({
           method,
-          path: new URL(String(input)).pathname,
+          path: new URL(requestUrl(input)).pathname,
           authorization: headers.get('authorization'),
           otp: headers.get('x-uapkg-otp'),
         });
@@ -154,7 +159,12 @@ describe('PackageLifecycleCommand request-scoped OTP', () => {
       'fetch',
       vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
         if ((init?.method ?? 'GET') === 'POST') {
-          return Response.json({ ok: true, requestId: 'request-yank-failed', status: 'queued', message: 'queued' });
+          return Response.json({
+            ok: true,
+            requestId: 'request-yank-failed',
+            status: 'queued',
+            message: 'queued',
+          });
         }
         reads += 1;
         return Response.json(

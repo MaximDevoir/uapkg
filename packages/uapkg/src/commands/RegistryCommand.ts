@@ -54,7 +54,7 @@ export class RegistryCommand implements Command {
         return this.executeRefresh(config);
       default:
         return this.fail([
-          createParseErrorDiagnostic(`Unsupported registry action: ${this.options.action satisfies never}`),
+          createParseErrorDiagnostic(`Unsupported registry action: ${String(this.options.action satisfies never)}`),
         ]);
     }
   }

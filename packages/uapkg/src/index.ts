@@ -15,11 +15,7 @@ export { UAPKGApplication } from './app/UAPKGApplication.js';
 export { parseUAPKGCommandLine } from './cli/parseCommandLine.js';
 export { runUAPKGCLI } from './cli/runUAPKGCLI.js';
 export type { UAPKGCommandLine, UAPKGWhoamiField } from './cli/UAPKGCommandLine.js';
-export {
-  createUAPKGCommandLineFactory,
-  UAPKG_WHOAMI_FIELDS,
-  UAPKGCommandLineFactory,
-} from './cli/UAPKGCommandLine.js';
+export { createUAPKGCommandLineFactory, UAPKG_WHOAMI_FIELDS, UAPKGCommandLineFactory } from './cli/UAPKGCommandLine.js';
 // Commands — new surface
 export { AddCommand, type AddCommandOptions } from './commands/AddCommand.js';
 // Commands — retained, ported onto CompositionRoot in Phase 10
@@ -31,10 +27,7 @@ export { LoginCommand, type LoginCommandOptions } from './commands/LoginCommand.
 export { LogoutCommand, type LogoutCommandOptions } from './commands/LogoutCommand.js';
 export { OutdatedCommand, type OutdatedCommandOptions } from './commands/OutdatedCommand.js';
 export { PackCommand } from './commands/PackCommand.js';
-export {
-  ProjectGetNameCommand,
-  type ProjectGetNameCommandOptions,
-} from './commands/ProjectGetNameCommand.js';
+export { ProjectGetNameCommand, type ProjectGetNameCommandOptions } from './commands/ProjectGetNameCommand.js';
 export { PublishCommand, type PublishCommandOptions } from './commands/PublishCommand.js';
 export {
   RegistryCommand,
@@ -65,10 +58,7 @@ export {
   loginDiagnosticForError,
 } from './control-plane/AccountManager.js';
 export { AuthMetadataStore } from './control-plane/AuthMetadataStore.js';
-export {
-  ControlPlaneClient,
-  type ControlPlaneCredential,
-} from './control-plane/ControlPlaneClient.js';
+export { ControlPlaneClient, type ControlPlaneCredential } from './control-plane/ControlPlaneClient.js';
 export * from './control-plane/ControlPlaneTypes.js';
 export { CredentialStore, type KeyringLoader } from './control-plane/CredentialStore.js';
 export { DPoPKeyStore } from './control-plane/DPoPKeyStore.js';
@@ -86,10 +76,7 @@ export {
 export * from './postinstall/index.js';
 // Prompt abstractions (used by init)
 export { InkPromptService } from './prompts/InkPromptService.js';
-export {
-  type ProjectContextDetection,
-  ProjectContextDetector,
-} from './prompts/ProjectContextDetector.js';
+export { type ProjectContextDetection, ProjectContextDetector } from './prompts/ProjectContextDetector.js';
 export type { PromptService, SelectOption } from './prompts/PromptService.js';
 // Reporting
 export { DiagnosticReporter } from './reporting/DiagnosticReporter.js';

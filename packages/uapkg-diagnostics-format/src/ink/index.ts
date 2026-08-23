@@ -30,9 +30,6 @@ export { HintLine } from './primitives/HintLine.js';
 export { PlainTextBody } from './primitives/PlainTextBody.js';
 export { SeverityBadge } from './primitives/SeverityBadge.js';
 export { createInkRegistry, DiagnosticInkRegistry } from './registry/DiagnosticInkRegistry.js';
-export {
-  DiagnosticsListView,
-  type DiagnosticsListViewProps,
-} from './views/DiagnosticsListView.js';
+export { DiagnosticsListView, type DiagnosticsListViewProps } from './views/DiagnosticsListView.js';
 // Views.
 export { DiagnosticView, type DiagnosticViewProps } from './views/DiagnosticView.js';

@@ -1,5 +1,5 @@
 import type { UAPKGBuildMode } from '@uapkg/common';
-import type { DevBuildMode, DevBuildOptions } from './types';
+import type { DevBuildMode, DevBuildOptions } from './types.ts';
 
 const BUILD_MODE_FLAGS = new Set(['--development', '--production']);
 

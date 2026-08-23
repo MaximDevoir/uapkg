@@ -228,10 +228,3 @@ interface LockEntry {
   readonly integrity: AssetHash;
   readonly path?: InstallPath;
 }
-
-// biome-ignore lint: TODO: review if no longer used after refactor
-interface RegistryVersionShape {
-  readonly releaseFiles: {
-    readonly package: { readonly url: string; readonly integrity: { readonly size: number } };
-  };
-}

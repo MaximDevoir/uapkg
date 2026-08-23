@@ -1,19 +1,21 @@
 import type { UAPKGBuildMode } from '@uapkg/common';
-import { BuildService } from './BuildService';
-import { CleanupService } from './CleanupService';
-import { DevBuildStatusPrinter } from './DevBuildStatusPrinter';
-import { GlobalCommandShimService } from './GlobalCommandShimService';
-import { GlobalUapkgDevModeService } from './GlobalUapkgDevModeService';
-import { GlobalUapkgSnapshotStore } from './GlobalUapkgSnapshotStore';
-import { GlobalUapkgStateService } from './GlobalUapkgStateService';
-import { ProcessRunner } from './ProcessRunner';
+import { BuildService } from './BuildService.ts';
+import { CleanupService } from './CleanupService.ts';
+import { DevBuildStatusPrinter } from './DevBuildStatusPrinter.ts';
+import { GlobalCommandShimService } from './GlobalCommandShimService.ts';
+import { GlobalUapkgDevModeService } from './GlobalUapkgDevModeService.ts';
+import { GlobalUapkgSnapshotStore } from './GlobalUapkgSnapshotStore.ts';
+import { GlobalUapkgStateService } from './GlobalUapkgStateService.ts';
+import { ProcessRunner } from './ProcessRunner.ts';
 
 export class DevBuildOrchestrator {
   private readonly buildService: BuildService;
   private readonly devModeService: GlobalUapkgDevModeService;
   private readonly cleanupService: CleanupService;
+  private readonly workspaceRoot: string;
 
-  constructor(private readonly workspaceRoot: string) {
+  constructor(workspaceRoot: string) {
+    this.workspaceRoot = workspaceRoot;
     const runner = new ProcessRunner();
     this.buildService = new BuildService(runner, this.workspaceRoot);
     this.cleanupService = new CleanupService(runner, this.workspaceRoot);

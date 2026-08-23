@@ -1,34 +1,29 @@
 import type { UAPKGBuildMode } from '@uapkg/common';
-import type { ProcessRunner } from './ProcessRunner';
+import type { ProcessRunner } from './ProcessRunner.ts';
 
 export class BuildService {
-  constructor(
-    private readonly runner: ProcessRunner,
-    private readonly workspaceRoot: string,
-  ) {}
+  private readonly runner: ProcessRunner;
+  private readonly workspaceRoot: string;
+
+  constructor(runner: ProcessRunner, workspaceRoot: string) {
+    this.runner = runner;
+    this.workspaceRoot = workspaceRoot;
+  }
 
   buildAll(mode: UAPKGBuildMode) {
-    this.runner.run('pnpm', ['nx', 'run-many', '-t', 'build', '--all', `--configuration=${mode}`], this.workspaceRoot);
+    this.runner.run('vp', ['run', '--cache', '-w', 'pack:libraries'], this.workspaceRoot);
+    this.runner.run('vp', ['run', '--cache', '-w', 'cli:build', '--', `--${mode}`], this.workspaceRoot);
   }
 
   buildCliWithDependencies() {
-    this.runner.run('pnpm', ['nx', 'run', 'uapkg:build:development'], this.workspaceRoot);
+    this.runner.run('vp', ['run', '--cache', '-w', 'cli:build', '--', '--development'], this.workspaceRoot);
   }
 
   watchCliAndDependents() {
+    this.runner.run('vp', ['run', 'build:link'], this.workspaceRoot);
     this.runner.run(
-      'pnpm',
-      [
-        'nx',
-        'watch',
-        '--projects=uapkg',
-        '--includeDependentProjects',
-        '--initialRun',
-        '--',
-        'pnpm',
-        'run',
-        'build:link',
-      ],
+      'vp',
+      ['run', '--no-cache', '--filter', '@uapkg/cli...', '--parallel', 'build:watch'],
       this.workspaceRoot,
     );
   }

@@ -50,7 +50,7 @@ export class ConfigCommand implements Command {
       case 'edit':
         return this.executeEdit(config);
       default:
-        return this.fail([createParseErrorDiagnostic(`Unsupported config action: ${action satisfies never}`)]);
+        return this.fail([createParseErrorDiagnostic(`Unsupported config action: ${String(action satisfies never)}`)]);
     }
   }
 

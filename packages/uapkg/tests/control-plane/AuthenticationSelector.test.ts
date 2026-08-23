@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { AccountManager } from '../../src/control-plane/AccountManager.js';
 import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSelector.js';
 import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';
@@ -176,7 +176,10 @@ describe('AuthenticationSelector', () => {
   it('rejects non-six-digit request OTPs before transport', async () => {
     process.env.UAPKG_TOKEN = 'uapkg_gat_test';
     const selector = new AuthenticationSelector(
-      { hasGrant: vi.fn(async () => false), getAccessCredential: vi.fn() } as unknown as AccountManager,
+      {
+        hasGrant: vi.fn(async () => false),
+        getAccessCredential: vi.fn(),
+      } as unknown as AccountManager,
       prompts(['12345678']),
       { isAvailable: () => false } as GitHubActionsOidcCredentialProvider,
       () => true,

@@ -1,13 +1,13 @@
 ---
-"@uapkg/common-schema": patch
-"@uapkg/config": patch
-"@uapkg/package-claims": minor
-"@uapkg/package-manifest-schema": minor
-"@uapkg/registry-schema": minor
-"@uapkg/registry-core": patch
-"@uapkg/package-manifest": patch
-"@uapkg/installer": patch
-"@uapkg/cli": patch
+'@uapkg/common-schema': patch
+'@uapkg/config': patch
+'@uapkg/package-claims': minor
+'@uapkg/package-manifest-schema': minor
+'@uapkg/registry-schema': minor
+'@uapkg/registry-core': patch
+'@uapkg/package-manifest': patch
+'@uapkg/installer': patch
+'@uapkg/cli': patch
 ---
 
 Publish normalized package-claims schemas and the versioned registry metadata contract, with a shared context-aware package-registry manifest validator for public and private registries.

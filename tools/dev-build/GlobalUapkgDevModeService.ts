@@ -1,18 +1,30 @@
-import type { BuildService } from './BuildService';
-import type { DevBuildStatusPrinter } from './DevBuildStatusPrinter';
-import type { GlobalCommandShimService } from './GlobalCommandShimService';
-import type { GlobalUapkgSnapshotStore } from './GlobalUapkgSnapshotStore';
-import type { GlobalUapkgStateService } from './GlobalUapkgStateService';
-import type { CurrentGlobalUapkgState, SavedGlobalUapkgState } from './types';
+import type { BuildService } from './BuildService.ts';
+import type { DevBuildStatusPrinter } from './DevBuildStatusPrinter.ts';
+import type { GlobalCommandShimService } from './GlobalCommandShimService.ts';
+import type { GlobalUapkgSnapshotStore } from './GlobalUapkgSnapshotStore.ts';
+import type { GlobalUapkgStateService } from './GlobalUapkgStateService.ts';
+import type { CurrentGlobalUapkgState, SavedGlobalUapkgState } from './types.ts';
 
 export class GlobalUapkgDevModeService {
+  private readonly buildService: BuildService;
+  private readonly stateService: GlobalUapkgStateService;
+  private readonly snapshotStore: GlobalUapkgSnapshotStore;
+  private readonly statusPrinter: DevBuildStatusPrinter;
+  private readonly shimService: GlobalCommandShimService;
+
   constructor(
-    private readonly buildService: BuildService,
-    private readonly stateService: GlobalUapkgStateService,
-    private readonly snapshotStore: GlobalUapkgSnapshotStore,
-    private readonly statusPrinter: DevBuildStatusPrinter,
-    private readonly shimService: GlobalCommandShimService,
-  ) {}
+    buildService: BuildService,
+    stateService: GlobalUapkgStateService,
+    snapshotStore: GlobalUapkgSnapshotStore,
+    statusPrinter: DevBuildStatusPrinter,
+    shimService: GlobalCommandShimService,
+  ) {
+    this.buildService = buildService;
+    this.stateService = stateService;
+    this.snapshotStore = snapshotStore;
+    this.statusPrinter = statusPrinter;
+    this.shimService = shimService;
+  }
 
   link(options: { force: boolean }) {
     this.statusPrinter.printLinkStart(options.force);

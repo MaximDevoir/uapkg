@@ -2,8 +2,7 @@ import { Box, render, Text, useApp, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import TextInput from 'ink-text-input';
 import isCI from 'is-ci';
-// biome-ignore lint/correctness/noUnusedImports: Ink requires React
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { PromptService, SelectOption } from './PromptService.js';
 
 // ---------------------------------------------------------------------------
@@ -22,7 +21,7 @@ export class InkPromptService implements PromptService {
     }
     return await new Promise<string>((resolve) => {
       const app = render(<SelectPrompt message={message} options={options} onSubmit={(value) => resolve(value)} />);
-      Promise.resolve().then(() => app.waitUntilExit());
+      void Promise.resolve().then(() => app.waitUntilExit());
     });
   }
 
@@ -34,7 +33,7 @@ export class InkPromptService implements PromptService {
       const app = render(
         <TextPrompt message={message} initialValue={initialValue} onSubmit={(value) => resolve(value)} />,
       );
-      Promise.resolve().then(() => app.waitUntilExit());
+      void Promise.resolve().then(() => app.waitUntilExit());
     });
   }
 
@@ -44,12 +43,12 @@ export class InkPromptService implements PromptService {
     }
     return await new Promise<string>((resolve) => {
       const app = render(<SecretPrompt message={message} onSubmit={(value) => resolve(value)} />);
-      Promise.resolve().then(() => app.waitUntilExit());
+      void Promise.resolve().then(() => app.waitUntilExit());
     });
   }
 }
 
-function SecretPrompt({ message, onSubmit }: { message: string; onSubmit(value: string): void }) {
+function SecretPrompt({ message, onSubmit }: { message: string; onSubmit: (value: string) => void }) {
   const [value, setValue] = useState('');
   const { exit } = useApp();
 
@@ -75,7 +74,7 @@ function SelectPrompt({
 }: {
   message: string;
   options: SelectOption[];
-  onSubmit(value: string): void;
+  onSubmit: (value: string) => void;
 }) {
   const { exit } = useApp();
   return (
@@ -99,7 +98,7 @@ function TextPrompt({
 }: {
   message: string;
   initialValue: string;
-  onSubmit(value: string): void;
+  onSubmit: (value: string) => void;
 }) {
   const [value, setValue] = useState(initialValue);
   const { exit } = useApp();

@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import {
   assertConsumerRootCompatibility,
   assertGitIdentityUnchanged,
@@ -14,6 +14,7 @@ import {
   canonicalJson,
   computeBundleDigest,
   computeGitIdentity,
+  createClosureBuildCommands,
   createContentAddressedFilename,
   type DependencyMap,
   normalizePackedTarball,
@@ -44,7 +45,6 @@ function workspacePackage(
     name,
     version: '1.3.0',
     directory: `/workspace/${name}`,
-    projectName: name,
     dependencies,
     optionalDependencies,
   };
@@ -97,6 +97,15 @@ describe('runtime closure discovery', () => {
       '@uapkg/common-schema',
       '@uapkg/registry-schema',
       '@uapkg/package-claims',
+    ]);
+  });
+
+  it('routes CLI artifacts through the cache-aware production task', () => {
+    const closure = [workspacePackage('@uapkg/common'), workspacePackage('@uapkg/cli')];
+
+    expect(createClosureBuildCommands(closure)).toEqual([
+      ['run', '--cache', '-w', 'pack:common'],
+      ['run', '--cache', '-w', 'cli:build', '--', '--production'],
     ]);
   });
 
@@ -242,7 +251,7 @@ describe('publish-shaped bundle identity', () => {
     });
   });
 
-  it('rejects workspace ranges that were not rewritten by pnpm pack', () => {
+  it('rejects workspace ranges that were not rewritten by the Vite+ package manager', () => {
     expect(() =>
       validatePackedManifest(
         {
@@ -252,7 +261,7 @@ describe('publish-shaped bundle identity', () => {
         },
         { name: '@uapkg/registry-schema', version: '1.3.0' },
       ),
-    ).toThrow('pnpm did not rewrite');
+    ).toThrow('Vite+ package manager did not rewrite');
 
     expect(
       validatePackedManifest(
@@ -315,9 +324,13 @@ describe('Git source identity', () => {
   it('is stable for unchanged dirty content and changes with tracked or untracked content', () => {
     const repository = temporaryDirectory('uapkg-bundle-git-');
     execFileSync('git', ['init'], { cwd: repository });
-    execFileSync('git', ['config', 'user.email', 'bundle-test@example.invalid'], { cwd: repository });
+    execFileSync('git', ['config', 'user.email', 'bundle-test@example.invalid'], {
+      cwd: repository,
+    });
     execFileSync('git', ['config', 'user.name', 'Bundle Test'], { cwd: repository });
-    execFileSync('git', ['remote', 'add', 'origin', 'https://github.com/MaximDevoir/uapkg.git'], { cwd: repository });
+    execFileSync('git', ['remote', 'add', 'origin', 'https://github.com/MaximDevoir/uapkg.git'], {
+      cwd: repository,
+    });
     writeFileSync(path.join(repository, 'tracked.txt'), 'committed\n');
     execFileSync('git', ['add', 'tracked.txt'], { cwd: repository });
     execFileSync('git', ['commit', '-m', 'fixture'], { cwd: repository });

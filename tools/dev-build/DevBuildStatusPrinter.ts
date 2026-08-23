@@ -1,17 +1,23 @@
-import { resolveUapkgProfileRoot, type UAPKGBuildMode } from '@uapkg/common';
-import type { CurrentGlobalUapkgState, GlobalUapkgSnapshot } from './types';
+import os from 'node:os';
+import path from 'node:path';
+import type { UAPKGBuildMode } from '@uapkg/common';
+import type { CurrentGlobalUapkgState, GlobalUapkgSnapshot } from './types.ts';
 
 export type UapkgProfileRoots = Readonly<Record<UAPKGBuildMode, string>>;
 
-export function resolveUapkgProfileRoots(homeDirectory?: string): UapkgProfileRoots {
+export function resolveUapkgProfileRoots(homeDirectory = os.homedir()): UapkgProfileRoots {
   return {
-    production: resolveUapkgProfileRoot('production', homeDirectory),
-    development: resolveUapkgProfileRoot('development', homeDirectory),
+    production: path.join(homeDirectory, '.uapkg'),
+    development: path.join(homeDirectory, '.uapkg-development'),
   };
 }
 
 export class DevBuildStatusPrinter {
-  constructor(private readonly profileRoots = resolveUapkgProfileRoots()) {}
+  private readonly profileRoots: UapkgProfileRoots;
+
+  constructor(profileRoots = resolveUapkgProfileRoots()) {
+    this.profileRoots = profileRoots;
+  }
 
   printLinkStart(force: boolean) {
     console.log(`[dev-build] build:link started${force ? ' (force)' : ''}`);
@@ -40,7 +46,7 @@ export class DevBuildStatusPrinter {
     console.log('[dev-build] External development links are not restored automatically.');
     console.log('[dev-build] Restore manually if needed:');
     console.log(`[dev-build]   cd ${path}`);
-    console.log('[dev-build]   pnpm add --global .');
+    console.log('[dev-build]   vp exec pnpm add --global .');
   }
 
   printUnlinkRefusedWithoutForce() {

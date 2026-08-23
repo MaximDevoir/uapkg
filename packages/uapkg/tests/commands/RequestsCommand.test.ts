@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
 import { RequestsCommand } from '../../src/commands/RequestsCommand.js';
 import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';

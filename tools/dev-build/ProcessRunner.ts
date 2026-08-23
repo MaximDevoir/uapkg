@@ -56,7 +56,7 @@ export class ProcessRunner {
   }
 
   private isCmdShim(command: string): boolean {
-    return ['pnpm', 'npm', 'npx', 'yarn'].includes(command);
+    return command === 'vp';
   }
 
   private throwIfFailed(

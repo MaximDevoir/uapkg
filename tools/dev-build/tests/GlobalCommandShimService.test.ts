@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { GlobalCommandShimService } from '../GlobalCommandShimService';
 import { ProcessRunner } from '../ProcessRunner';
 
@@ -21,7 +21,7 @@ describe('GlobalCommandShimService', () => {
     const globalBinDirectory = makeTemporaryDirectory('pnpm-bin-');
     const activeShimPath = path.join(globalBinDirectory, process.platform === 'win32' ? 'uapkg.cmd' : 'uapkg');
     const runner = new ProcessRunner();
-    vi.spyOn(runner, 'runAndCapture').mockReturnValue({
+    const runAndCapture = vi.spyOn(runner, 'runAndCapture').mockReturnValue({
       stdout: globalBinDirectory,
       stderr: '',
       status: 0,
@@ -34,6 +34,9 @@ describe('GlobalCommandShimService', () => {
     const workspaceEntry = path.join(workspaceRoot, 'packages', 'uapkg', 'dist', 'cli.js');
     fs.writeFileSync(activeShimPath, `node "${workspaceEntry}"`, 'utf8');
     expect(service.resolveWorkspaceShimPath()).toBe(activeShimPath);
+    expect(runAndCapture).toHaveBeenCalledWith('vp', ['exec', 'pnpm', 'bin', '--global'], workspaceRoot, {
+      ignoreFailure: true,
+    });
   });
 });
 

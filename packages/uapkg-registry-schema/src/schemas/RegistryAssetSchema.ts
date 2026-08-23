@@ -6,7 +6,7 @@ import { IntegritySchema } from './IntegritySchema.js';
  */
 export const RegistryAssetSchema = z
   .object({
-    url: z.string().url(),
+    url: z.url(),
     integrity: IntegritySchema,
   })
   .strict();

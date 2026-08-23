@@ -1,12 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { ProcessRunner } from './ProcessRunner';
+import type { ProcessRunner } from './ProcessRunner.ts';
 
 export class CleanupService {
-  constructor(
-    private readonly runner: ProcessRunner,
-    private readonly workspaceRoot: string,
-  ) {}
+  private readonly runner: ProcessRunner;
+  private readonly workspaceRoot: string;
+
+  constructor(runner: ProcessRunner, workspaceRoot: string) {
+    this.runner = runner;
+    this.workspaceRoot = workspaceRoot;
+  }
 
   cleanBuildArtifacts() {
     for (const rootTarget of this.getRootBuildTargets()) {
@@ -14,7 +17,7 @@ export class CleanupService {
     }
 
     for (const packageDir of this.getWorkspacePackageDirectories()) {
-      for (const targetName of ['dist', 'build', 'coverage', '.turbo', '.cache']) {
+      for (const targetName of ['dist', 'coverage']) {
         this.removeDirectoryIfExists(path.join(packageDir, targetName));
       }
 
@@ -22,25 +25,18 @@ export class CleanupService {
     }
 
     this.removeFilesBySuffix(path.join(this.workspaceRoot, 'tools'), '.tsbuildinfo');
-    this.runner.runAndCapture('pnpm', ['nx', 'reset'], this.workspaceRoot, { ignoreFailure: true });
+    this.runner.runAndCapture('vp', ['cache', 'clean'], this.workspaceRoot, { ignoreFailure: true });
   }
 
   cleanAll() {
     this.cleanBuildArtifacts();
     this.removeWorkspaceNodeModules();
     this.removeWorkspacePnpmStores();
-    this.runner.runAndCapture('pnpm', ['store', 'prune'], this.workspaceRoot, { ignoreFailure: true });
+    this.runner.runAndCapture('vp', ['exec', 'pnpm', 'store', 'prune'], this.workspaceRoot, { ignoreFailure: true });
   }
 
   private getRootBuildTargets() {
-    return [
-      path.join(this.workspaceRoot, 'coverage'),
-      path.join(this.workspaceRoot, 'dist'),
-      path.join(this.workspaceRoot, 'build'),
-      path.join(this.workspaceRoot, '.turbo'),
-      path.join(this.workspaceRoot, '.nx', 'cache'),
-      path.join(this.workspaceRoot, '.nx', 'workspace-data'),
-    ];
+    return [path.join(this.workspaceRoot, 'coverage')];
   }
 
   private getWorkspacePackageDirectories() {

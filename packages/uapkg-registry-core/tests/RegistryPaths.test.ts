@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { INTERNAL_BUILD_MODE_ENV, INTERNAL_PROFILE_HOME_ENV, resolveUapkgProfileRoot } from '@uapkg/common';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
   getRegistryCachePath,
   getRegistryLockPath,

@@ -112,10 +112,10 @@ const requestSummarySchema = z
         packageName: z.string().optional(),
         packageVersion: z.string().optional(),
       })
-      .passthrough()
+      .loose()
       .optional(),
   })
-  .passthrough();
+  .loose();
 
 const requestCheckIdSchema = z
   .string()
@@ -274,7 +274,7 @@ export class ControlPlaneClient {
   ): Promise<RegistryRequestSummary[]> {
     const query = new URLSearchParams({ registryId });
     if (status) query.set('status', status);
-    const value = await this.requestJson(credential, 'GET', `/v1/registry-requests?${query}`);
+    const value = await this.requestJson(credential, 'GET', `/v1/registry-requests?${query.toString()}`);
     const parsed = z
       .object({
         ok: z.literal(true),

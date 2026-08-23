@@ -1,5 +1,5 @@
 import type { DownloadStatusSnapshot } from '@uapkg/installer';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { InstallProgressReporter } from '../../src/reporting/InstallProgressReporter.js';
 import { MemoryTextSink } from '../_fakes/MemoryTextSink.js';
 

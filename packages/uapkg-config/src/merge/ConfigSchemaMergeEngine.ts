@@ -3,7 +3,7 @@ import {
   createConfigUnknownKeyDiagnostic,
   DiagnosticBag,
 } from '@uapkg/diagnostics';
-import type { ZodTypeAny } from 'zod';
+import type { ZodType } from 'zod';
 import type { ConfigLayer, ConfigResolvedResult } from '../contracts/ConfigTypes.js';
 import {
   type ConfigSchemaNodeKind,
@@ -29,7 +29,7 @@ interface MergeContext {
  *   semantic validation.
  */
 export class ConfigSchemaMergeEngine {
-  public constructor(private readonly rootSchema: ZodTypeAny) {}
+  public constructor(private readonly rootSchema: ZodType) {}
 
   public mergeLayers(layers: readonly ConfigLayer[]): ConfigResolvedResult {
     const bag = new DiagnosticBag();
@@ -44,7 +44,7 @@ export class ConfigSchemaMergeEngine {
   }
 
   private mergeNode(
-    schema: ZodTypeAny,
+    schema: ZodType,
     baseValue: unknown,
     overrideValue: unknown,
     context: MergeContext,
@@ -65,7 +65,7 @@ export class ConfigSchemaMergeEngine {
   }
 
   private mergeObjectNode(
-    schema: ZodTypeAny,
+    schema: ZodType,
     baseValue: unknown,
     overrideValue: unknown,
     context: MergeContext,
@@ -101,7 +101,7 @@ export class ConfigSchemaMergeEngine {
   }
 
   private mergeRecordNode(
-    schema: ZodTypeAny,
+    schema: ZodType,
     baseValue: unknown,
     overrideValue: unknown,
     context: MergeContext,

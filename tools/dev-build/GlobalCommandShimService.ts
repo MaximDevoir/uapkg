@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { PathUtils } from './PathUtils';
-import type { ProcessRunner } from './ProcessRunner';
+import { PathUtils } from './PathUtils.ts';
+import type { ProcessRunner } from './ProcessRunner.ts';
 
 interface GlobalShimPaths {
   cmdPath: string;
@@ -11,16 +11,19 @@ interface GlobalShimPaths {
 
 export class GlobalCommandShimService {
   private readonly pathUtils: PathUtils;
+  private readonly runner: ProcessRunner;
+  private readonly workspaceRoot: string;
 
-  constructor(
-    private readonly runner: ProcessRunner,
-    private readonly workspaceRoot: string,
-  ) {
+  constructor(runner: ProcessRunner, workspaceRoot: string) {
+    this.runner = runner;
+    this.workspaceRoot = workspaceRoot;
     this.pathUtils = new PathUtils();
   }
 
   getGlobalBinDir() {
-    const result = this.runner.runAndCapture('pnpm', ['bin', '--global'], this.workspaceRoot, { ignoreFailure: true });
+    const result = this.runner.runAndCapture('vp', ['exec', 'pnpm', 'bin', '--global'], this.workspaceRoot, {
+      ignoreFailure: true,
+    });
     const value = result.stdout
       .split(/\r?\n/)
       .map((line) => line.trim())

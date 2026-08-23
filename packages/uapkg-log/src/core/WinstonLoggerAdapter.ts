@@ -6,7 +6,7 @@ export class WinstonLoggerAdapter implements LogEngine {
     level: 'debug',
     format: format.combine(
       format.timestamp(),
-      format.printf(({ message }) => `${message}`),
+      format.printf(({ message }) => String(message)),
     ),
     transports: [new transports.Console()],
   });

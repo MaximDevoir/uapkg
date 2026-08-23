@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 export type ConfigSchemaNodeKind = 'object' | 'record' | 'string' | 'number' | 'boolean' | 'enum' | 'other';
 
-export type ConfigObjectShape = Record<string, z.ZodTypeAny>;
+export type ConfigObjectShape = Record<string, z.ZodType>;
 
-export function unwrapConfigSchema(schema: z.ZodTypeAny): z.ZodTypeAny {
+export function unwrapConfigSchema(schema: z.ZodType): z.ZodType {
   let current = schema;
 
   while (true) {
@@ -15,12 +15,12 @@ export function unwrapConfigSchema(schema: z.ZodTypeAny): z.ZodTypeAny {
       current instanceof z.ZodCatch ||
       current instanceof z.ZodReadonly
     ) {
-      current = current.unwrap() as unknown as z.ZodTypeAny;
+      current = current.unwrap() as unknown as z.ZodType;
       continue;
     }
 
     if (current instanceof z.ZodPipe) {
-      current = current.def.in as unknown as z.ZodTypeAny;
+      current = current.def.in as unknown as z.ZodType;
       continue;
     }
 
@@ -28,7 +28,7 @@ export function unwrapConfigSchema(schema: z.ZodTypeAny): z.ZodTypeAny {
   }
 }
 
-export function getConfigSchemaNodeKind(schema: z.ZodTypeAny): ConfigSchemaNodeKind {
+export function getConfigSchemaNodeKind(schema: z.ZodType): ConfigSchemaNodeKind {
   const node = unwrapConfigSchema(schema);
 
   if (node instanceof z.ZodObject) return 'object';
@@ -41,7 +41,7 @@ export function getConfigSchemaNodeKind(schema: z.ZodTypeAny): ConfigSchemaNodeK
   return 'other';
 }
 
-export function getObjectShape(schema: z.ZodTypeAny): ConfigObjectShape {
+export function getObjectShape(schema: z.ZodType): ConfigObjectShape {
   const node = unwrapConfigSchema(schema);
   if (!(node instanceof z.ZodObject)) {
     return {};
@@ -50,13 +50,13 @@ export function getObjectShape(schema: z.ZodTypeAny): ConfigObjectShape {
   return (node.shape as ConfigObjectShape) ?? {};
 }
 
-export function getRecordValueSchema(schema: z.ZodTypeAny): z.ZodTypeAny | null {
+export function getRecordValueSchema(schema: z.ZodType): z.ZodType | null {
   const node = unwrapConfigSchema(schema);
   if (!(node instanceof z.ZodRecord)) {
     return null;
   }
 
-  return unwrapConfigSchema(node.valueType as z.ZodTypeAny);
+  return unwrapConfigSchema(node.valueType as z.ZodType);
 }
 
 export function getExpectedBroadType(kind: ConfigSchemaNodeKind): string {

@@ -6,7 +6,7 @@ import { z } from 'zod';
 export const PackageSourceSchema = z
   .object({
     type: z.literal('git'),
-    url: z.string().url(),
+    url: z.url(),
   })
   .strict();
 

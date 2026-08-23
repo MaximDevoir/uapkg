@@ -19,12 +19,7 @@ export type {
   SafetyEvaluation,
   SafetyPolicy,
 } from './contracts/SafetyPolicyTypes.js';
-export type {
-  DownloadStatusSnapshot,
-  InstallTotals,
-  SlotSnapshot,
-  SlotState,
-} from './contracts/StatusStreamTypes.js';
+export type { DownloadStatusSnapshot, InstallTotals, SlotSnapshot, SlotState } from './contracts/StatusStreamTypes.js';
 
 // Core
 export { type ClaimsVerificationInput, ClaimsVerifier } from './core/ClaimsVerifier.js';

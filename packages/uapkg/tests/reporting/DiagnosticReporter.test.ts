@@ -1,5 +1,5 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { DiagnosticReporter } from '../../src/reporting/DiagnosticReporter.js';
 import { TextDiagnosticRenderer } from '../../src/reporting/TextDiagnosticRenderer.js';
 import { MemoryTextSink } from '../_fakes/MemoryTextSink.js';

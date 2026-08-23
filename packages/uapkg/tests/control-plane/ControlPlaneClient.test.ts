@@ -1,5 +1,5 @@
 import * as oauth from 'oauth4webapi';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { describeControlPlaneError } from '../../src/control-plane/AccountManager.js';
 import { ControlPlaneClient, type ControlPlaneCredential } from '../../src/control-plane/ControlPlaneClient.js';
 import {
@@ -10,6 +10,11 @@ import {
   type UAPKGCliScope,
 } from '../../src/control-plane/ControlPlaneTypes.js';
 
+function requestUrl(input: string | URL | Request): string {
+  if (typeof input === 'string') return input;
+  return input instanceof URL ? input.href : input.url;
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -19,14 +24,17 @@ describe('ControlPlaneClient CLI login confirmation', () => {
     const grantId = '22222222-2222-4222-8222-222222222222';
     const predecessorGrantId = '11111111-1111-4111-8111-111111111111';
     const now = Date.now();
-    const requests: Array<{ readonly url: string; readonly method: string; readonly authorization: string | null }> =
-      [];
+    const requests: Array<{
+      readonly url: string;
+      readonly method: string;
+      readonly authorization: string | null;
+    }> = [];
     vi.stubGlobal(
       'fetch',
       vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
         const headers = new Headers(init?.headers);
         requests.push({
-          url: String(input),
+          url: requestUrl(input),
           method: init?.method ?? 'GET',
           authorization: headers.get('authorization'),
         });
@@ -113,7 +121,10 @@ describe('ControlPlaneClient CLI login confirmation', () => {
           },
         });
       }
-      return Response.json({ ok: true, grant: { id: grantId, status: 'pending', replacesGrantId: null } });
+      return Response.json({
+        ok: true,
+        grant: { id: grantId, status: 'pending', replacesGrantId: null },
+      });
     });
     vi.stubGlobal('fetch', fetchMock);
     const client = new ControlPlaneClient(UAPKG_CONTROL_PLANE_API);
@@ -175,7 +186,12 @@ describe('ControlPlaneClient request-scoped OTP transport', () => {
         const headers = new Headers(init?.headers);
         observed.push({ method: init?.method ?? 'GET', otp: headers.get('x-uapkg-otp') });
         if (init?.method === 'POST') {
-          return Response.json({ ok: true, requestId: 'request-1', status: 'queued', message: 'queued' });
+          return Response.json({
+            ok: true,
+            requestId: 'request-1',
+            status: 'queued',
+            message: 'queued',
+          });
         }
         return Response.json({
           ok: true,
@@ -339,7 +355,9 @@ describe('ControlPlaneClient registry request detail', () => {
       'fetch',
       vi.fn(async () => Response.json({ ok: true, request })),
     );
-    await expect(client.getRegistryRequestDetail(credential, request.id)).resolves.toEqual({ request });
+    await expect(client.getRegistryRequestDetail(credential, request.id)).resolves.toEqual({
+      request,
+    });
   });
 
   it.each([

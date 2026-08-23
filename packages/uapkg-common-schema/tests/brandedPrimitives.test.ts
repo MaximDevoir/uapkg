@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 import { z } from 'zod';
 import {
   AssetHashSchema,
@@ -107,17 +107,12 @@ describe('PackageVersionSchema', () => {
     expect(PackageVersionSchema.safeParse(value).success).toBe(true);
   });
 
-  it.each([
-    '',
-    'v1.2.3',
-    '=1.2.3',
-    '01.2.3',
-    ' 1.2.3',
-    '1.2.3 ',
-    'not-a-version',
-  ])('rejects non-canonical semver %s', (value) => {
-    expect(PackageVersionSchema.safeParse(value).success).toBe(false);
-  });
+  it.each(['', 'v1.2.3', '=1.2.3', '01.2.3', ' 1.2.3', '1.2.3 ', 'not-a-version'])(
+    'rejects non-canonical semver %s',
+    (value) => {
+      expect(PackageVersionSchema.safeParse(value).success).toBe(false);
+    },
+  );
 });
 
 describe('VersionRangeSchema', () => {

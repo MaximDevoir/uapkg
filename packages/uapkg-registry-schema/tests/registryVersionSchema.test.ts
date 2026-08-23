@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import {
   createPackageRegistryManifestSchema,
   getRegistryPackagePath,
@@ -30,7 +30,10 @@ describe('RegistryVersionSchema', () => {
   });
 
   it('tolerates unknown optional members instead of rejecting them', () => {
-    const parsed = RegistryVersionSchema.safeParse({ ...versionRecord, futureOptional: { anything: 1 } });
+    const parsed = RegistryVersionSchema.safeParse({
+      ...versionRecord,
+      futureOptional: { anything: 1 },
+    });
     expect(parsed.success).toBe(true);
   });
 

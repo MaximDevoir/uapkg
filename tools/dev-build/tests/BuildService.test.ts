@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { BuildService } from '../BuildService';
 import { ProcessRunner } from '../ProcessRunner';
 
@@ -14,9 +14,11 @@ describe('BuildService', () => {
 
     service.buildAll(mode);
 
-    expect(run).toHaveBeenCalledWith(
-      'pnpm',
-      ['nx', 'run-many', '-t', 'build', '--all', `--configuration=${mode}`],
+    expect(run).toHaveBeenNthCalledWith(1, 'vp', ['run', '--cache', '-w', 'pack:libraries'], 'D:/workspace');
+    expect(run).toHaveBeenNthCalledWith(
+      2,
+      'vp',
+      ['run', '--cache', '-w', 'cli:build', '--', `--${mode}`],
       'D:/workspace',
     );
   });
@@ -28,7 +30,12 @@ describe('BuildService', () => {
 
     service.buildCliWithDependencies();
 
-    expect(run).toHaveBeenCalledWith('pnpm', ['nx', 'run', 'uapkg:build:development'], 'D:/workspace');
+    expect(run).toHaveBeenCalledOnce();
+    expect(run).toHaveBeenCalledWith(
+      'vp',
+      ['run', '--cache', '-w', 'cli:build', '--', '--development'],
+      'D:/workspace',
+    );
   });
 
   it('performs an initial development link before watching for changes', () => {
@@ -38,19 +45,11 @@ describe('BuildService', () => {
 
     service.watchCliAndDependents();
 
-    expect(run).toHaveBeenCalledWith(
-      'pnpm',
-      [
-        'nx',
-        'watch',
-        '--projects=uapkg',
-        '--includeDependentProjects',
-        '--initialRun',
-        '--',
-        'pnpm',
-        'run',
-        'build:link',
-      ],
+    expect(run).toHaveBeenNthCalledWith(1, 'vp', ['run', 'build:link'], 'D:/workspace');
+    expect(run).toHaveBeenNthCalledWith(
+      2,
+      'vp',
+      ['run', '--no-cache', '--filter', '@uapkg/cli...', '--parallel', 'build:watch'],
       'D:/workspace',
     );
   });

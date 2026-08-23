@@ -1,4 +1,4 @@
-import { verifyProductionBuild } from './CliBuild.js';
+import { verifyProductionBuild } from './CliBuild.ts';
 
 try {
   await verifyProductionBuild();

@@ -1,4 +1,4 @@
-import { buildCli, parseBuildMode } from './CliBuild.js';
+import { buildCli, parseBuildMode } from './CliBuild.ts';
 
 try {
   const mode = parseBuildMode(process.argv.slice(2));

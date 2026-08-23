@@ -10,11 +10,7 @@
 export { definePostinstall } from './api/definePostinstall.js';
 // API
 export type { PostinstallDefinition, ProjectSetupDefinition, ZoneDefinition } from './api/PostinstallDsl.js';
-export {
-  PostinstallDefinitionSchema,
-  ProjectSetupSchema,
-  ZoneSchema,
-} from './api/PostinstallDsl.js';
+export { PostinstallDefinitionSchema, ProjectSetupSchema, ZoneSchema } from './api/PostinstallDsl.js';
 
 // Loader
 export { EntryResolver, type PostinstallEntryKind, type ResolvedEntry } from './loader/EntryResolver.js';
@@ -32,11 +28,7 @@ export {
   MarkerIntegrityValidator,
 } from './markers/MarkerIntegrityValidator.js';
 // Policy
-export {
-  type PolicyConfigReader,
-  type PolicyDecision,
-  PostinstallPolicyGate,
-} from './policy/PostinstallPolicyGate.js';
+export { type PolicyConfigReader, type PolicyDecision, PostinstallPolicyGate } from './policy/PostinstallPolicyGate.js';
 // Runner
 export {
   type PostinstallCandidate,
@@ -48,12 +40,7 @@ export {
 export { BuildCsInjector } from './unreal/BuildCsInjector.js';
 export { CSharpInjectionEngine } from './unreal/CSharpInjectionEngine.js';
 export { CSharpStructureAnalyzer } from './unreal/CSharpStructureAnalyzer.js';
-export type {
-  CSharpFileKind,
-  ParsedClass,
-  ParsedConstructor,
-  ParsedCSharpFile,
-} from './unreal/CSharpStructures.js';
+export type { CSharpFileKind, ParsedClass, ParsedConstructor, ParsedCSharpFile } from './unreal/CSharpStructures.js';
 export { CSharpWrapperFactory, type WrapperContextType } from './unreal/CSharpWrapperFactory.js';
 export { getPluginHash, getWrapperClassName } from './unreal/PluginHash.js';
 export { PrettyParseError } from './unreal/PrettyParseError.js';

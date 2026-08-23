@@ -1,5 +1,5 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { DIAGNOSTIC_LEVEL_ORDER, sortDiagnostics } from '../../src/reporting/TextSink.js';
 
 function d(level: Diagnostic['level'], code = 'X'): Diagnostic {

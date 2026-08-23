@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { z } from 'zod';
 import { normalizePackageClaims } from '../src/index.js';
 import { ClaimedDependencySchema, PackageClaimsSchema } from '../src/schema/index.js';

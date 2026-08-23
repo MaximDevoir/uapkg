@@ -2,7 +2,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { c as createTar } from 'tar';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { readPackageClaimsFromArchive, readPackagedManifest } from '../src/index.js';
 
 const cleanups: string[] = [];
@@ -66,7 +66,11 @@ describe('readPackagedManifest', () => {
 
   it('enforces the manifest size bound', async () => {
     const archive = await makeArchive({
-      'uapkg.json': JSON.stringify({ name: 'my-plugin', version: '1.0.0', padding: 'x'.repeat(4096) }),
+      'uapkg.json': JSON.stringify({
+        name: 'my-plugin',
+        version: '1.0.0',
+        padding: 'x'.repeat(4096),
+      }),
     });
     const result = await readPackagedManifest(archive, { maxManifestBytes: 128 });
     expect(result.ok).toBe(false);

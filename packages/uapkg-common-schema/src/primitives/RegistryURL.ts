@@ -6,6 +6,14 @@ import type { Brand } from '../brand/Brand.js';
  */
 export type RegistryURL = Brand<string, 'RegistryURL'>;
 
+function hasControlCharacter(value: string): boolean {
+  for (let index = 0; index < value.length; index += 1) {
+    const codeUnit = value.charCodeAt(index);
+    if (codeUnit <= 31 || codeUnit === 127) return true;
+  }
+  return false;
+}
+
 export const RegistryURLSchema = z
   .string()
   .min(1)
@@ -15,7 +23,7 @@ export const RegistryURLSchema = z
       return;
     }
 
-    if ([...value].some((character) => character.charCodeAt(0) <= 31 || character.charCodeAt(0) === 127)) {
+    if (hasControlCharacter(value)) {
       context.addIssue({ code: 'custom', message: 'Must not contain control characters' });
       return;
     }
