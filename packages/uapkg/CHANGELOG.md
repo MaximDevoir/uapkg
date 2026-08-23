@@ -1,5 +1,24 @@
 # uapkg
 
+## 1.3.2
+
+### Patch Changes
+
+- Updated dependencies [[`1ac5069`](https://github.com/MaximDevoir/uapkg/commit/1ac5069ecebae08cee60bcc52c40e5c4f948ed07)]:
+  - @uapkg/common@1.3.2
+  - @uapkg/common-schema@1.3.2
+  - @uapkg/config@1.3.2
+  - @uapkg/diagnostics@1.3.2
+  - @uapkg/diagnostics-format@1.3.2
+  - @uapkg/installer@1.3.2
+  - @uapkg/log@1.3.2
+  - @uapkg/pack@1.3.2
+  - @uapkg/package-claims@1.3.2
+  - @uapkg/package-manifest@1.3.2
+  - @uapkg/package-manifest-schema@1.3.2
+  - @uapkg/registry-core@1.3.2
+  - @uapkg/registry-schema@1.3.2
+
 ## 1.3.1
 
 ### Patch Changes

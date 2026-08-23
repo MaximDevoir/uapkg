@@ -1,5 +1,15 @@
 # @uapkg/common
 
+## 1.3.2
+
+### Patch Changes
+
+- [`1ac5069`](https://github.com/MaximDevoir/uapkg/commit/1ac5069ecebae08cee60bcc52c40e5c4f948ed07) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Prevent concurrent release publishing from rebuilding and racing over workspace artifacts.
+
+- Updated dependencies []:
+  - @uapkg/common-schema@1.3.2
+  - @uapkg/diagnostics@1.3.2
+
 ## 1.3.1
 
 ### Patch Changes
