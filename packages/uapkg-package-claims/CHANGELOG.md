@@ -1,5 +1,23 @@
 # @uapkg/package-claims
 
+## 1.3.1
+
+### Patch Changes
+
+- [`2a3f4de`](https://github.com/MaximDevoir/uapkg/commit/2a3f4de35497b34d02414413bc64dafb587044a2) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Publish normalized package-claims schemas and the versioned registry metadata contract, with a shared context-aware package-registry manifest validator for public and private registries.
+
+  Share compatible Zod instances through peer dependencies, permit private registry records and lock entries without Git trees, and fail closed on missing or unsupported registry metadata and public records missing required Git provenance.
+
+  Represent common-schema brands with JSON Schema-compatible type-only branding, expose package-name constraints on claims record keys, and reject non-canonical prefixed package versions.
+
+- [`3e8fc87`](https://github.com/MaximDevoir/uapkg/commit/3e8fc87e928eabd48315ac71f6030955b322a3b5) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Internal migration to Vite+
+
+- Updated dependencies [[`1b0e624`](https://github.com/MaximDevoir/uapkg/commit/1b0e624c8f78a1c496cef389838948e94f742c7f), [`2a3f4de`](https://github.com/MaximDevoir/uapkg/commit/2a3f4de35497b34d02414413bc64dafb587044a2), [`3e8fc87`](https://github.com/MaximDevoir/uapkg/commit/3e8fc87e928eabd48315ac71f6030955b322a3b5)]:
+  - @uapkg/diagnostics@1.3.1
+  - @uapkg/common-schema@1.3.1
+  - @uapkg/package-manifest-schema@1.3.1
+  - @uapkg/registry-schema@1.3.1
+
 ## 1.3.0
 
 ### Patch Changes

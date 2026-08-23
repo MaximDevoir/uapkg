@@ -1,5 +1,18 @@
 # @uapkg/diagnostics-format
 
+## 1.3.1
+
+### Patch Changes
+
+- [`2a0db4d`](https://github.com/MaximDevoir/uapkg/commit/2a0db4def1f31327afc7c3e511f6b6dad0510864) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Clarify UAPKG owner namespaces and render bounded request checks and terminal operational-failure diagnostics across publishing commands.
+
+- [`1b0e624`](https://github.com/MaximDevoir/uapkg/commit/1b0e624c8f78a1c496cef389838948e94f742c7f) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Render synchronous publish submission failures as typed, actionable diagnostics with validated context and recovery resources.
+
+- [`3e8fc87`](https://github.com/MaximDevoir/uapkg/commit/3e8fc87e928eabd48315ac71f6030955b322a3b5) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Internal migration to Vite+
+
+- Updated dependencies [[`1b0e624`](https://github.com/MaximDevoir/uapkg/commit/1b0e624c8f78a1c496cef389838948e94f742c7f), [`3e8fc87`](https://github.com/MaximDevoir/uapkg/commit/3e8fc87e928eabd48315ac71f6030955b322a3b5)]:
+  - @uapkg/diagnostics@1.3.1
+
 ## 1.3.0
 
 ### Patch Changes

@@ -1,5 +1,46 @@
 # uapkg
 
+## 1.3.1
+
+### Patch Changes
+
+- [`a464c77`](https://github.com/MaximDevoir/uapkg/commit/a464c7760c029985cfa77b73d974e6601af90c5f) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Improve GitHub Actions OIDC transport and use deterministic, rerun-stable publish idempotency keys.
+
+- [`9634804`](https://github.com/MaximDevoir/uapkg/commit/963480468e144730c674736a76d0e7bfbe500a29) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Preserve and display action-specific context from second-factor-required control-plane errors.
+
+- [`2a0db4d`](https://github.com/MaximDevoir/uapkg/commit/2a0db4def1f31327afc7c3e511f6b6dad0510864) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Clarify UAPKG owner namespaces and render bounded request checks and terminal operational-failure diagnostics across publishing commands.
+
+- [`aa1e603`](https://github.com/MaximDevoir/uapkg/commit/aa1e6032928cfeab7afcbce54cabf9858c10677d) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Download registry artifacts through bounded, scheme-safe redirects and retain byte-stream compatibility with legacy GitHub release-asset API URLs.
+
+- [`1b0e624`](https://github.com/MaximDevoir/uapkg/commit/1b0e624c8f78a1c496cef389838948e94f742c7f) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Render synchronous publish submission failures as typed, actionable diagnostics with validated context and recovery resources.
+
+- [`4e91556`](https://github.com/MaximDevoir/uapkg/commit/4e915567478921cdc8ce476daddb1913ab7f426a) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Bind every GitHub Actions OIDC exchange and renewal to the exact trusted registry and packaged package name.
+
+- [`2a3f4de`](https://github.com/MaximDevoir/uapkg/commit/2a3f4de35497b34d02414413bc64dafb587044a2) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Publish normalized package-claims schemas and the versioned registry metadata contract, with a shared context-aware package-registry manifest validator for public and private registries.
+
+  Share compatible Zod instances through peer dependencies, permit private registry records and lock entries without Git trees, and fail closed on missing or unsupported registry metadata and public records missing required Git provenance.
+
+  Represent common-schema brands with JSON Schema-compatible type-only branding, expose package-name constraints on claims record keys, and reject non-canonical prefixed package versions.
+
+- [`834ae65`](https://github.com/MaximDevoir/uapkg/commit/834ae656ed7d20f669a1fb40905d10e43f1b1579) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Describe trusted-publisher authorization using the canonical repository, exact workflow path, and optional GitHub Environment without obsolete event or ref guidance.
+
+- [`3e8fc87`](https://github.com/MaximDevoir/uapkg/commit/3e8fc87e928eabd48315ac71f6030955b322a3b5) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Internal migration to Vite+
+
+- Updated dependencies [[`2a0db4d`](https://github.com/MaximDevoir/uapkg/commit/2a0db4def1f31327afc7c3e511f6b6dad0510864), [`aa1e603`](https://github.com/MaximDevoir/uapkg/commit/aa1e6032928cfeab7afcbce54cabf9858c10677d), [`1b0e624`](https://github.com/MaximDevoir/uapkg/commit/1b0e624c8f78a1c496cef389838948e94f742c7f), [`2a3f4de`](https://github.com/MaximDevoir/uapkg/commit/2a3f4de35497b34d02414413bc64dafb587044a2), [`3e8fc87`](https://github.com/MaximDevoir/uapkg/commit/3e8fc87e928eabd48315ac71f6030955b322a3b5)]:
+  - @uapkg/diagnostics-format@1.3.1
+  - @uapkg/installer@1.3.1
+  - @uapkg/diagnostics@1.3.1
+  - @uapkg/common-schema@1.3.1
+  - @uapkg/config@1.3.1
+  - @uapkg/package-claims@1.3.1
+  - @uapkg/package-manifest-schema@1.3.1
+  - @uapkg/registry-schema@1.3.1
+  - @uapkg/registry-core@1.3.1
+  - @uapkg/package-manifest@1.3.1
+  - @uapkg/common@1.3.1
+  - @uapkg/pack@1.3.1
+  - @uapkg/log@1.3.1
+
 ## 1.3.0
 
 ### Minor Changes
