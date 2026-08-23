@@ -1,5 +1,12 @@
 # @uapkg/diagnostics-format
 
+## 1.3.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @uapkg/diagnostics@1.3.2
+
 ## 1.3.1
 
 ### Patch Changes

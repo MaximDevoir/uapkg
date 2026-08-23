@@ -1,5 +1,16 @@
 # @uapkg/registry-tools
 
+## 1.3.2
+
+### Patch Changes
+
+- Updated dependencies [[`1ac5069`](https://github.com/MaximDevoir/uapkg/commit/1ac5069ecebae08cee60bcc52c40e5c4f948ed07)]:
+  - @uapkg/common@1.3.2
+  - @uapkg/common-schema@1.3.2
+  - @uapkg/diagnostics@1.3.2
+  - @uapkg/package-manifest-schema@1.3.2
+  - @uapkg/registry-schema@1.3.2
+
 ## 1.3.1
 
 ### Patch Changes

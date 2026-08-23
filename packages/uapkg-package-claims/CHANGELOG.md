@@ -1,5 +1,15 @@
 # @uapkg/package-claims
 
+## 1.3.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @uapkg/common-schema@1.3.2
+  - @uapkg/diagnostics@1.3.2
+  - @uapkg/package-manifest-schema@1.3.2
+  - @uapkg/registry-schema@1.3.2
+
 ## 1.3.1
 
 ### Patch Changes
