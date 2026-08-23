@@ -36,3 +36,6 @@ jobs:
           publish: vp run release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # The artifacts were built and verified above. Avoid concurrent pnpm publish
+          # hooks rebuilding and cleaning the same workspace package outputs.
+          PNPM_CONFIG_IGNORE_SCRIPTS: 'true'
