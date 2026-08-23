@@ -1,5 +1,15 @@
 # @uapkg/common
 
+## 1.3.1
+
+### Patch Changes
+
+- [`3e8fc87`](https://github.com/MaximDevoir/uapkg/commit/3e8fc87e928eabd48315ac71f6030955b322a3b5) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Internal migration to Vite+
+
+- Updated dependencies [[`1b0e624`](https://github.com/MaximDevoir/uapkg/commit/1b0e624c8f78a1c496cef389838948e94f742c7f), [`2a3f4de`](https://github.com/MaximDevoir/uapkg/commit/2a3f4de35497b34d02414413bc64dafb587044a2), [`3e8fc87`](https://github.com/MaximDevoir/uapkg/commit/3e8fc87e928eabd48315ac71f6030955b322a3b5)]:
+  - @uapkg/diagnostics@1.3.1
+  - @uapkg/common-schema@1.3.1
+
 ## 1.3.0
 
 ### Patch Changes

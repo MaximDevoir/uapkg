@@ -1,5 +1,13 @@
 # @uapkg/diagnostics
 
+## 1.3.1
+
+### Patch Changes
+
+- [`1b0e624`](https://github.com/MaximDevoir/uapkg/commit/1b0e624c8f78a1c496cef389838948e94f742c7f) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Render synchronous publish submission failures as typed, actionable diagnostics with validated context and recovery resources.
+
+- [`3e8fc87`](https://github.com/MaximDevoir/uapkg/commit/3e8fc87e928eabd48315ac71f6030955b322a3b5) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Internal migration to Vite+
+
 ## 1.3.0
 
 ## 1.2.0
