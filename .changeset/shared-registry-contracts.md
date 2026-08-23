@@ -1,9 +1,9 @@
 ---
 '@uapkg/common-schema': patch
 '@uapkg/config': patch
-'@uapkg/package-claims': minor
-'@uapkg/package-manifest-schema': minor
-'@uapkg/registry-schema': minor
+'@uapkg/package-claims': patch
+'@uapkg/package-manifest-schema': patch
+'@uapkg/registry-schema': patch
 '@uapkg/registry-core': patch
 '@uapkg/package-manifest': patch
 '@uapkg/installer': patch
