@@ -1,7 +1,7 @@
-import type { CompositionRoot } from '../app/CompositionRoot.js';
-import type { UAPKGOutputFormat } from '../cli/UAPKGCommandLine.js';
-import { describeControlPlaneError } from '../control-plane/AccountManager.js';
-import type { Command } from './Command.js';
+import type { CompositionRoot } from '../app/CompositionRoot.ts';
+import type { UAPKGOutputFormat } from '../cli/UAPKGCommandLine.ts';
+import { describeControlPlaneError } from '../control-plane/AccountManager.ts';
+import type { Command } from './Command.ts';
 
 export interface LogoutCommandOptions {
   readonly registry?: string;

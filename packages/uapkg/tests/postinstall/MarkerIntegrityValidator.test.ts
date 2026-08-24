@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { MarkerIntegrityValidator } from '../../src/postinstall/markers/MarkerIntegrityValidator.js';
+import { MarkerIntegrityValidator } from '../../src/postinstall/markers/MarkerIntegrityValidator.ts';
 
 const v = new MarkerIntegrityValidator();
 const PLUGIN = 'plug';

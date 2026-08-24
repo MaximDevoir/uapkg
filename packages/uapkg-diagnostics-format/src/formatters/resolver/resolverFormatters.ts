@@ -1,5 +1,5 @@
 import type { CircularDepDiagnostic, Diagnostic, VersionConflictDiagnostic } from '@uapkg/diagnostics';
-import type { FormatterMap } from '../../contracts/FormatterTypes.js';
+import type { FormatterMap } from '../../contracts/FormatterTypes.ts';
 
 function formatVersionConflict(d: Diagnostic): string {
   const data = (d as VersionConflictDiagnostic).data;

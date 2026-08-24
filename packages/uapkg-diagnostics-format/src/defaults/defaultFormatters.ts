@@ -1,15 +1,15 @@
-import type { FormatterMap } from '../contracts/FormatterTypes.js';
-import { configFormatters } from '../formatters/config/configFormatters.js';
-import { installerFormatters } from '../formatters/installer/installerFormatters.js';
-import { manifestFormatters } from '../formatters/manifest/manifestFormatters.js';
-import { packFormatters } from '../formatters/pack/packFormatters.js';
-import { postinstallFormatters } from '../formatters/postinstall/postinstallFormatters.js';
-import { publishingFormatters } from '../formatters/publishing/publishingFormatters.js';
-import { registryFormatters } from '../formatters/registry/registryFormatters.js';
-import { registryToolsFormatters } from '../formatters/registryTools/registryToolsFormatters.js';
-import { resolverFormatters } from '../formatters/resolver/resolverFormatters.js';
-import { safetyFormatters } from '../formatters/safety/safetyFormatters.js';
-import { specFormatters } from '../formatters/spec/specFormatters.js';
+import type { FormatterMap } from '../contracts/FormatterTypes.ts';
+import { configFormatters } from '../formatters/config/configFormatters.ts';
+import { installerFormatters } from '../formatters/installer/installerFormatters.ts';
+import { manifestFormatters } from '../formatters/manifest/manifestFormatters.ts';
+import { packFormatters } from '../formatters/pack/packFormatters.ts';
+import { postinstallFormatters } from '../formatters/postinstall/postinstallFormatters.ts';
+import { publishingFormatters } from '../formatters/publishing/publishingFormatters.ts';
+import { registryFormatters } from '../formatters/registry/registryFormatters.ts';
+import { registryToolsFormatters } from '../formatters/registryTools/registryToolsFormatters.ts';
+import { resolverFormatters } from '../formatters/resolver/resolverFormatters.ts';
+import { safetyFormatters } from '../formatters/safety/safetyFormatters.ts';
+import { specFormatters } from '../formatters/spec/specFormatters.ts';
 
 /**
  * Merged map of all built-in formatters across families.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { UAPKGCommandLineParser } from '../../src/cli/parsing/UAPKGCommandLineParser.js';
+import { UAPKGCommandLineParser } from '../../src/cli/parsing/UAPKGCommandLineParser.ts';
 
 describe('UAPKG registry command parsing', () => {
   it.each(['auth', 'refresh'] as const)('parses registry %s with an optional alias and JSON output', async (action) => {

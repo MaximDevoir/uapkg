@@ -1,5 +1,5 @@
 import path from 'node:path';
-import type { CollectedFile } from '../contracts/PackTypes.js';
+import type { CollectedFile } from '../contracts/PackTypes.ts';
 
 /**
  * Computes generated artifact paths that should never be re-packed.

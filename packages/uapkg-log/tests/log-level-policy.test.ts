@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
-import { LogLevelPolicy } from '../src/core/LogLevelPolicy';
+import { LogLevelPolicy } from '../src/core/LogLevelPolicy.ts';
 
 describe('LogLevelPolicy', () => {
   it('prioritizes verbose over quiet', () => {

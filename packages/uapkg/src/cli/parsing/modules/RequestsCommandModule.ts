@@ -1,6 +1,6 @@
 import type { Argv } from 'yargs';
-import { createUAPKGCommandLineFactory, type UAPKGRegistryRequestStatus } from '../../UAPKGCommandLine.js';
-import type { CommandLineSink, UAPKGCommandModule } from '../contracts/UAPKGCommandModule.js';
+import { createUAPKGCommandLineFactory, type UAPKGRegistryRequestStatus } from '../../UAPKGCommandLine.ts';
+import type { CommandLineSink, UAPKGCommandModule } from '../contracts/UAPKGCommandModule.ts';
 
 const REQUEST_STATUSES = [
   'queued',

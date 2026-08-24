@@ -1,5 +1,5 @@
 import type { LockDependency, Lockfile } from '@uapkg/package-manifest-schema';
-import type { PackageNode, ResolvedGraph } from '../contracts/ManifestTypes.js';
+import type { PackageNode, ResolvedGraph } from '../contracts/ManifestTypes.ts';
 
 /**
  * Produces a `Lockfile` from a resolved dependency graph.

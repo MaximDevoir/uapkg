@@ -5,14 +5,14 @@ import {
   type Result,
 } from '@uapkg/diagnostics';
 import type { PackageRegistryManifest, RegistryVersion } from '@uapkg/registry-schema';
-import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.js';
+import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
 import type {
   RegistryMutationPlan,
   RemovePackageVersionRequest,
   ResolvedRegistryToolsPolicy,
-} from '../contracts/RegistryToolsTypes.js';
-import type { ManifestStore } from '../io/ManifestStore.js';
-import type { RegistryRepoPaths } from '../paths/RegistryRepoPaths.js';
+} from '../contracts/RegistryToolsTypes.ts';
+import type { ManifestStore } from '../io/ManifestStore.ts';
+import type { RegistryRepoPaths } from '../paths/RegistryRepoPaths.ts';
 
 /**
  * Plans the removal of a single version from a package.

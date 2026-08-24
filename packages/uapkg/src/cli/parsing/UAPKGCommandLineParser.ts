@@ -1,8 +1,8 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { UAPKG_BUILD_METADATA } from '../../build/BuildMetadata.js';
-import type { UAPKGCommandLine } from '../UAPKGCommandLine.js';
-import { UAPKGParserRegistry } from './UAPKGParserRegistry.js';
+import { UAPKG_BUILD_METADATA } from '../../build/BuildMetadata.ts';
+import type { UAPKGCommandLine } from '../UAPKGCommandLine.ts';
+import { UAPKGParserRegistry } from './UAPKGParserRegistry.ts';
 
 export class UAPKGCommandLineParser {
   constructor(private readonly registry = new UAPKGParserRegistry()) {}

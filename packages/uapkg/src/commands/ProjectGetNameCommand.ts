@@ -1,6 +1,6 @@
 import { ManifestReader } from '@uapkg/package-manifest';
-import type { CompositionRoot } from '../app/CompositionRoot.js';
-import type { Command } from './Command.js';
+import type { CompositionRoot } from '../app/CompositionRoot.ts';
+import type { Command } from './Command.ts';
 
 /**
  * Options for {@link ProjectGetNameCommand}. Reserved for future expansion

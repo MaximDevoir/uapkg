@@ -13,8 +13,8 @@ import {
   type LoginProgressEvent,
   LoopbackAuthorizationReceiver,
   loginDiagnosticForError,
-} from '../../src/control-plane/AccountManager.js';
-import type { AuthMetadataStore } from '../../src/control-plane/AuthMetadataStore.js';
+} from '../../src/control-plane/AccountManager.ts';
+import type { AuthMetadataStore } from '../../src/control-plane/AuthMetadataStore.ts';
 import {
   ControlPlaneError,
   OAuthScopeInsufficientError,
@@ -22,10 +22,10 @@ import {
   type RegistryGrantMetadata,
   type RegistryTrust,
   UAPKG_CLI_SCOPES,
-} from '../../src/control-plane/ControlPlaneTypes.js';
-import { CredentialStore } from '../../src/control-plane/CredentialStore.js';
-import { DPoPKeyStore } from '../../src/control-plane/DPoPKeyStore.js';
-import { FileRegistryGrantLock, type RegistryGrantLock } from '../../src/control-plane/RegistryGrantLock.js';
+} from '../../src/control-plane/ControlPlaneTypes.ts';
+import { CredentialStore } from '../../src/control-plane/CredentialStore.ts';
+import { DPoPKeyStore } from '../../src/control-plane/DPoPKeyStore.ts';
+import { FileRegistryGrantLock, type RegistryGrantLock } from '../../src/control-plane/RegistryGrantLock.ts';
 
 const trust: RegistryTrust = {
   alias: 'official',

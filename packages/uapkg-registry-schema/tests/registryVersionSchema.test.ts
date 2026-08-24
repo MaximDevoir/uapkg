@@ -6,7 +6,7 @@ import {
   PackageRegistryManifestSchema,
   RegistryMetaSchema,
   RegistryVersionSchema,
-} from '../src/index.js';
+} from '../src/index.ts';
 
 const versionRecord = {
   gitTree: 'a'.repeat(40),

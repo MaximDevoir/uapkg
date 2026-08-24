@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { redactRegistryUrlSecrets, sanitizeRegistryUrlForDisplay } from '../src/registry/RegistryUrlSanitizer.js';
+import { redactRegistryUrlSecrets, sanitizeRegistryUrlForDisplay } from '../src/registry/RegistryUrlSanitizer.ts';
 
 describe('registry URL diagnostic safety', () => {
   it('fails closed for a malformed HTTP coordinate', () => {

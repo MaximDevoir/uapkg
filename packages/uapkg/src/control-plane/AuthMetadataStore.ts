@@ -3,9 +3,9 @@ import { existsSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { z } from 'zod';
-import { resolveAuthStoragePaths } from './AuthStoragePaths.js';
-import type { AuthMetadataFile, RegistryGrantMetadata } from './ControlPlaneTypes.js';
-import { FileRegistryGrantLock, type RegistryGrantLock } from './RegistryGrantLock.js';
+import { resolveAuthStoragePaths } from './AuthStoragePaths.ts';
+import type { AuthMetadataFile, RegistryGrantMetadata } from './ControlPlaneTypes.ts';
+import { FileRegistryGrantLock, type RegistryGrantLock } from './RegistryGrantLock.ts';
 
 const AUTH_METADATA_LOCK_NAMESPACE = 'urn:uapkg:auth-metadata';
 

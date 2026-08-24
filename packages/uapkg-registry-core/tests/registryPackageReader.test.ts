@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
-import { getRegistryRepoPath } from '../src/paths/RegistryPaths.js';
-import { RegistryPackageReader } from '../src/registry/RegistryPackageReader.js';
+import { getRegistryRepoPath } from '../src/paths/RegistryPaths.ts';
+import { RegistryPackageReader } from '../src/registry/RegistryPackageReader.ts';
 
 const shortId = 'schema-context-test';
 const previousProfileHome = process.env[INTERNAL_PROFILE_HOME_ENV];

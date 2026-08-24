@@ -1,6 +1,6 @@
 import { createParseErrorDiagnostic, fail, ok, type Result } from '@uapkg/diagnostics';
 import type { ZodType } from 'zod';
-import { getConfigSchemaRuntime } from './runtime/ConfigSchemaRuntimeProvider.js';
+import { getConfigSchemaRuntime } from './runtime/ConfigSchemaRuntimeProvider.ts';
 
 const runtime = getConfigSchemaRuntime();
 

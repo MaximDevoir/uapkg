@@ -1,16 +1,16 @@
-import type { ConfigDiagnostic } from './config/ConfigDiagnostics.js';
-import type { ControlPlaneDiagnostic } from './controlPlane/ControlPlaneDiagnostics.js';
-import type { GeneralDiagnostic } from './general/GeneralDiagnostics.js';
-import type { InstallerDiagnostic } from './installer/InstallerDiagnostics.js';
-import type { ManifestDiagnostic } from './manifest/ManifestDiagnostics.js';
-import type { PackDiagnostic } from './pack/PackDiagnostics.js';
-import type { PostinstallDiagnostic } from './postinstall/PostinstallDiagnostics.js';
-import type { PublishingDiagnostic } from './publishing/PublishingDiagnostics.js';
-import type { RegistryDiagnostic } from './registry/RegistryDiagnostics.js';
-import type { RegistryToolsDiagnostic } from './registryTools/RegistryToolsDiagnostics.js';
-import type { ResolverDiagnostic } from './resolver/ResolverDiagnostics.js';
-import type { SafetyDiagnostic } from './safety/SafetyDiagnostics.js';
-import type { SpecParseDiagnostic } from './spec/SpecDiagnostics.js';
+import type { ConfigDiagnostic } from './config/ConfigDiagnostics.ts';
+import type { ControlPlaneDiagnostic } from './controlPlane/ControlPlaneDiagnostics.ts';
+import type { GeneralDiagnostic } from './general/GeneralDiagnostics.ts';
+import type { InstallerDiagnostic } from './installer/InstallerDiagnostics.ts';
+import type { ManifestDiagnostic } from './manifest/ManifestDiagnostics.ts';
+import type { PackDiagnostic } from './pack/PackDiagnostics.ts';
+import type { PostinstallDiagnostic } from './postinstall/PostinstallDiagnostics.ts';
+import type { PublishingDiagnostic } from './publishing/PublishingDiagnostics.ts';
+import type { RegistryDiagnostic } from './registry/RegistryDiagnostics.ts';
+import type { RegistryToolsDiagnostic } from './registryTools/RegistryToolsDiagnostics.ts';
+import type { ResolverDiagnostic } from './resolver/ResolverDiagnostics.ts';
+import type { SafetyDiagnostic } from './safety/SafetyDiagnostics.ts';
+import type { SpecParseDiagnostic } from './spec/SpecDiagnostics.ts';
 
 /**
  * The unified Diagnostic type — a discriminated union of every known

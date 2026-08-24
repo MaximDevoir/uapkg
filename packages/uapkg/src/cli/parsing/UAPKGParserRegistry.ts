@@ -1,24 +1,24 @@
 import type { Argv } from 'yargs';
-import type { UAPKGCommandLine } from '../UAPKGCommandLine.js';
-import type { UAPKGCommandModule } from './contracts/UAPKGCommandModule.js';
-import { AddCommandModule } from './modules/AddCommandModule.js';
-import { ConfigCommandModule } from './modules/ConfigCommandModule.js';
-import { InitCommandModule } from './modules/InitCommandModule.js';
-import { InstallCommandModule } from './modules/InstallCommandModule.js';
-import { LifecycleCommandModule } from './modules/LifecycleCommandModule.js';
-import { ListCommandModule } from './modules/ListCommandModule.js';
-import { LoginCommandModule } from './modules/LoginCommandModule.js';
-import { LogoutCommandModule } from './modules/LogoutCommandModule.js';
-import { OutdatedCommandModule } from './modules/OutdatedCommandModule.js';
-import { PackCommandModule } from './modules/PackCommandModule.js';
-import { ProjectGetNameCommandModule } from './modules/ProjectGetNameCommandModule.js';
-import { PublishCommandModule } from './modules/PublishCommandModule.js';
-import { RegistryCommandModule } from './modules/RegistryCommandModule.js';
-import { RemoveCommandModule } from './modules/RemoveCommandModule.js';
-import { RequestsCommandModule } from './modules/RequestsCommandModule.js';
-import { UpdateCommandModule } from './modules/UpdateCommandModule.js';
-import { WhoamiCommandModule } from './modules/WhoamiCommandModule.js';
-import { WhyCommandModule } from './modules/WhyCommandModule.js';
+import type { UAPKGCommandLine } from '../UAPKGCommandLine.ts';
+import type { UAPKGCommandModule } from './contracts/UAPKGCommandModule.ts';
+import { AddCommandModule } from './modules/AddCommandModule.ts';
+import { ConfigCommandModule } from './modules/ConfigCommandModule.ts';
+import { InitCommandModule } from './modules/InitCommandModule.ts';
+import { InstallCommandModule } from './modules/InstallCommandModule.ts';
+import { LifecycleCommandModule } from './modules/LifecycleCommandModule.ts';
+import { ListCommandModule } from './modules/ListCommandModule.ts';
+import { LoginCommandModule } from './modules/LoginCommandModule.ts';
+import { LogoutCommandModule } from './modules/LogoutCommandModule.ts';
+import { OutdatedCommandModule } from './modules/OutdatedCommandModule.ts';
+import { PackCommandModule } from './modules/PackCommandModule.ts';
+import { ProjectGetNameCommandModule } from './modules/ProjectGetNameCommandModule.ts';
+import { PublishCommandModule } from './modules/PublishCommandModule.ts';
+import { RegistryCommandModule } from './modules/RegistryCommandModule.ts';
+import { RemoveCommandModule } from './modules/RemoveCommandModule.ts';
+import { RequestsCommandModule } from './modules/RequestsCommandModule.ts';
+import { UpdateCommandModule } from './modules/UpdateCommandModule.ts';
+import { WhoamiCommandModule } from './modules/WhoamiCommandModule.ts';
+import { WhyCommandModule } from './modules/WhyCommandModule.ts';
 
 export class UAPKGParserRegistry {
   constructor(

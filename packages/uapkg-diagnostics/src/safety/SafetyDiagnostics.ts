@@ -1,4 +1,4 @@
-import type { DiagnosticBase } from '../base/Diagnostic.js';
+import type { DiagnosticBase } from '../base/Diagnostic.ts';
 
 // ---------------------------------------------------------------------------
 // Safety diagnostic codes — emitted by @uapkg/installer's SafetyPolicy layer.

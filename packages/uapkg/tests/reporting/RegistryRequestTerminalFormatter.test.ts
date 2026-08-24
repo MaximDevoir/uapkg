@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import type { RegistryRequestDetail } from '../../src/control-plane/ControlPlaneTypes.js';
-import { formatRegistryRequestTerminal } from '../../src/reporting/RegistryRequestTerminalFormatter.js';
+import type { RegistryRequestDetail } from '../../src/control-plane/ControlPlaneTypes.ts';
+import { formatRegistryRequestTerminal } from '../../src/reporting/RegistryRequestTerminalFormatter.ts';
 
 const failedDetail: RegistryRequestDetail = {
   request: {

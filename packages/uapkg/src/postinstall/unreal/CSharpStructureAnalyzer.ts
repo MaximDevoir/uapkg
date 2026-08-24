@@ -1,5 +1,5 @@
-import type { CSharpFileKind, ParsedClass, ParsedConstructor, ParsedCSharpFile } from './CSharpStructures.js';
-import { PrettyParseError } from './PrettyParseError.js';
+import type { CSharpFileKind, ParsedClass, ParsedConstructor, ParsedCSharpFile } from './CSharpStructures.ts';
+import { PrettyParseError } from './PrettyParseError.ts';
 
 const CLASS_REGEX = /\bclass\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*([^{\r\n]+)/g;
 

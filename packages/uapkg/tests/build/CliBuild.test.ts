@@ -13,7 +13,7 @@ import {
   verifyBuiltCli,
   verifyProductionBuild,
   writeBuildArtifacts,
-} from '../../build/CliBuild.js';
+} from '../../build/CliBuild.ts';
 
 const temporaryDirectories: string[] = [];
 

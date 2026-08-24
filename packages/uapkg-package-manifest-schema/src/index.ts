@@ -3,9 +3,9 @@
 // ---------------------------------------------------------------------------
 
 // Lockfile schemas
-export { type LockDependency, LockDependencySchema } from './lockfile/LockDependencySchema.js';
-export { type Lockfile, LockfileSchema } from './lockfile/LockfileSchema.js';
-export { type BaseManifest, BaseManifestSchema } from './manifest/BaseManifestSchema.js';
+export { type LockDependency, LockDependencySchema } from './lockfile/LockDependencySchema.ts';
+export { type Lockfile, LockfileSchema } from './lockfile/LockfileSchema.ts';
+export { type BaseManifest, BaseManifestSchema } from './manifest/BaseManifestSchema.ts';
 // Manifest schemas
 export {
   type Dependency,
@@ -18,14 +18,14 @@ export {
   normalizeDependencyRecord,
   toDependencyDeclaration,
   toDependencyRecordDeclaration,
-} from './manifest/DependencySchema.js';
-export { type ManifestKind, ManifestKindSchema } from './manifest/ManifestKind.js';
-export { type Manifest, ManifestSchema } from './manifest/ManifestSchema.js';
-export { type PluginManifest, PluginManifestSchema } from './manifest/PluginManifestSchema.js';
+} from './manifest/DependencySchema.ts';
+export { type ManifestKind, ManifestKindSchema } from './manifest/ManifestKind.ts';
+export { type Manifest, ManifestSchema } from './manifest/ManifestSchema.ts';
+export { type PluginManifest, PluginManifestSchema } from './manifest/PluginManifestSchema.ts';
 export {
   type ProjectManifest,
   ProjectManifestSchema,
   type ProjectPostinstall,
   ProjectPostinstallSchema,
-} from './manifest/ProjectManifestSchema.js';
-export { type Publish, PublishSchema } from './manifest/PublishSchema.js';
+} from './manifest/ProjectManifestSchema.ts';
+export { type Publish, PublishSchema } from './manifest/PublishSchema.ts';

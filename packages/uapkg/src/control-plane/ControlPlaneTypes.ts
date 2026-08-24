@@ -1,4 +1,4 @@
-import { UAPKG_CONTROL_PLANE_ENDPOINTS } from './ControlPlaneEndpoints.js';
+import { UAPKG_CONTROL_PLANE_ENDPOINTS } from './ControlPlaneEndpoints.ts';
 
 export const UAPKG_AUTHORIZATION_ISSUER = UAPKG_CONTROL_PLANE_ENDPOINTS.issuer;
 export const UAPKG_CONTROL_PLANE_API = UAPKG_CONTROL_PLANE_ENDPOINTS.apiBaseUrl;

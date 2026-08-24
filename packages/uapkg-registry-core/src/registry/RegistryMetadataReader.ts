@@ -9,8 +9,8 @@ import {
   ok,
   type Result,
 } from '@uapkg/diagnostics';
-import type { RegistryMetadata } from '../contracts/RegistryCoreTypes.js';
-import { getRegistryMetadataPath } from '../paths/RegistryPaths.js';
+import type { RegistryMetadata } from '../contracts/RegistryCoreTypes.ts';
+import { getRegistryMetadataPath } from '../paths/RegistryPaths.ts';
 
 /**
  * Read and write `registry.json` metadata for a local registry cache.

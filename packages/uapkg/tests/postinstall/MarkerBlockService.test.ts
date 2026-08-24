@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { MarkerBlockService } from '../../src/postinstall/markers/MarkerBlockService.js';
+import { MarkerBlockService } from '../../src/postinstall/markers/MarkerBlockService.ts';
 
 const svc = new MarkerBlockService();
 const PLUGIN = 'plug';

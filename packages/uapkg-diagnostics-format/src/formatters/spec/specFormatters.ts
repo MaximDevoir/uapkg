@@ -4,7 +4,7 @@ import type {
   InvalidPackageSpecDiagnostic,
   InvalidVersionRangeDiagnostic,
 } from '@uapkg/diagnostics';
-import type { FormatterMap } from '../../contracts/FormatterTypes.js';
+import type { FormatterMap } from '../../contracts/FormatterTypes.ts';
 
 function formatInvalidPackageSpec(d: Diagnostic): string {
   const data = (d as InvalidPackageSpecDiagnostic).data;

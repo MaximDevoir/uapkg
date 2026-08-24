@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
-import { PackageLifecycleCommand } from '../../src/commands/PackageLifecycleCommand.js';
-import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSelector.js';
-import { type RegistryTrust, UAPKG_CONTROL_PLANE_API } from '../../src/control-plane/ControlPlaneTypes.js';
-import { PublishIdempotencyStore } from '../../src/control-plane/PublishIdempotencyStore.js';
+import type { CompositionRoot } from '../../src/app/CompositionRoot.ts';
+import { PackageLifecycleCommand } from '../../src/commands/PackageLifecycleCommand.ts';
+import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSelector.ts';
+import { type RegistryTrust, UAPKG_CONTROL_PLANE_API } from '../../src/control-plane/ControlPlaneTypes.ts';
+import { PublishIdempotencyStore } from '../../src/control-plane/PublishIdempotencyStore.ts';
 
 function requestUrl(input: string | URL | Request): string {
   if (typeof input === 'string') return input;

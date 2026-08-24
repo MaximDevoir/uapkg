@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import { createIoErrorDiagnostic, fail, ok, type Result } from '@uapkg/diagnostics';
-import type { ZoneDefinition } from '../api/PostinstallDsl.js';
-import { MarkerBlockEditor } from '../markers/MarkerBlockEditor.js';
-import { CSharpInjectionEngine } from './CSharpInjectionEngine.js';
-import { CSharpStructureAnalyzer } from './CSharpStructureAnalyzer.js';
-import { CSharpWrapperFactory } from './CSharpWrapperFactory.js';
-import { getWrapperClassName } from './PluginHash.js';
+import type { ZoneDefinition } from '../api/PostinstallDsl.ts';
+import { MarkerBlockEditor } from '../markers/MarkerBlockEditor.ts';
+import { CSharpInjectionEngine } from './CSharpInjectionEngine.ts';
+import { CSharpStructureAnalyzer } from './CSharpStructureAnalyzer.ts';
+import { CSharpWrapperFactory } from './CSharpWrapperFactory.ts';
+import { getWrapperClassName } from './PluginHash.ts';
 
 const BUILD_CS_ZONES = ['module-includes', 'module-class-body', 'module-constructor'] as const;
 

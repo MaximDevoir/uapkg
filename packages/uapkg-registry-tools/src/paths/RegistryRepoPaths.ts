@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import type { PackageName } from '@uapkg/common-schema';
 import { getRegistryPackagePathSegments } from '@uapkg/registry-schema';
-import { REGISTRY_TOOLS_PACKAGES_DIR } from '../contracts/RegistryToolsTypes.js';
+import { REGISTRY_TOOLS_PACKAGES_DIR } from '../contracts/RegistryToolsTypes.ts';
 
 /**
  * Pure path helpers for the registry repo layout used by `@uapkg/registry-tools`.

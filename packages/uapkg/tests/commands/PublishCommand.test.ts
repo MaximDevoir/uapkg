@@ -7,12 +7,12 @@ import type { Manifest } from '@uapkg/package-manifest-schema';
 import { getRegistryRepoPath } from '@uapkg/registry-core';
 import { c as createTar } from 'tar';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
-import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
-import { PublishCommand, readTrustedRegistryType } from '../../src/commands/PublishCommand.js';
-import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSelector.js';
-import { ControlPlaneClient } from '../../src/control-plane/ControlPlaneClient.js';
-import { ControlPlaneError, type RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';
-import { createGitHubActionsPublishIdempotencyKey } from '../../src/control-plane/PublishIdempotencyStore.js';
+import type { CompositionRoot } from '../../src/app/CompositionRoot.ts';
+import { PublishCommand, readTrustedRegistryType } from '../../src/commands/PublishCommand.ts';
+import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSelector.ts';
+import { ControlPlaneClient } from '../../src/control-plane/ControlPlaneClient.ts';
+import { ControlPlaneError, type RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.ts';
+import { createGitHubActionsPublishIdempotencyKey } from '../../src/control-plane/PublishIdempotencyStore.ts';
 
 const cleanups: string[] = [];
 let profileHome: string;

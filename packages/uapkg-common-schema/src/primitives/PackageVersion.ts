@@ -1,6 +1,6 @@
 import { parse as parseSemver } from 'semver';
 import { z } from 'zod';
-import type { Brand } from '../brand/Brand.js';
+import type { Brand } from '../brand/Brand.ts';
 
 /**
  * Branded type for a valid semver v2 version string (no `v` or `=` prefix).

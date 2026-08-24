@@ -1,8 +1,8 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
 import { Box } from 'ink';
 import type { ReactElement } from 'react';
-import type { IDiagnosticInkRegistry } from '../contracts/InkTypes.js';
-import { DiagnosticView } from './DiagnosticView.js';
+import type { IDiagnosticInkRegistry } from '../contracts/InkTypes.ts';
+import { DiagnosticView } from './DiagnosticView.tsx';
 
 export interface DiagnosticsListViewProps {
   readonly diagnostics: readonly Diagnostic[];

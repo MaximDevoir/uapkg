@@ -7,45 +7,45 @@
 // this barrel only.
 // ---------------------------------------------------------------------------
 
-export { definePostinstall } from './api/definePostinstall.js';
+export { definePostinstall } from './api/definePostinstall.ts';
 // API
-export type { PostinstallDefinition, ProjectSetupDefinition, ZoneDefinition } from './api/PostinstallDsl.js';
-export { PostinstallDefinitionSchema, ProjectSetupSchema, ZoneSchema } from './api/PostinstallDsl.js';
+export type { PostinstallDefinition, ProjectSetupDefinition, ZoneDefinition } from './api/PostinstallDsl.ts';
+export { PostinstallDefinitionSchema, ProjectSetupSchema, ZoneSchema } from './api/PostinstallDsl.ts';
 
 // Loader
-export { EntryResolver, type PostinstallEntryKind, type ResolvedEntry } from './loader/EntryResolver.js';
-export { EsbuildTranspiler } from './loader/EsbuildTranspiler.js';
-export { ExportValidator } from './loader/ExportValidator.js';
-export { ModuleImporter, type ModuleSource } from './loader/ModuleImporter.js';
-export { type LoadedPostinstall, PostinstallLoader } from './loader/PostinstallLoader.js';
+export { EntryResolver, type PostinstallEntryKind, type ResolvedEntry } from './loader/EntryResolver.ts';
+export { EsbuildTranspiler } from './loader/EsbuildTranspiler.ts';
+export { ExportValidator } from './loader/ExportValidator.ts';
+export { ModuleImporter, type ModuleSource } from './loader/ModuleImporter.ts';
+export { type LoadedPostinstall, PostinstallLoader } from './loader/PostinstallLoader.ts';
 // Markers
-export { MarkerBlockEditor } from './markers/MarkerBlockEditor.js';
-export { MarkerBlockService } from './markers/MarkerBlockService.js';
+export { MarkerBlockEditor } from './markers/MarkerBlockEditor.ts';
+export { MarkerBlockService } from './markers/MarkerBlockService.ts';
 export {
   type MarkerIntegrityFail,
   type MarkerIntegrityOk,
   type MarkerIntegrityResult,
   MarkerIntegrityValidator,
-} from './markers/MarkerIntegrityValidator.js';
+} from './markers/MarkerIntegrityValidator.ts';
 // Policy
-export { type PolicyConfigReader, type PolicyDecision, PostinstallPolicyGate } from './policy/PostinstallPolicyGate.js';
+export { type PolicyConfigReader, type PolicyDecision, PostinstallPolicyGate } from './policy/PostinstallPolicyGate.ts';
 // Runner
 export {
   type PostinstallCandidate,
   PostinstallOrchestrator,
   type PostinstallOrchestratorInput,
   type PostinstallReport,
-} from './runner/PostinstallOrchestrator.js';
+} from './runner/PostinstallOrchestrator.ts';
 // Unreal
-export { BuildCsInjector } from './unreal/BuildCsInjector.js';
-export { CSharpInjectionEngine } from './unreal/CSharpInjectionEngine.js';
-export { CSharpStructureAnalyzer } from './unreal/CSharpStructureAnalyzer.js';
-export type { CSharpFileKind, ParsedClass, ParsedConstructor, ParsedCSharpFile } from './unreal/CSharpStructures.js';
-export { CSharpWrapperFactory, type WrapperContextType } from './unreal/CSharpWrapperFactory.js';
-export { getPluginHash, getWrapperClassName } from './unreal/PluginHash.js';
-export { PrettyParseError } from './unreal/PrettyParseError.js';
-export { ProjectFileLocator } from './unreal/ProjectFileLocator.js';
-export { TargetCsInjector } from './unreal/TargetCsInjector.js';
-export { type SourceCatalog, UnrealSourceCatalogBuilder } from './unreal/UnrealSourceCatalog.js';
-export { UProjectInjector } from './unreal/UProjectInjector.js';
-export { UProjectMetadataReader } from './unreal/UProjectMetadataReader.js';
+export { BuildCsInjector } from './unreal/BuildCsInjector.ts';
+export { CSharpInjectionEngine } from './unreal/CSharpInjectionEngine.ts';
+export { CSharpStructureAnalyzer } from './unreal/CSharpStructureAnalyzer.ts';
+export type { CSharpFileKind, ParsedClass, ParsedConstructor, ParsedCSharpFile } from './unreal/CSharpStructures.ts';
+export { CSharpWrapperFactory, type WrapperContextType } from './unreal/CSharpWrapperFactory.ts';
+export { getPluginHash, getWrapperClassName } from './unreal/PluginHash.ts';
+export { PrettyParseError } from './unreal/PrettyParseError.ts';
+export { ProjectFileLocator } from './unreal/ProjectFileLocator.ts';
+export { TargetCsInjector } from './unreal/TargetCsInjector.ts';
+export { type SourceCatalog, UnrealSourceCatalogBuilder } from './unreal/UnrealSourceCatalog.ts';
+export { UProjectInjector } from './unreal/UProjectInjector.ts';
+export { UProjectMetadataReader } from './unreal/UProjectMetadataReader.ts';

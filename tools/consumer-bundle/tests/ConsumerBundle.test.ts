@@ -26,7 +26,7 @@ import {
   verifyBundleFiles,
   verifyCompletePackedClosure,
   type WorkspacePackage,
-} from '../ConsumerBundle';
+} from '../ConsumerBundle.ts';
 
 const temporaryDirectories: string[] = [];
 

@@ -1,6 +1,6 @@
 import type { Diagnostic, DiagnosticCode } from '@uapkg/diagnostics';
-import type { DiagnosticFormatterFn, FormatterMap, IFormatterRegistry } from '../contracts/FormatterTypes.js';
-import { formatPlainText } from '../formatters/PlainTextFormatter.js';
+import type { DiagnosticFormatterFn, FormatterMap, IFormatterRegistry } from '../contracts/FormatterTypes.ts';
+import { formatPlainText } from '../formatters/PlainTextFormatter.ts';
 
 /**
  * Registry that maps diagnostic codes to formatter functions.

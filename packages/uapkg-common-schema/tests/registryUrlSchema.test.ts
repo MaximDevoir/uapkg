@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { RegistryURLSchema } from '../src/index.js';
+import { RegistryURLSchema } from '../src/index.ts';
 
 describe('RegistryURLSchema', () => {
   it.each([

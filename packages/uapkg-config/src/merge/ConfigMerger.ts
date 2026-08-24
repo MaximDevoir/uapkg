@@ -1,6 +1,6 @@
-import type { ConfigLayer, ConfigResolvedResult } from '../contracts/ConfigTypes.js';
-import { partialConfigSchema } from '../schema/configSchema.js';
-import { ConfigSchemaMergeEngine } from './ConfigSchemaMergeEngine.js';
+import type { ConfigLayer, ConfigResolvedResult } from '../contracts/ConfigTypes.ts';
+import { partialConfigSchema } from '../schema/configSchema.ts';
+import { ConfigSchemaMergeEngine } from './ConfigSchemaMergeEngine.ts';
 
 export class ConfigMerger {
   public constructor(private readonly engine = new ConfigSchemaMergeEngine(partialConfigSchema)) {}

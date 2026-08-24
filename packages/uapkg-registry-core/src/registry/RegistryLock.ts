@@ -8,7 +8,7 @@ import {
   ok,
   type Result,
 } from '@uapkg/diagnostics';
-import type { RegistryLockData } from '../contracts/RegistryCoreTypes.js';
+import type { RegistryLockData } from '../contracts/RegistryCoreTypes.ts';
 
 const HEARTBEAT_STALE_SECONDS = 30;
 const HEARTBEAT_INTERVAL_MS = 5_000;

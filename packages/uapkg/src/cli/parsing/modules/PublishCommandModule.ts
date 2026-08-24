@@ -1,6 +1,6 @@
 import type { Argv } from 'yargs';
-import { createUAPKGCommandLineFactory, type UAPKGControlPlaneAuthMode } from '../../UAPKGCommandLine.js';
-import type { CommandLineSink, UAPKGCommandModule } from '../contracts/UAPKGCommandModule.js';
+import { createUAPKGCommandLineFactory, type UAPKGControlPlaneAuthMode } from '../../UAPKGCommandLine.ts';
+import type { CommandLineSink, UAPKGCommandModule } from '../contracts/UAPKGCommandModule.ts';
 
 const AUTH_MODES = ['auto', 'login', 'gat', 'oidc'] as const;
 

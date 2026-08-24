@@ -1,5 +1,5 @@
 import type { Diagnostic, UpluginMissingDiagnostic } from '@uapkg/diagnostics';
-import type { FormatterMap } from '../../contracts/FormatterTypes.js';
+import type { FormatterMap } from '../../contracts/FormatterTypes.ts';
 
 function formatUpluginMissing(diagnostic: Diagnostic): string {
   const data = (diagnostic as UpluginMissingDiagnostic).data;

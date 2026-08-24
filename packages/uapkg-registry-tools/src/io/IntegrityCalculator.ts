@@ -9,8 +9,8 @@ import {
   type Result,
 } from '@uapkg/diagnostics';
 import { type Integrity, IntegritySchema } from '@uapkg/registry-schema';
-import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.js';
-import type { IntegrityAlgorithm, IntegrityVerificationResult } from '../contracts/RegistryToolsTypes.js';
+import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
+import type { IntegrityAlgorithm, IntegrityVerificationResult } from '../contracts/RegistryToolsTypes.ts';
 
 /**
  * Computes and verifies file integrity locally — never reaches the network.

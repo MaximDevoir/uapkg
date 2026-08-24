@@ -9,7 +9,7 @@ import type {
 } from '@uapkg/diagnostics';
 import { Box, Text } from 'ink';
 import type { ReactElement } from 'react';
-import type { DiagnosticBodyProps, DiagnosticInkComponentMap } from '../contracts/InkTypes.js';
+import type { DiagnosticBodyProps, DiagnosticInkComponentMap } from '../contracts/InkTypes.ts';
 
 function NetworkError({ diagnostic }: DiagnosticBodyProps): ReactElement {
   const data = (diagnostic as NetworkErrorDiagnostic).data;

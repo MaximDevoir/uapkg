@@ -1,24 +1,24 @@
 import { randomUUID } from 'node:crypto';
-import type { CompositionRoot } from '../app/CompositionRoot.js';
-import type { UAPKGLifecycleCommandName, UAPKGOutputFormat } from '../cli/UAPKGCommandLine.js';
-import { describeControlPlaneError } from '../control-plane/AccountManager.js';
-import { AuthenticationSelector } from '../control-plane/AuthenticationSelector.js';
-import { ControlPlaneClient } from '../control-plane/ControlPlaneClient.js';
+import type { CompositionRoot } from '../app/CompositionRoot.ts';
+import type { UAPKGLifecycleCommandName, UAPKGOutputFormat } from '../cli/UAPKGCommandLine.ts';
+import { describeControlPlaneError } from '../control-plane/AccountManager.ts';
+import { AuthenticationSelector } from '../control-plane/AuthenticationSelector.ts';
+import { ControlPlaneClient } from '../control-plane/ControlPlaneClient.ts';
 import {
   type ControlPlaneAuthMode,
   ControlPlaneError,
   type RegistryRequestDetail,
   type RegistryRequestStatus,
   type RegistryRequestSubmission,
-} from '../control-plane/ControlPlaneTypes.js';
-import { PublishIdempotencyStore } from '../control-plane/PublishIdempotencyStore.js';
-import { InkPromptService } from '../prompts/InkPromptService.js';
+} from '../control-plane/ControlPlaneTypes.ts';
+import { PublishIdempotencyStore } from '../control-plane/PublishIdempotencyStore.ts';
+import { InkPromptService } from '../prompts/InkPromptService.tsx';
 import {
   formatRegistryRequestTerminal,
   isRegistryRequestSuccessStatus,
   isRegistryRequestTerminalStatus,
-} from '../reporting/RegistryRequestTerminalFormatter.js';
-import type { Command } from './Command.js';
+} from '../reporting/RegistryRequestTerminalFormatter.ts';
+import type { Command } from './Command.ts';
 
 const WATCH_TIMEOUT_MS = 30 * 60 * 1000;
 const REASON_REQUIRED: ReadonlySet<UAPKGLifecycleCommandName> = new Set(['yank', 'unyank', 'unpublish', 'deprecate']);

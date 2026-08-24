@@ -1,7 +1,7 @@
 import type { DownloadStatusSnapshot } from '@uapkg/installer';
 import { describe, expect, it } from 'vite-plus/test';
-import { InstallProgressReporter } from '../../src/reporting/InstallProgressReporter.js';
-import { MemoryTextSink } from '../_fakes/MemoryTextSink.js';
+import { InstallProgressReporter } from '../../src/reporting/InstallProgressReporter.ts';
+import { MemoryTextSink } from '../_fakes/MemoryTextSink.ts';
 
 function snap(bytesDone: number, bytesTotal: number, activeSlots = 1): DownloadStatusSnapshot {
   return {

@@ -2,7 +2,7 @@ import { access, mkdir, mkdtemp, readFile, rm, utimes, writeFile } from 'node:fs
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
-import { FileRegistryGrantLock } from '../../src/control-plane/RegistryGrantLock.js';
+import { FileRegistryGrantLock } from '../../src/control-plane/RegistryGrantLock.ts';
 
 const issuer = 'https://account.uapkg.dev/oauth';
 const registryId = '00000000-0000-4000-a000-000000000020';

@@ -8,7 +8,7 @@ import {
   ok,
   type Result,
 } from '@uapkg/diagnostics';
-import type { CollectedFile } from '../contracts/PackTypes.js';
+import type { CollectedFile } from '../contracts/PackTypes.ts';
 
 export class FileCrawler {
   collect(pluginRoot: string): Result<CollectedFile[]> {

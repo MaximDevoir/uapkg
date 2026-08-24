@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { IntegritySchema } from './IntegritySchema.js';
+import { IntegritySchema } from './IntegritySchema.ts';
 
 /**
  * A downloadable release asset with integrity metadata.

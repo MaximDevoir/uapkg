@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import type { AccountManager } from '../../src/control-plane/AccountManager.js';
-import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSelector.js';
-import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';
-import { GitHubActionsOidcCredentialProvider } from '../../src/control-plane/GitHubActionsOidcCredentialProvider.js';
-import type { PromptService } from '../../src/prompts/PromptService.js';
+import type { AccountManager } from '../../src/control-plane/AccountManager.ts';
+import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSelector.ts';
+import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.ts';
+import { GitHubActionsOidcCredentialProvider } from '../../src/control-plane/GitHubActionsOidcCredentialProvider.ts';
+import type { PromptService } from '../../src/prompts/PromptService.ts';
 
 const trust: RegistryTrust = {
   alias: 'official',

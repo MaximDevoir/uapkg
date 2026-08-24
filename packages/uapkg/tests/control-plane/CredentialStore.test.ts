@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { CredentialStore } from '../../src/control-plane/CredentialStore.js';
+import { CredentialStore } from '../../src/control-plane/CredentialStore.ts';
 
 describe('CredentialStore', () => {
   it('loads the native keyring lazily and never uses a plaintext fallback', async () => {

@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { DevBuildStatusPrinter, resolveUapkgProfileRoots } from '../DevBuildStatusPrinter';
+import { DevBuildStatusPrinter, resolveUapkgProfileRoots } from '../DevBuildStatusPrinter.ts';
 
 afterEach(() => {
   vi.restoreAllMocks();

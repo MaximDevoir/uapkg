@@ -1,6 +1,6 @@
 import { DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
-import type { InstallAction } from '../contracts/InstallerTypes.js';
-import type { SafetyContext, SafetyPolicy } from '../contracts/SafetyPolicyTypes.js';
+import type { InstallAction } from '../contracts/InstallerTypes.ts';
+import type { SafetyContext, SafetyPolicy } from '../contracts/SafetyPolicyTypes.ts';
 
 /**
  * Per-action safety evaluation result.

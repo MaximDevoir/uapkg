@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { BuildService } from '../BuildService';
-import { ProcessRunner } from '../ProcessRunner';
+import { BuildService } from '../BuildService.ts';
+import { ProcessRunner } from '../ProcessRunner.ts';
 
 afterEach(() => {
   vi.restoreAllMocks();

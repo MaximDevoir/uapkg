@@ -2,7 +2,7 @@ import type { ChildProcess, SpawnOptions } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
 import { describe, expect, it, vi } from 'vite-plus/test';
-import { type GitProcessSpawner, GitRunner } from '../src/registry/GitRunner.js';
+import { type GitProcessSpawner, GitRunner } from '../src/registry/GitRunner.ts';
 
 describe('GitRunner', () => {
   it.each([

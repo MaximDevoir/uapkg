@@ -1,4 +1,4 @@
-import type { DiagnosticBase } from '../base/Diagnostic.js';
+import type { DiagnosticBase } from '../base/Diagnostic.ts';
 
 // ---------------------------------------------------------------------------
 // Spec-parse diagnostics (CLI package specifier parsing: `@org/name@range`)

@@ -1,8 +1,8 @@
 import { DiagnosticBag } from '@uapkg/diagnostics';
-import type { ConfigLayer, ConfigLayerBuildResult } from '../contracts/ConfigTypes.js';
-import { ConfigFileRepository } from '../files/ConfigFileRepository.js';
-import { ConfigPathResolver } from '../files/ConfigPathResolver.js';
-import { getDefaultConfig } from '../schema/configSchema.js';
+import type { ConfigLayer, ConfigLayerBuildResult } from '../contracts/ConfigTypes.ts';
+import { ConfigFileRepository } from '../files/ConfigFileRepository.ts';
+import { ConfigPathResolver } from '../files/ConfigPathResolver.ts';
+import { getDefaultConfig } from '../schema/configSchema.ts';
 
 export class ConfigLayerBuilder {
   constructor(

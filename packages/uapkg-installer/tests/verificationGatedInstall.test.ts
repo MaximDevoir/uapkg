@@ -11,7 +11,7 @@ import type { RegistryCore } from '@uapkg/registry-core';
 import { PackageRegistryManifestSchema } from '@uapkg/registry-schema';
 import { c as createTar } from 'tar';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vite-plus/test';
-import { Installer } from '../src/core/Installer.js';
+import { Installer } from '../src/core/Installer.ts';
 
 interface FixtureArtifact {
   readonly url: string;

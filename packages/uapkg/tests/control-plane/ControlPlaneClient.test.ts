@@ -1,14 +1,14 @@
 import * as oauth from 'oauth4webapi';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { describeControlPlaneError } from '../../src/control-plane/AccountManager.js';
-import { ControlPlaneClient, type ControlPlaneCredential } from '../../src/control-plane/ControlPlaneClient.js';
+import { describeControlPlaneError } from '../../src/control-plane/AccountManager.ts';
+import { ControlPlaneClient, type ControlPlaneCredential } from '../../src/control-plane/ControlPlaneClient.ts';
 import {
   ControlPlaneError,
   OAuthScopeInsufficientError,
   OAuthScopeUnsupportedError,
   UAPKG_CONTROL_PLANE_API,
   type UAPKGCliScope,
-} from '../../src/control-plane/ControlPlaneTypes.js';
+} from '../../src/control-plane/ControlPlaneTypes.ts';
 
 function requestUrl(input: string | URL | Request): string {
   if (typeof input === 'string') return input;

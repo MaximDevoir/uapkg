@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BaseManifestSchema } from './BaseManifestSchema.js';
+import { BaseManifestSchema } from './BaseManifestSchema.ts';
 
 /**
  * Plugin manifest — `uapkg.json` for a plugin package.

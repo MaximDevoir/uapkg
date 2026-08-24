@@ -1,8 +1,8 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
-import { DiagnosticDeduplicator } from './DiagnosticDeduplicator.js';
-import type { DiagnosticRenderer } from './DiagnosticRenderer.js';
-import { InkDiagnosticRenderer } from './InkDiagnosticRenderer.js';
-import { sortDiagnostics } from './TextSink.js';
+import { DiagnosticDeduplicator } from './DiagnosticDeduplicator.ts';
+import type { DiagnosticRenderer } from './DiagnosticRenderer.ts';
+import { InkDiagnosticRenderer } from './InkDiagnosticRenderer.ts';
+import { sortDiagnostics } from './TextSink.ts';
 
 /**
  * Human-readable diagnostic reporter.

@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { AuthMetadataStore } from '../../src/control-plane/AuthMetadataStore.js';
-import type { RegistryGrantMetadata } from '../../src/control-plane/ControlPlaneTypes.js';
+import { AuthMetadataStore } from '../../src/control-plane/AuthMetadataStore.ts';
+import type { RegistryGrantMetadata } from '../../src/control-plane/ControlPlaneTypes.ts';
 
 const grant: RegistryGrantMetadata = {
   issuer: 'https://account.uapkg.dev/oauth',

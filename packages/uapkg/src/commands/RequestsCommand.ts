@@ -1,18 +1,18 @@
-import type { CompositionRoot } from '../app/CompositionRoot.js';
-import type { UAPKGOutputFormat } from '../cli/UAPKGCommandLine.js';
-import { describeControlPlaneError } from '../control-plane/AccountManager.js';
-import { ControlPlaneClient } from '../control-plane/ControlPlaneClient.js';
+import type { CompositionRoot } from '../app/CompositionRoot.ts';
+import type { UAPKGOutputFormat } from '../cli/UAPKGCommandLine.ts';
+import { describeControlPlaneError } from '../control-plane/AccountManager.ts';
+import { ControlPlaneClient } from '../control-plane/ControlPlaneClient.ts';
 import {
   ControlPlaneError,
   type RegistryRequestDetail,
   type RegistryRequestStatus,
-} from '../control-plane/ControlPlaneTypes.js';
+} from '../control-plane/ControlPlaneTypes.ts';
 import {
   formatRegistryRequestTerminal,
   isRegistryRequestSuccessStatus,
   isRegistryRequestTerminalStatus,
-} from '../reporting/RegistryRequestTerminalFormatter.js';
-import type { Command } from './Command.js';
+} from '../reporting/RegistryRequestTerminalFormatter.ts';
+import type { Command } from './Command.ts';
 
 export interface RequestsCommandOptions {
   readonly action: 'list' | 'status';

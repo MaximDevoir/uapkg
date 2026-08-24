@@ -1,6 +1,6 @@
 import { createPostinstallMarkerCorruptDiagnostic, fail, ok, type Result } from '@uapkg/diagnostics';
-import { MarkerBlockService } from './MarkerBlockService.js';
-import { MarkerIntegrityValidator } from './MarkerIntegrityValidator.js';
+import { MarkerBlockService } from './MarkerBlockService.ts';
+import { MarkerIntegrityValidator } from './MarkerIntegrityValidator.ts';
 
 /**
  * Higher-level idempotent wrapper around {@link MarkerBlockService}.

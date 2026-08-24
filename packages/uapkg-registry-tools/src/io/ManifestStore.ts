@@ -18,10 +18,10 @@ import {
   PackageRegistryManifestSchema,
   type RegistryVersion,
 } from '@uapkg/registry-schema';
-import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.js';
-import type { WriteManifestResult } from '../contracts/RegistryToolsTypes.js';
-import { sortVersionsNewestFirst } from '../mutation/VersionSorter.js';
-import type { RegistryRepoPaths } from '../paths/RegistryRepoPaths.js';
+import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
+import type { WriteManifestResult } from '../contracts/RegistryToolsTypes.ts';
+import { sortVersionsNewestFirst } from '../mutation/VersionSorter.ts';
+import type { RegistryRepoPaths } from '../paths/RegistryRepoPaths.ts';
 
 /**
  * Reads, validates, and writes registry-package manifests on disk.

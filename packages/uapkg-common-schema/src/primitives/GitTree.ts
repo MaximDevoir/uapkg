@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Brand } from '../brand/Brand.js';
+import type { Brand } from '../brand/Brand.ts';
 
 /**
  * Branded type for a git tree SHA (40-char hex string).

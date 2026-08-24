@@ -1,8 +1,8 @@
-import type { CompositionRoot } from '../app/CompositionRoot.js';
-import type { UAPKGOutputFormat, UAPKGWhoamiField } from '../cli/UAPKGCommandLine.js';
-import { controlPlaneDiagnosticForError, describeControlPlaneError } from '../control-plane/AccountManager.js';
-import { ControlPlaneClient } from '../control-plane/ControlPlaneClient.js';
-import type { Command } from './Command.js';
+import type { CompositionRoot } from '../app/CompositionRoot.ts';
+import type { UAPKGOutputFormat, UAPKGWhoamiField } from '../cli/UAPKGCommandLine.ts';
+import { controlPlaneDiagnosticForError, describeControlPlaneError } from '../control-plane/AccountManager.ts';
+import { ControlPlaneClient } from '../control-plane/ControlPlaneClient.ts';
+import type { Command } from './Command.ts';
 
 export interface WhoamiCommandOptions {
   readonly field?: UAPKGWhoamiField;

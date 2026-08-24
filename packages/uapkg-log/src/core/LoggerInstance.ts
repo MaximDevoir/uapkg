@@ -1,4 +1,4 @@
-import type { LogEngine, LogLevel } from '../contracts/LoggerTypes.js';
+import type { LogEngine, LogLevel } from '../contracts/LoggerTypes.ts';
 
 export class LoggerInstance {
   constructor(

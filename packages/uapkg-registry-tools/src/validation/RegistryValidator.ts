@@ -7,18 +7,18 @@ import {
   type Result,
 } from '@uapkg/diagnostics';
 import type { PackageRegistryManifest } from '@uapkg/registry-schema';
-import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.js';
+import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
 import type {
   PackageValidationReport,
   RegistryValidationReport,
   ResolvedRegistryToolsPolicy,
-} from '../contracts/RegistryToolsTypes.js';
-import type { ManifestStore } from '../io/ManifestStore.js';
-import type { PackageLister } from '../listing/PackageLister.js';
-import { sortVersionsNewestFirst } from '../mutation/VersionSorter.js';
-import type { RegistryRepoPaths } from '../paths/RegistryRepoPaths.js';
-import type { DependencyReachabilityValidator } from './DependencyReachabilityValidator.js';
-import type { ExternalRegistryPolicyValidator } from './ExternalRegistryPolicyValidator.js';
+} from '../contracts/RegistryToolsTypes.ts';
+import type { ManifestStore } from '../io/ManifestStore.ts';
+import type { PackageLister } from '../listing/PackageLister.ts';
+import { sortVersionsNewestFirst } from '../mutation/VersionSorter.ts';
+import type { RegistryRepoPaths } from '../paths/RegistryRepoPaths.ts';
+import type { DependencyReachabilityValidator } from './DependencyReachabilityValidator.ts';
+import type { ExternalRegistryPolicyValidator } from './ExternalRegistryPolicyValidator.ts';
 
 /**
  * High-level validator that runs every cross-cutting check across one or more

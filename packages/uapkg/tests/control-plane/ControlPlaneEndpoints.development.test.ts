@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-vi.mock('../../src/build/BuildMetadata.js', () => ({
+vi.mock('../../src/build/BuildMetadata.ts', () => ({
   UAPKG_BUILD_METADATA: Object.freeze({
     mode: 'development',
     packageVersion: '1.2.3',
@@ -8,12 +8,12 @@ vi.mock('../../src/build/BuildMetadata.js', () => ({
   }),
 }));
 
-import { ControlPlaneClient } from '../../src/control-plane/ControlPlaneClient.js';
+import { ControlPlaneClient } from '../../src/control-plane/ControlPlaneClient.ts';
 import {
   registryAudience,
   UAPKG_AUTHORIZATION_ISSUER,
   UAPKG_CONTROL_PLANE_API,
-} from '../../src/control-plane/ControlPlaneTypes.js';
+} from '../../src/control-plane/ControlPlaneTypes.ts';
 
 describe('development-stamped control-plane endpoints', () => {
   it('pins authorization, API requests, and registry audiences to development', async () => {

@@ -1,5 +1,5 @@
 import { createLogger, format, transports } from 'winston';
-import type { LogEngine, LogLevel } from '../contracts/LoggerTypes.js';
+import type { LogEngine, LogLevel } from '../contracts/LoggerTypes.ts';
 
 export class WinstonLoggerAdapter implements LogEngine {
   private readonly logger = createLogger({

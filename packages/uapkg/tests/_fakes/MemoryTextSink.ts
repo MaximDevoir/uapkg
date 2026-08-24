@@ -1,4 +1,4 @@
-import type { TextSink } from '../../src/reporting/TextSink.js';
+import type { TextSink } from '../../src/reporting/TextSink.ts';
 
 /**
  * Test-only `TextSink` implementation that captures every write for assertions.

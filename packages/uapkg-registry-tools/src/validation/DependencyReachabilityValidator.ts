@@ -7,9 +7,9 @@ import {
 } from '@uapkg/diagnostics';
 import type { RegistryDependency, RegistryVersion } from '@uapkg/registry-schema';
 import { satisfies } from 'semver';
-import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.js';
-import type { DependencyValidationReport, ResolvedRegistryToolsPolicy } from '../contracts/RegistryToolsTypes.js';
-import type { ManifestStore } from '../io/ManifestStore.js';
+import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
+import type { DependencyValidationReport, ResolvedRegistryToolsPolicy } from '../contracts/RegistryToolsTypes.ts';
+import type { ManifestStore } from '../io/ManifestStore.ts';
 
 /**
  * Verifies that the in-registry (non-external) dependencies of a single

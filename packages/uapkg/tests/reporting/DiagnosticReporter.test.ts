@@ -1,8 +1,8 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
 import { describe, expect, it } from 'vite-plus/test';
-import { DiagnosticReporter } from '../../src/reporting/DiagnosticReporter.js';
-import { TextDiagnosticRenderer } from '../../src/reporting/TextDiagnosticRenderer.js';
-import { MemoryTextSink } from '../_fakes/MemoryTextSink.js';
+import { DiagnosticReporter } from '../../src/reporting/DiagnosticReporter.ts';
+import { TextDiagnosticRenderer } from '../../src/reporting/TextDiagnosticRenderer.ts';
+import { MemoryTextSink } from '../_fakes/MemoryTextSink.ts';
 
 function d(level: Diagnostic['level'], code = 'X', message = 'msg', hint?: string): Diagnostic {
   return { level, code, message, ...(hint ? { hint } : {}) } as Diagnostic;

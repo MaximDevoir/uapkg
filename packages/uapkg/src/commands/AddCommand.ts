@@ -1,10 +1,10 @@
 import { parsePackageSpec } from '@uapkg/common';
 import type { Diagnostic } from '@uapkg/diagnostics';
-import type { CompositionRoot } from '../app/CompositionRoot.js';
-import { InstallProgressReporter } from '../reporting/InstallProgressReporter.js';
-import { DependencyAddResolver } from './add/DependencyAddResolver.js';
-import type { Command } from './Command.js';
-import { InstallCommand } from './InstallCommand.js';
+import type { CompositionRoot } from '../app/CompositionRoot.ts';
+import { InstallProgressReporter } from '../reporting/InstallProgressReporter.ts';
+import { DependencyAddResolver } from './add/DependencyAddResolver.ts';
+import type { Command } from './Command.ts';
+import { InstallCommand } from './InstallCommand.ts';
 
 export interface AddCommandOptions {
   readonly spec: string;

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { GlobalUapkgSnapshotStore } from '../GlobalUapkgSnapshotStore';
+import { GlobalUapkgSnapshotStore } from '../GlobalUapkgSnapshotStore.ts';
 
 const temporaryDirectories: string[] = [];
 

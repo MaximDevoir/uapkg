@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
-import { LoginCommand } from '../../src/commands/LoginCommand.js';
-import { LoginError, type LoginOptions, type LoginResult } from '../../src/control-plane/AccountManager.js';
-import type { RegistryGrantMetadata, RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';
-import { JsonReporter } from '../../src/reporting/JsonReporter.js';
+import type { CompositionRoot } from '../../src/app/CompositionRoot.ts';
+import { LoginCommand } from '../../src/commands/LoginCommand.ts';
+import { LoginError, type LoginOptions, type LoginResult } from '../../src/control-plane/AccountManager.ts';
+import type { RegistryGrantMetadata, RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.ts';
+import { JsonReporter } from '../../src/reporting/JsonReporter.ts';
 
 const trust: RegistryTrust = {
   alias: 'default',

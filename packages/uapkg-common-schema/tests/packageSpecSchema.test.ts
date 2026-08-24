@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { OrgNameSchema, PackageSpecSchema } from '../src/index';
+import { OrgNameSchema, PackageSpecSchema } from '../src/index.ts';
 
 describe('OrgNameSchema', () => {
   it('accepts valid org names', () => {

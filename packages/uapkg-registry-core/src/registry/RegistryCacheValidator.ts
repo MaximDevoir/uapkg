@@ -9,8 +9,8 @@ import {
   ok,
   type Result,
 } from '@uapkg/diagnostics';
-import { getRegistryCachePath, getRegistryMetadataPath, getRegistryRepoPath } from '../paths/RegistryPaths.js';
-import type { RegistryMetadataReader } from './RegistryMetadataReader.js';
+import { getRegistryCachePath, getRegistryMetadataPath, getRegistryRepoPath } from '../paths/RegistryPaths.ts';
+import type { RegistryMetadataReader } from './RegistryMetadataReader.ts';
 
 export interface RegistryCacheState {
   readonly initialized: boolean;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { CompositionRoot } from '../../src/app/CompositionRoot.js';
+import { CompositionRoot } from '../../src/app/CompositionRoot.ts';
 
 describe('CompositionRoot', () => {
   it('cwd is returned as provided', () => {

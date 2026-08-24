@@ -1,6 +1,6 @@
 import { PackageNameSchema } from '@uapkg/common-schema';
 import { z } from 'zod';
-import { LockDependencySchema } from './LockDependencySchema.js';
+import { LockDependencySchema } from './LockDependencySchema.ts';
 
 /** Lockfile versions this build understands. Unknown versions fail closed. */
 export const SUPPORTED_LOCKFILE_VERSIONS = [1] as const;

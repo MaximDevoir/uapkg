@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { GlobalCommandShimService } from '../GlobalCommandShimService';
-import { ProcessRunner } from '../ProcessRunner';
+import { GlobalCommandShimService } from '../GlobalCommandShimService.ts';
+import { ProcessRunner } from '../ProcessRunner.ts';
 
 const temporaryDirectories: string[] = [];
 

@@ -3,21 +3,21 @@
 // ---------------------------------------------------------------------------
 
 // Human formatting
-export { prettyBytes, prettyBytesProgress } from './format/prettyBytes.js';
+export { prettyBytes, prettyBytesProgress } from './format/prettyBytes.ts';
 export {
   computeRegistryIdentifier,
   computeRegistryIdentifierShort,
   type RegistryIdentityDescriptor,
-} from './hash/registryIdentifier.js';
+} from './hash/registryIdentifier.ts';
 // Hashing
-export { sha256, sha256Prefixed } from './hash/sha256.js';
-export { safeJsonParse } from './json/safeJsonParse.js';
+export { sha256, sha256Prefixed } from './hash/sha256.ts';
+export { safeJsonParse } from './json/safeJsonParse.ts';
 // JSON
-export { stableStringify } from './json/stableStringify.js';
+export { stableStringify } from './json/stableStringify.ts';
 // Normalization
-export { normalizeUrl } from './normalize/normalizeUrl.js';
+export { normalizeUrl } from './normalize/normalizeUrl.ts';
 // Paths
-export { normalizePath, toForwardSlash } from './paths/forwardSlash.js';
+export { normalizePath, toForwardSlash } from './paths/forwardSlash.ts';
 // Runtime profile
 export {
   INTERNAL_BUILD_MODE_ENV,
@@ -26,6 +26,6 @@ export {
   resolveUapkgBuildMode,
   resolveUapkgProfileRoot,
   type UAPKGBuildMode,
-} from './runtime/UapkgRuntimeProfile.js';
+} from './runtime/UapkgRuntimeProfile.ts';
 // Package spec parsing (CLI "@org/name@range")
-export { formatPackageSpec, parsePackageSpec } from './spec/parsePackageSpec.js';
+export { formatPackageSpec, parsePackageSpec } from './spec/parsePackageSpec.ts';

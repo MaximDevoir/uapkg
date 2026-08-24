@@ -8,17 +8,17 @@ import {
   type Result,
 } from '@uapkg/diagnostics';
 import { type PackageRegistryManifest, type RegistryVersion, RegistryVersionSchema } from '@uapkg/registry-schema';
-import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.js';
+import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
 import type {
   AddPackageVersionRequest,
   RegistryMutationPlan,
   ResolvedRegistryToolsPolicy,
-} from '../contracts/RegistryToolsTypes.js';
-import type { ManifestStore } from '../io/ManifestStore.js';
-import type { RegistryRepoPaths } from '../paths/RegistryRepoPaths.js';
-import type { DependencyReachabilityValidator } from '../validation/DependencyReachabilityValidator.js';
-import type { ExternalRegistryPolicyValidator } from '../validation/ExternalRegistryPolicyValidator.js';
-import { sortVersionsNewestFirst } from './VersionSorter.js';
+} from '../contracts/RegistryToolsTypes.ts';
+import type { ManifestStore } from '../io/ManifestStore.ts';
+import type { RegistryRepoPaths } from '../paths/RegistryRepoPaths.ts';
+import type { DependencyReachabilityValidator } from '../validation/DependencyReachabilityValidator.ts';
+import type { ExternalRegistryPolicyValidator } from '../validation/ExternalRegistryPolicyValidator.ts';
+import { sortVersionsNewestFirst } from './VersionSorter.ts';
 
 /**
  * Plans the addition of a single package version.

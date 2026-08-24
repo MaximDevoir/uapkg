@@ -1,7 +1,7 @@
 import { PackageNameSchema, PackageVersionSchema } from '@uapkg/common-schema';
 import { RegistryVersionSchema } from '@uapkg/registry-schema';
 import { describe, expect, it } from 'vite-plus/test';
-import { claimsFromRegistryVersion, compareClaims, normalizePackageClaims, type PackageClaims } from '../src/index.js';
+import { claimsFromRegistryVersion, compareClaims, normalizePackageClaims, type PackageClaims } from '../src/index.ts';
 
 const NAME = PackageNameSchema.parse('my-plugin');
 const VERSION = PackageVersionSchema.parse('1.2.3');

@@ -1,7 +1,7 @@
 import type { PackageVersion, VersionRange } from '@uapkg/common-schema';
 import { createVersionNotFoundDiagnostic, DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
 import type { PackageRegistryManifest, RegistryVersion } from '@uapkg/registry-schema';
-import { SemverSelectionPolicy } from './SemverSelectionPolicy.js';
+import { SemverSelectionPolicy } from './SemverSelectionPolicy.ts';
 
 export interface ResolvedVersion {
   readonly version: string;

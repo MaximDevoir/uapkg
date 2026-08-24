@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it, vi } from 'vite-plus/test';
-import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
+import type { CompositionRoot } from '../../src/app/CompositionRoot.ts';
 import {
   canonicalizeRegistryGitOrigin,
   fingerprintRegistryGitOrigin,
   RegistryTrustResolver,
-} from '../../src/control-plane/RegistryTrustResolver.js';
+} from '../../src/control-plane/RegistryTrustResolver.ts';
 
 const readFileMock = vi.hoisted(() => vi.fn());
 

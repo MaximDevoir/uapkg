@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { z } from 'zod';
-import { normalizePackageClaims } from '../src/index.js';
-import { ClaimedDependencySchema, PackageClaimsSchema } from '../src/schema/index.js';
+import { normalizePackageClaims } from '../src/index.ts';
+import { ClaimedDependencySchema, PackageClaimsSchema } from '../src/schema/index.ts';
 
 describe('package claims schemas', () => {
   it('validates the canonical normalized claims representation', () => {

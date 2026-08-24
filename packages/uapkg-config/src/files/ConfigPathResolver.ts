@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { resolveActiveUapkgProfileRoot } from '@uapkg/common';
-import type { ConfigPaths } from '../contracts/ConfigTypes.js';
+import type { ConfigPaths } from '../contracts/ConfigTypes.ts';
 
 export class ConfigPathResolver {
   constructor(private readonly profileRoot = resolveActiveUapkgProfileRoot()) {}

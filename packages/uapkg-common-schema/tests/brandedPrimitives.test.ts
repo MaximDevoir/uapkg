@@ -20,7 +20,7 @@ import {
   type UnixTimestamp,
   UnixTimestampSchema,
   VersionRangeSchema,
-} from '../src/index.js';
+} from '../src/index.ts';
 
 describe('composable branded primitives', () => {
   it('converts every branded primitive to JSON Schema without transform nodes', () => {

@@ -1,6 +1,6 @@
 import { createSchemaInvalidDiagnostic, DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
 import { type PackageRegistryManifest, PackageRegistryManifestSchema } from '@uapkg/registry-schema';
-import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.js';
+import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
 
 /**
  * Validates raw, untrusted manifest data against the registry schema.

@@ -1,7 +1,7 @@
 import type { RegistryIdentifier } from '@uapkg/common-schema';
 import type { Diagnostic } from '@uapkg/diagnostics';
 import { describe, expect, it } from 'vite-plus/test';
-import { Registry } from '../src/registry/Registry.js';
+import { Registry } from '../src/registry/Registry.ts';
 
 describe('Registry unreachable diagnostics', () => {
   it('do not expose credentials, query data, or fragments', () => {

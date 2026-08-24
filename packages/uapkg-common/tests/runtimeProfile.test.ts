@@ -8,7 +8,7 @@ import {
   resolveActiveUapkgProfileRoot,
   resolveUapkgBuildMode,
   resolveUapkgProfileRoot,
-} from '../src/index.js';
+} from '../src/index.ts';
 
 afterEach(() => {
   vi.unstubAllEnvs();

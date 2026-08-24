@@ -1,7 +1,7 @@
 import type { RegistryIdentifier, UnixTimestamp } from '@uapkg/common-schema';
 import { ok } from '@uapkg/diagnostics';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { Registry, RegistryLock } from '../src/index.js';
+import { Registry, RegistryLock } from '../src/index.ts';
 
 afterEach(() => {
   vi.restoreAllMocks();

@@ -1,4 +1,4 @@
-import type { PostInstallPolicyValue, ResolvedConfig } from '../contracts/ConfigTypes.js';
+import type { PostInstallPolicyValue, ResolvedConfig } from '../contracts/ConfigTypes.ts';
 
 /**
  * Resolves the effective `PostInstallPolicy` for a given install action.

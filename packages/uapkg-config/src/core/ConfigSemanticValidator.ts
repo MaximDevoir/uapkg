@@ -4,7 +4,7 @@ import {
   type Diagnostic,
   DiagnosticBag,
 } from '@uapkg/diagnostics';
-import { configSchema } from '../schema/configSchema.js';
+import { configSchema } from '../schema/configSchema.ts';
 
 /**
  * Runs post-merge semantic checks and narrow-rule validation.

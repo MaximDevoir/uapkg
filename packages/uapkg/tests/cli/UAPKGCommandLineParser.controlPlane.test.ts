@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { UAPKGCommandLineParser } from '../../src/cli/parsing/UAPKGCommandLineParser.js';
+import { UAPKGCommandLineParser } from '../../src/cli/parsing/UAPKGCommandLineParser.ts';
 
 const WHOAMI_FIELDS = ['username', 'user-id', 'registry', 'registry-id'] as const;
 const WHOAMI_FORMS: ReadonlyArray<{

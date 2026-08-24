@@ -4,7 +4,7 @@ import {
   type RegistryTrust,
   UAPKG_CONTROL_PLANE_API,
   UAPKG_GITHUB_OIDC_AUDIENCE,
-} from './ControlPlaneTypes.js';
+} from './ControlPlaneTypes.ts';
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_RESPONSE_BYTES = 64 * 1024;

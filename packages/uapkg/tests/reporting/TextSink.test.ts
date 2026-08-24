@@ -1,6 +1,6 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
 import { describe, expect, it } from 'vite-plus/test';
-import { DIAGNOSTIC_LEVEL_ORDER, sortDiagnostics } from '../../src/reporting/TextSink.js';
+import { DIAGNOSTIC_LEVEL_ORDER, sortDiagnostics } from '../../src/reporting/TextSink.ts';
 
 function d(level: Diagnostic['level'], code = 'X'): Diagnostic {
   return { level, code, message: `${level}-${code}` } as Diagnostic;

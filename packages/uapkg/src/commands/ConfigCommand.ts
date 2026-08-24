@@ -10,9 +10,9 @@ import {
 } from '@uapkg/config';
 import { createParseErrorDiagnostic, type Diagnostic } from '@uapkg/diagnostics';
 import Log from '@uapkg/log';
-import type { UAPKGConfigAction, UAPKGConfigScope, UAPKGOutputFormat } from '../cli/UAPKGCommandLine.js';
-import { DiagnosticReporter } from '../reporting/DiagnosticReporter.js';
-import type { Command } from './Command.js';
+import type { UAPKGConfigAction, UAPKGConfigScope, UAPKGOutputFormat } from '../cli/UAPKGCommandLine.ts';
+import { DiagnosticReporter } from '../reporting/DiagnosticReporter.ts';
+import type { Command } from './Command.ts';
 
 export interface ConfigCommandOptions {
   cwd: string;

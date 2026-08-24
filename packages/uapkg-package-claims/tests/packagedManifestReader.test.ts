@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { c as createTar } from 'tar';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { readPackageClaimsFromArchive, readPackagedManifest } from '../src/index.js';
+import { readPackageClaimsFromArchive, readPackagedManifest } from '../src/index.ts';
 
 const cleanups: string[] = [];
 

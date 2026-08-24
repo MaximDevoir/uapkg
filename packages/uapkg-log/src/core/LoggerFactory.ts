@@ -1,7 +1,7 @@
-import type { LoggerOptions, LoggerStateResolver } from '../contracts/LoggerTypes.js';
-import { LoggerInstance } from './LoggerInstance.js';
-import { LogLevelPolicy } from './LogLevelPolicy.js';
-import { WinstonLoggerAdapter } from './WinstonLoggerAdapter.js';
+import type { LoggerOptions, LoggerStateResolver } from '../contracts/LoggerTypes.ts';
+import { LoggerInstance } from './LoggerInstance.ts';
+import { LogLevelPolicy } from './LogLevelPolicy.ts';
+import { WinstonLoggerAdapter } from './WinstonLoggerAdapter.ts';
 
 export class LoggerFactory {
   constructor(private readonly policy = new LogLevelPolicy()) {}

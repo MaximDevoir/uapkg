@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { computeRegistryIdentifier, computeRegistryIdentifierShort, normalizeUrl } from '../src/index.js';
+import { computeRegistryIdentifier, computeRegistryIdentifierShort, normalizeUrl } from '../src/index.ts';
 
 describe('normalizeUrl', () => {
   it.each([

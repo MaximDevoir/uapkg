@@ -3,16 +3,16 @@
 // ---------------------------------------------------------------------------
 
 // Paths
-export { getRegistryPackagePath, getRegistryPackagePathSegments } from './paths/RegistryPackagePath.js';
+export { getRegistryPackagePath, getRegistryPackagePathSegments } from './paths/RegistryPackagePath.ts';
 // Schemas
-export { type Integrity, IntegritySchema } from './schemas/IntegritySchema.js';
+export { type Integrity, IntegritySchema } from './schemas/IntegritySchema.ts';
 export {
   createPackageRegistryManifestSchema,
   type PackageRegistryManifest,
   PackageRegistryManifestSchema,
-} from './schemas/PackageRegistryManifestSchema.js';
-export { type PackageSource, PackageSourceSchema } from './schemas/PackageSourceSchema.js';
-export { type RegistryAsset, RegistryAssetSchema } from './schemas/RegistryAssetSchema.js';
+} from './schemas/PackageRegistryManifestSchema.ts';
+export { type PackageSource, PackageSourceSchema } from './schemas/PackageSourceSchema.ts';
+export { type RegistryAsset, RegistryAssetSchema } from './schemas/RegistryAssetSchema.ts';
 export {
   normalizeRegistryDependencyDeclaration,
   normalizeRegistryDependencyRecord,
@@ -24,13 +24,13 @@ export {
   RegistryDependencyShortSchema,
   toRegistryDependencyDeclaration,
   toRegistryDependencyRecordDeclaration,
-} from './schemas/RegistryDependencySchema.js';
+} from './schemas/RegistryDependencySchema.ts';
 export {
   type RegistryMeta,
   RegistryMetaSchema,
   type RegistryType,
   RegistryTypeSchema,
-} from './schemas/RegistryMetaSchema.js';
+} from './schemas/RegistryMetaSchema.ts';
 export {
   type RegistryVersion,
   RegistryVersionSchema,
@@ -38,4 +38,4 @@ export {
   ReleaseFilesSchema,
   type VersionMeta,
   VersionMetaSchema,
-} from './schemas/RegistryVersionSchema.js';
+} from './schemas/RegistryVersionSchema.ts';

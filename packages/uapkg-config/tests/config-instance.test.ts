@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { INTERNAL_BUILD_MODE_ENV, INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { createConfig } from '../src';
+import { createConfig } from '../src/index.ts';
 
 const temporaryDirectories: string[] = [];
 

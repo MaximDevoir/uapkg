@@ -4,7 +4,7 @@ import type {
   RegistryUnreachableDiagnostic,
   SchemaInvalidDiagnostic,
 } from '@uapkg/diagnostics';
-import type { FormatterMap } from '../../contracts/FormatterTypes.js';
+import type { FormatterMap } from '../../contracts/FormatterTypes.ts';
 
 function formatGitError(d: Diagnostic): string {
   const data = (d as GitErrorDiagnostic).data;

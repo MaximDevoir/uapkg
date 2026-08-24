@@ -8,8 +8,8 @@ import {
 } from '@uapkg/diagnostics-format/ink';
 import { render } from 'ink';
 import { createElement } from 'react';
-import type { DiagnosticRenderer } from './DiagnosticRenderer.js';
-import type { TextSink } from './TextSink.js';
+import type { DiagnosticRenderer } from './DiagnosticRenderer.ts';
+import type { TextSink } from './TextSink.ts';
 
 /**
  * Ink-backed diagnostic renderer.

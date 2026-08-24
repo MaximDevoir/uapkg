@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vite-plus/test';
-import { PackService } from '../src/core/PackService';
+import { PackService } from '../src/core/PackService.ts';
 
 function createTempDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'uapkg-pack-'));

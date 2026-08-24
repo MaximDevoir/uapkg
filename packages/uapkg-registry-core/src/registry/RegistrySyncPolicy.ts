@@ -1,4 +1,4 @@
-import type { SyncDecision, SyncPolicyInput } from '../contracts/RegistryCoreTypes.js';
+import type { SyncDecision, SyncPolicyInput } from '../contracts/RegistryCoreTypes.ts';
 
 /**
  * Determines whether a registry should be updated.

@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import * as oauth from 'oauth4webapi';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { AccountManager } from '../../src/control-plane/AccountManager.js';
-import { ControlPlaneClient } from '../../src/control-plane/ControlPlaneClient.js';
+import { AccountManager } from '../../src/control-plane/AccountManager.ts';
+import { ControlPlaneClient } from '../../src/control-plane/ControlPlaneClient.ts';
 
 afterEach(() => {
   vi.unstubAllGlobals();

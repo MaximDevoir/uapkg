@@ -4,9 +4,9 @@ import { join } from 'node:path';
 import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
 import type { RegistryIdentifier, UnixTimestamp } from '@uapkg/common-schema';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
-import { getRegistryCachePath, getRegistryMetadataPath, getRegistryRepoPath } from '../src/paths/RegistryPaths.js';
-import { RegistryCacheValidator } from '../src/registry/RegistryCacheValidator.js';
-import { RegistryMetadataReader } from '../src/registry/RegistryMetadataReader.js';
+import { getRegistryCachePath, getRegistryMetadataPath, getRegistryRepoPath } from '../src/paths/RegistryPaths.ts';
+import { RegistryCacheValidator } from '../src/registry/RegistryCacheValidator.ts';
+import { RegistryMetadataReader } from '../src/registry/RegistryMetadataReader.ts';
 
 const shortId = '0123456789abcdef';
 const expectedIdentifier = 'a'.repeat(64) as RegistryIdentifier;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Brand } from '../brand/Brand.js';
+import type { Brand } from '../brand/Brand.ts';
 
 /**
  * Branded type for a scoped-organization name (the `@org` in `@org/pkg`).

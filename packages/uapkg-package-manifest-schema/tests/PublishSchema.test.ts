@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { PublishSchema } from '../src/index.js';
+import { PublishSchema } from '../src/index.ts';
 
 describe('PublishSchema', () => {
   it('accepts stable GitHub Release publishing coordinates', () => {

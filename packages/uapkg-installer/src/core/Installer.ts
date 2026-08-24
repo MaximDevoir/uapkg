@@ -9,19 +9,19 @@ import type {
   InstallerOptions,
   InstallReport,
   PackageInstallOutcome,
-} from '../contracts/InstallerTypes.js';
-import type { DownloadStatusSnapshot } from '../contracts/StatusStreamTypes.js';
-import { NoMarkerPolicy } from '../safety/NoMarkerPolicy.js';
-import { SafetyPolicyRegistry } from '../safety/SafetyPolicyRegistry.js';
-import { SlotTable } from '../status/SlotTable.js';
-import { StatusStream } from '../status/StatusStream.js';
-import { ClaimsVerifier } from './ClaimsVerifier.js';
-import { DiskStateInspector } from './DiskStateInspector.js';
-import { InstallPlanner } from './InstallPlanner.js';
-import { IntegrityVerifier } from './IntegrityVerifier.js';
-import { PackageDownloader } from './PackageDownloader.js';
-import { PackageExtractor } from './PackageExtractor.js';
-import { PackageRemover } from './PackageRemover.js';
+} from '../contracts/InstallerTypes.ts';
+import type { DownloadStatusSnapshot } from '../contracts/StatusStreamTypes.ts';
+import { NoMarkerPolicy } from '../safety/NoMarkerPolicy.ts';
+import { SafetyPolicyRegistry } from '../safety/SafetyPolicyRegistry.ts';
+import { SlotTable } from '../status/SlotTable.ts';
+import { StatusStream } from '../status/StatusStream.ts';
+import { ClaimsVerifier } from './ClaimsVerifier.ts';
+import { DiskStateInspector } from './DiskStateInspector.ts';
+import { InstallPlanner } from './InstallPlanner.ts';
+import { IntegrityVerifier } from './IntegrityVerifier.ts';
+import { PackageDownloader } from './PackageDownloader.ts';
+import { PackageExtractor } from './PackageExtractor.ts';
+import { PackageRemover } from './PackageRemover.ts';
 
 interface ExecutionRuntime {
   readonly slots: SlotTable;

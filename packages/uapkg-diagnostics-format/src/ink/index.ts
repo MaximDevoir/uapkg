@@ -10,26 +10,26 @@
 // ---------------------------------------------------------------------------
 
 // Family component maps — exported individually so consumers can cherry-pick.
-export { installerInkComponents } from './components/installerInkComponents.js';
-export { manifestInkComponents } from './components/manifestInkComponents.js';
-export { postinstallInkComponents } from './components/postinstallInkComponents.js';
-export { publishingInkComponents } from './components/publishingInkComponents.js';
-export { registryInkComponents } from './components/registryInkComponents.js';
-export { resolverInkComponents } from './components/resolverInkComponents.js';
-export { safetyInkComponents } from './components/safetyInkComponents.js';
-export { specInkComponents } from './components/specInkComponents.js';
+export { installerInkComponents } from './components/installerInkComponents.tsx';
+export { manifestInkComponents } from './components/manifestInkComponents.tsx';
+export { postinstallInkComponents } from './components/postinstallInkComponents.tsx';
+export { publishingInkComponents } from './components/publishingInkComponents.tsx';
+export { registryInkComponents } from './components/registryInkComponents.tsx';
+export { resolverInkComponents } from './components/resolverInkComponents.tsx';
+export { safetyInkComponents } from './components/safetyInkComponents.tsx';
+export { specInkComponents } from './components/specInkComponents.tsx';
 export type {
   DiagnosticBodyComponent,
   DiagnosticBodyProps,
   DiagnosticInkComponentMap,
   IDiagnosticInkRegistry,
-} from './contracts/InkTypes.js';
-export { defaultInkComponents } from './defaults/defaultInkComponents.js';
+} from './contracts/InkTypes.ts';
+export { defaultInkComponents } from './defaults/defaultInkComponents.ts';
 // Primitives.
-export { HintLine } from './primitives/HintLine.js';
-export { PlainTextBody } from './primitives/PlainTextBody.js';
-export { SeverityBadge } from './primitives/SeverityBadge.js';
-export { createInkRegistry, DiagnosticInkRegistry } from './registry/DiagnosticInkRegistry.js';
-export { DiagnosticsListView, type DiagnosticsListViewProps } from './views/DiagnosticsListView.js';
+export { HintLine } from './primitives/HintLine.tsx';
+export { PlainTextBody } from './primitives/PlainTextBody.tsx';
+export { SeverityBadge } from './primitives/SeverityBadge.tsx';
+export { createInkRegistry, DiagnosticInkRegistry } from './registry/DiagnosticInkRegistry.ts';
+export { DiagnosticsListView, type DiagnosticsListViewProps } from './views/DiagnosticsListView.tsx';
 // Views.
-export { DiagnosticView, type DiagnosticViewProps } from './views/DiagnosticView.js';
+export { DiagnosticView, type DiagnosticViewProps } from './views/DiagnosticView.tsx';

@@ -1,4 +1,4 @@
-import type { DiagnosticBase } from '../base/Diagnostic.js';
+import type { DiagnosticBase } from '../base/Diagnostic.ts';
 
 export type LoginDiagnosticCode =
   | 'LOGIN_ACCESS_DENIED'

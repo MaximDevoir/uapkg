@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { MarkerBlockEditor } from '../../src/postinstall/markers/MarkerBlockEditor.js';
+import { MarkerBlockEditor } from '../../src/postinstall/markers/MarkerBlockEditor.ts';
 
 const PLUGIN = 'plug';
 const ZONE = 'module-class-body';

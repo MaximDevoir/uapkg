@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 
 // Aggregator
-export { getRegistryToolsAggregator, RegistryToolsAggregator } from './aggregator/RegistryToolsAggregator.js';
+export { getRegistryToolsAggregator, RegistryToolsAggregator } from './aggregator/RegistryToolsAggregator.ts';
 
 // Contracts
 export type {
@@ -36,32 +36,32 @@ export type {
   UnknownKeysPolicyMode,
   WriteManifestResult,
   WriteResult,
-} from './contracts/RegistryToolsTypes.js';
+} from './contracts/RegistryToolsTypes.ts';
 
 // IO helpers
-export { IntegrityCalculator } from './io/IntegrityCalculator.js';
-export { ManifestStore } from './io/ManifestStore.js';
+export { IntegrityCalculator } from './io/IntegrityCalculator.ts';
+export { ManifestStore } from './io/ManifestStore.ts';
 
 // Listing
-export { PackageLister } from './listing/PackageLister.js';
+export { PackageLister } from './listing/PackageLister.ts';
 
 // Mutation planners
-export { AddPackageVersionPlanner } from './mutation/AddPackageVersionPlanner.js';
-export { RemovePackagePlanner } from './mutation/RemovePackagePlanner.js';
-export { RemovePackageVersionPlanner } from './mutation/RemovePackageVersionPlanner.js';
-export { sortVersionsNewestFirst } from './mutation/VersionSorter.js';
+export { AddPackageVersionPlanner } from './mutation/AddPackageVersionPlanner.ts';
+export { RemovePackagePlanner } from './mutation/RemovePackagePlanner.ts';
+export { RemovePackageVersionPlanner } from './mutation/RemovePackageVersionPlanner.ts';
+export { sortVersionsNewestFirst } from './mutation/VersionSorter.ts';
 
 // Paths
-export { RegistryRepoPaths } from './paths/RegistryRepoPaths.js';
+export { RegistryRepoPaths } from './paths/RegistryRepoPaths.ts';
 // Orchestrator
-export { RegistryTools } from './tools/RegistryTools.js';
+export { RegistryTools } from './tools/RegistryTools.ts';
 // Validators
-export { DependencyReachabilityValidator } from './validation/DependencyReachabilityValidator.js';
-export { ExternalRegistryPolicyValidator } from './validation/ExternalRegistryPolicyValidator.js';
-export { ManifestValidator } from './validation/ManifestValidator.js';
+export { DependencyReachabilityValidator } from './validation/DependencyReachabilityValidator.ts';
+export { ExternalRegistryPolicyValidator } from './validation/ExternalRegistryPolicyValidator.ts';
+export { ManifestValidator } from './validation/ManifestValidator.ts';
 export {
   type OfficialRegistryPolicyRequest,
   OfficialRegistryPolicyValidator,
-} from './validation/OfficialRegistryPolicyValidator.js';
-export { RegistryValidator } from './validation/RegistryValidator.js';
-export { ReleaseFileNameValidator } from './validation/ReleaseFileNameValidator.js';
+} from './validation/OfficialRegistryPolicyValidator.ts';
+export { RegistryValidator } from './validation/RegistryValidator.ts';
+export { ReleaseFileNameValidator } from './validation/ReleaseFileNameValidator.ts';

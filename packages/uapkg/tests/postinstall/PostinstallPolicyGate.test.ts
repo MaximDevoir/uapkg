@@ -1,6 +1,6 @@
 import type { ResolvedConfig } from '@uapkg/config';
 import { describe, expect, it } from 'vite-plus/test';
-import { PostinstallPolicyGate } from '../../src/postinstall/policy/PostinstallPolicyGate.js';
+import { PostinstallPolicyGate } from '../../src/postinstall/policy/PostinstallPolicyGate.ts';
 
 function makeConfig(partial: Partial<ResolvedConfig> = {}): ResolvedConfig {
   return {

@@ -1,7 +1,7 @@
 import { fail, ok } from '@uapkg/diagnostics';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
-import { RegistryCommand } from '../../src/commands/RegistryCommand.js';
+import type { CompositionRoot } from '../../src/app/CompositionRoot.ts';
+import { RegistryCommand } from '../../src/commands/RegistryCommand.ts';
 
 afterEach(() => {
   vi.restoreAllMocks();

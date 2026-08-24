@@ -1,6 +1,6 @@
 import { type ChildProcess, type SpawnOptions, spawn } from 'node:child_process';
 import { createGitErrorDiagnostic, ok, type Result } from '@uapkg/diagnostics';
-import { redactRegistryUrlSecrets, sanitizeRegistryUrlForDisplay } from './RegistryUrlSanitizer.js';
+import { redactRegistryUrlSecrets, sanitizeRegistryUrlForDisplay } from './RegistryUrlSanitizer.ts';
 
 export type GitInteractionMode = 'non-interactive' | 'interactive';
 

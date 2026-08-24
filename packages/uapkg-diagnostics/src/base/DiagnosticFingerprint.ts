@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { DiagnosticLevel } from './DiagnosticLevel.js';
+import type { DiagnosticLevel } from './DiagnosticLevel.ts';
 
 interface FingerprintInput {
   readonly level: DiagnosticLevel;

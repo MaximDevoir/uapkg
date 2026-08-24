@@ -1,6 +1,6 @@
 import type { Argv } from 'yargs';
-import { createUAPKGCommandLineFactory } from '../../UAPKGCommandLine.js';
-import type { CommandLineSink, UAPKGCommandModule } from '../contracts/UAPKGCommandModule.js';
+import { createUAPKGCommandLineFactory } from '../../UAPKGCommandLine.ts';
+import type { CommandLineSink, UAPKGCommandModule } from '../contracts/UAPKGCommandModule.ts';
 
 export class PackCommandModule implements UAPKGCommandModule {
   private readonly factory = createUAPKGCommandLineFactory();

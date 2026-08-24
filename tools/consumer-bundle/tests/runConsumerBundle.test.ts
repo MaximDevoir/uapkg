@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { parseConsumerBundleOptions } from '../runConsumerBundle';
+import { parseConsumerBundleOptions } from '../runConsumerBundle.ts';
 
 describe('consumer bundle CLI options', () => {
   it('accepts package-manager separators and repeatable roots', () => {

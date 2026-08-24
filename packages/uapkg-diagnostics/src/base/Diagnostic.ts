@@ -1,5 +1,5 @@
-import { createDiagnosticFingerprint } from './DiagnosticFingerprint.js';
-import type { DiagnosticLevel } from './DiagnosticLevel.js';
+import { createDiagnosticFingerprint } from './DiagnosticFingerprint.ts';
+import type { DiagnosticLevel } from './DiagnosticLevel.ts';
 
 export type DiagnosticEmitPolicy = 'always' | 'once';
 

@@ -11,20 +11,20 @@ import {
 } from '@uapkg/diagnostics';
 import type { Dependency, Lockfile, Manifest } from '@uapkg/package-manifest-schema';
 import type { RegistryCore } from '@uapkg/registry-core';
-import type { ResolvedGraph, ResolverOptions } from '../contracts/ManifestTypes.js';
-import { LockfileReader } from '../io/LockfileReader.js';
-import { LockfileSyncIssueWriter } from '../io/LockfileSyncIssueWriter.js';
-import { LockfileWriter } from '../io/LockfileWriter.js';
-import { ManifestReader } from '../io/ManifestReader.js';
-import { ManifestWriter } from '../io/ManifestWriter.js';
-import { LockfileSync } from '../resolver/LockfileSync.js';
-import { Resolver } from '../resolver/Resolver.js';
-import { type AddDependencyOptions, DependencyMutator } from './DependencyMutator.js';
-import { type LockfileDiff, LockfileDiffer } from './LockfileDiffer.js';
-import { sortLockfileSyncIssues } from './LockfileSyncIssue.js';
-import { LockfileSyncValidator } from './LockfileSyncValidator.js';
-import { OutdatedChecker, type OutdatedEntry } from './OutdatedChecker.js';
-import { WhyGraph, type WhyResult } from './WhyGraph.js';
+import type { ResolvedGraph, ResolverOptions } from '../contracts/ManifestTypes.ts';
+import { LockfileReader } from '../io/LockfileReader.ts';
+import { LockfileSyncIssueWriter } from '../io/LockfileSyncIssueWriter.ts';
+import { LockfileWriter } from '../io/LockfileWriter.ts';
+import { ManifestReader } from '../io/ManifestReader.ts';
+import { ManifestWriter } from '../io/ManifestWriter.ts';
+import { LockfileSync } from '../resolver/LockfileSync.ts';
+import { Resolver } from '../resolver/Resolver.ts';
+import { type AddDependencyOptions, DependencyMutator } from './DependencyMutator.ts';
+import { type LockfileDiff, LockfileDiffer } from './LockfileDiffer.ts';
+import { sortLockfileSyncIssues } from './LockfileSyncIssue.ts';
+import { LockfileSyncValidator } from './LockfileSyncValidator.ts';
+import { OutdatedChecker, type OutdatedEntry } from './OutdatedChecker.ts';
+import { WhyGraph, type WhyResult } from './WhyGraph.ts';
 
 export interface PackageManifestOptions {
   /** Absolute path to the directory containing `uapkg.json`. */

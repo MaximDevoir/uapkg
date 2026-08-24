@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { parseDevBuildOptions } from '../DevBuildOptions';
+import { parseDevBuildOptions } from '../DevBuildOptions.ts';
 
 describe('parseDevBuildOptions', () => {
   it('defaults a normal build to development', () => {

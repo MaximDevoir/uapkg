@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { ControlPlaneError } from '../../src/control-plane/ControlPlaneTypes.js';
+import { ControlPlaneError } from '../../src/control-plane/ControlPlaneTypes.ts';
 import {
   PUBLISH_SUBMISSION_ERROR_CATALOG,
   type PublishRequestErrorContext,
   publishRequestDiagnosticForError,
-} from '../../src/control-plane/PublishRequestErrorMapper.js';
+} from '../../src/control-plane/PublishRequestErrorMapper.ts';
 
 const context: PublishRequestErrorContext = {
   packageName: 'example',

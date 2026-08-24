@@ -1,8 +1,8 @@
 import * as path from 'node:path';
 import type { InstallPlan } from '@uapkg/installer';
 import type { Lockfile, Manifest } from '@uapkg/package-manifest-schema';
-import type { CompositionRoot } from '../app/CompositionRoot.js';
-import type { PostinstallCandidate } from '../postinstall/runner/PostinstallOrchestrator.js';
+import type { CompositionRoot } from '../app/CompositionRoot.ts';
+import type { PostinstallCandidate } from '../postinstall/runner/PostinstallOrchestrator.ts';
 
 /**
  * Builds the {@link PostinstallCandidate} list that the postinstall

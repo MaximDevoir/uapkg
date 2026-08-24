@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { canonicalJsonStringify, parseJsonStrict, sha256OfCanonicalJson } from '../src/index.js';
+import { canonicalJsonStringify, parseJsonStrict, sha256OfCanonicalJson } from '../src/index.ts';
 
 describe('parseJsonStrict', () => {
   it('parses ordinary JSON', () => {

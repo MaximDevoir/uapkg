@@ -2,8 +2,8 @@ import { computeRegistryIdentifier, computeRegistryIdentifierShort } from '@uapk
 import type { RegistryIdentifier } from '@uapkg/common-schema';
 import { ConfigInstance } from '@uapkg/config';
 import { createRegistryNotFoundDiagnostic, DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
-import type { RegistryCoreOptions, RegistryDescriptor } from '../contracts/RegistryCoreTypes.js';
-import { Registry } from '../registry/Registry.js';
+import type { RegistryCoreOptions, RegistryDescriptor } from '../contracts/RegistryCoreTypes.ts';
+import { Registry } from '../registry/Registry.ts';
 
 /**
  * Top-level entry point for the registry subsystem.

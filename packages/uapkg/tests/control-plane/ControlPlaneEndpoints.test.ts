@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { UAPKG_BUILD_METADATA } from '../../src/build/BuildMetadata.js';
+import { UAPKG_BUILD_METADATA } from '../../src/build/BuildMetadata.ts';
 import {
   controlPlaneEndpointsForBuildMode,
   UAPKG_CONTROL_PLANE_ENDPOINTS,
-} from '../../src/control-plane/ControlPlaneEndpoints.js';
+} from '../../src/control-plane/ControlPlaneEndpoints.ts';
 import {
   registryAudience,
   UAPKG_AUTHORIZATION_ISSUER,
   UAPKG_CONTROL_PLANE_API,
-} from '../../src/control-plane/ControlPlaneTypes.js';
+} from '../../src/control-plane/ControlPlaneTypes.ts';
 
 describe('build-pinned control-plane endpoints', () => {
   it('maps development and production builds to isolated endpoint pairs', () => {

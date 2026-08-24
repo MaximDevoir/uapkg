@@ -1,12 +1,12 @@
 import { createRegistryToolsRemovalDeniedDiagnostic, DiagnosticBag, type Result } from '@uapkg/diagnostics';
-import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.js';
+import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
 import type {
   RegistryMutationPlan,
   RemovePackageRequest,
   ResolvedRegistryToolsPolicy,
-} from '../contracts/RegistryToolsTypes.js';
-import type { ManifestStore } from '../io/ManifestStore.js';
-import type { RegistryRepoPaths } from '../paths/RegistryRepoPaths.js';
+} from '../contracts/RegistryToolsTypes.ts';
+import type { ManifestStore } from '../io/ManifestStore.ts';
+import type { RegistryRepoPaths } from '../paths/RegistryRepoPaths.ts';
 
 /**
  * Plans the deletion of a package's manifest entirely.

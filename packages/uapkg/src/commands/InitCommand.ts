@@ -2,10 +2,10 @@ import type { PackageName, PackageVersion } from '@uapkg/common-schema';
 import { PackageNameSchema, PackageVersionSchema } from '@uapkg/common-schema';
 import { ManifestReader, ManifestWriter } from '@uapkg/package-manifest';
 import type { Manifest, ManifestKind } from '@uapkg/package-manifest-schema';
-import type { CompositionRoot } from '../app/CompositionRoot.js';
-import type { ProjectContextDetector } from '../prompts/ProjectContextDetector.js';
-import type { PromptService } from '../prompts/PromptService.js';
-import type { Command } from './Command.js';
+import type { CompositionRoot } from '../app/CompositionRoot.ts';
+import type { ProjectContextDetector } from '../prompts/ProjectContextDetector.ts';
+import type { PromptService } from '../prompts/PromptService.ts';
+import type { Command } from './Command.ts';
 
 export interface InitCommandOptions {
   readonly explicitKind?: ManifestKind;

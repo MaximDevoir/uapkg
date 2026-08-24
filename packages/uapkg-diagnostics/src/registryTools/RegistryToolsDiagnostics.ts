@@ -1,4 +1,4 @@
-import type { DiagnosticBase } from '../base/Diagnostic.js';
+import type { DiagnosticBase } from '../base/Diagnostic.ts';
 
 // ---------------------------------------------------------------------------
 // Registry-tools diagnostic codes
@@ -187,7 +187,7 @@ export type RegistryToolsDiagnostic =
 // Factory helpers
 // ---------------------------------------------------------------------------
 
-import { createDiagnostic } from '../base/Diagnostic.js';
+import { createDiagnostic } from '../base/Diagnostic.ts';
 
 const ONCE = { emitPolicy: 'once' as const };
 

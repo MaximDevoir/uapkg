@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Brand } from '../brand/Brand.js';
+import type { Brand } from '../brand/Brand.ts';
 
 /**
  * Branded type for a logical registry name (the key under `registries` in config).

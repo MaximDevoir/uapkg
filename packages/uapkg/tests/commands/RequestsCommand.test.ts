@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
-import { RequestsCommand } from '../../src/commands/RequestsCommand.js';
-import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';
+import type { CompositionRoot } from '../../src/app/CompositionRoot.ts';
+import { RequestsCommand } from '../../src/commands/RequestsCommand.ts';
+import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.ts';
 
 afterEach(() => {
   vi.useRealTimers();

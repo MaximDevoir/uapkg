@@ -1,7 +1,7 @@
-import type { CompositionRoot } from '../app/CompositionRoot.js';
-import type { UAPKGOutputFormat } from '../cli/UAPKGCommandLine.js';
-import { type LoginProgressEvent, loginDiagnosticForError } from '../control-plane/AccountManager.js';
-import type { Command } from './Command.js';
+import type { CompositionRoot } from '../app/CompositionRoot.ts';
+import type { UAPKGOutputFormat } from '../cli/UAPKGCommandLine.ts';
+import { type LoginProgressEvent, loginDiagnosticForError } from '../control-plane/AccountManager.ts';
+import type { Command } from './Command.ts';
 
 export interface LoginCommandOptions {
   readonly registry?: string;

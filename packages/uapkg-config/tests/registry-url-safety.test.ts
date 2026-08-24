@@ -3,10 +3,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { createConfig } from '../src/index.js';
-import { configSchema } from '../src/schema/configSchema.js';
-import { ConfigCliValueParser } from '../src/schema/runtime/ConfigCliValueParser.js';
-import { ConfigSchemaRuntime } from '../src/schema/runtime/ConfigSchemaRuntime.js';
+import { createConfig } from '../src/index.ts';
+import { configSchema } from '../src/schema/configSchema.ts';
+import { ConfigCliValueParser } from '../src/schema/runtime/ConfigCliValueParser.ts';
+import { ConfigSchemaRuntime } from '../src/schema/runtime/ConfigSchemaRuntime.ts';
 
 const temporaryDirectories: string[] = [];
 

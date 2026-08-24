@@ -1,6 +1,6 @@
 import path from 'node:path';
 import ignore from 'ignore';
-import type { IgnoreRule } from './IgnoreRuleLoader.js';
+import type { IgnoreRule } from './IgnoreRuleLoader.ts';
 
 export class IgnoreEvaluator {
   shouldIgnore(relativePath: string, absolutePath: string, rules: IgnoreRule[]) {

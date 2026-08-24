@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
-import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';
-import { GitHubActionsOidcCredentialProvider } from '../../src/control-plane/GitHubActionsOidcCredentialProvider.js';
+import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.ts';
+import { GitHubActionsOidcCredentialProvider } from '../../src/control-plane/GitHubActionsOidcCredentialProvider.ts';
 
 const trust: RegistryTrust = {
   alias: 'official',

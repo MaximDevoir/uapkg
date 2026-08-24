@@ -1,7 +1,7 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
 import { formatPublishRequestFailed } from '@uapkg/diagnostics-format';
-import type { DiagnosticRenderer } from './DiagnosticRenderer.js';
-import type { TextSink } from './TextSink.js';
+import type { DiagnosticRenderer } from './DiagnosticRenderer.ts';
+import type { TextSink } from './TextSink.ts';
 
 /**
  * Plain-text diagnostic renderer — used by tests and by any non-TTY path

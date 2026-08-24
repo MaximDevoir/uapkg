@@ -12,34 +12,34 @@ export type {
   InstallSummary,
   PackageInstallOutcome,
   PackageInstallStatus,
-} from './contracts/InstallerTypes.js';
+} from './contracts/InstallerTypes.ts';
 export type {
   BuiltInSafetyPolicyId,
   SafetyContext,
   SafetyEvaluation,
   SafetyPolicy,
-} from './contracts/SafetyPolicyTypes.js';
-export type { DownloadStatusSnapshot, InstallTotals, SlotSnapshot, SlotState } from './contracts/StatusStreamTypes.js';
+} from './contracts/SafetyPolicyTypes.ts';
+export type { DownloadStatusSnapshot, InstallTotals, SlotSnapshot, SlotState } from './contracts/StatusStreamTypes.ts';
 
 // Core
-export { type ClaimsVerificationInput, ClaimsVerifier } from './core/ClaimsVerifier.js';
-export { type DiskStateEntry, DiskStateInspector } from './core/DiskStateInspector.js';
-export { Installer, type InstallerConstructorOptions } from './core/Installer.js';
-export { InstallPlanner } from './core/InstallPlanner.js';
-export { IntegrityVerifier } from './core/IntegrityVerifier.js';
+export { type ClaimsVerificationInput, ClaimsVerifier } from './core/ClaimsVerifier.ts';
+export { type DiskStateEntry, DiskStateInspector } from './core/DiskStateInspector.ts';
+export { Installer, type InstallerConstructorOptions } from './core/Installer.ts';
+export { InstallPlanner } from './core/InstallPlanner.ts';
+export { IntegrityVerifier } from './core/IntegrityVerifier.ts';
 export {
   type DownloadOptions,
   type DownloadProgress,
   type DownloadResult,
   PackageDownloader,
-} from './core/PackageDownloader.js';
-export { PackageExtractor } from './core/PackageExtractor.js';
-export { PackageRemover } from './core/PackageRemover.js';
+} from './core/PackageDownloader.ts';
+export { PackageExtractor } from './core/PackageExtractor.ts';
+export { PackageRemover } from './core/PackageRemover.ts';
 
 // Safety
-export { NoMarkerPolicy } from './safety/NoMarkerPolicy.js';
-export { SafetyPolicyRegistry, type SafetyVerdict } from './safety/SafetyPolicyRegistry.js';
+export { NoMarkerPolicy } from './safety/NoMarkerPolicy.ts';
+export { SafetyPolicyRegistry, type SafetyVerdict } from './safety/SafetyPolicyRegistry.ts';
 
 // Status
-export { SlotTable } from './status/SlotTable.js';
-export { StatusStream } from './status/StatusStream.js';
+export { SlotTable } from './status/SlotTable.ts';
+export { StatusStream } from './status/StatusStream.ts';

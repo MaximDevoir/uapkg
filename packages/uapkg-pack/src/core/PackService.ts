@@ -11,17 +11,17 @@ import {
 } from '@uapkg/diagnostics';
 import Log, { createLogger } from '@uapkg/log';
 import semver from 'semver';
-import type { PackOptions, PackResult } from '../contracts/PackTypes.js';
-import { FileCrawler } from './FileCrawler.js';
-import { IgnoreEvaluator } from './IgnoreEvaluator.js';
-import { IgnoreRuleLoader } from './IgnoreRuleLoader.js';
-import { IntegrityWriter } from './IntegrityWriter.js';
-import { LFSPointerDetector } from './LFSPointerDetector.js';
-import { PackArtifactExcluder } from './PackArtifactExcluder.js';
-import { PackManifestReader } from './PackManifestReader.js';
-import { PluginDescriptorGuard } from './PluginDescriptorGuard.js';
-import { PluginRootResolver } from './PluginRootResolver.js';
-import { TarArchiveWriter } from './TarArchiveWriter.js';
+import type { PackOptions, PackResult } from '../contracts/PackTypes.ts';
+import { FileCrawler } from './FileCrawler.ts';
+import { IgnoreEvaluator } from './IgnoreEvaluator.ts';
+import { IgnoreRuleLoader } from './IgnoreRuleLoader.ts';
+import { IntegrityWriter } from './IntegrityWriter.ts';
+import { LFSPointerDetector } from './LFSPointerDetector.ts';
+import { PackArtifactExcluder } from './PackArtifactExcluder.ts';
+import { PackManifestReader } from './PackManifestReader.ts';
+import { PluginDescriptorGuard } from './PluginDescriptorGuard.ts';
+import { PluginRootResolver } from './PluginRootResolver.ts';
+import { TarArchiveWriter } from './TarArchiveWriter.ts';
 
 export class PackService {
   private readonly logger = createLogger({ context: 'pack' });

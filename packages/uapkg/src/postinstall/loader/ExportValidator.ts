@@ -1,5 +1,5 @@
 import { createPostinstallInvalidExportDiagnostic, fail, ok, type Result } from '@uapkg/diagnostics';
-import { type PostinstallDefinition, PostinstallDefinitionSchema } from '../api/PostinstallDsl.js';
+import { type PostinstallDefinition, PostinstallDefinitionSchema } from '../api/PostinstallDsl.ts';
 
 /**
  * Normalizes an imported module to its default export (or the module object

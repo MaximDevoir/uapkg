@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { JsonReporter } from '../../src/reporting/JsonReporter.js';
-import { MemoryTextSink } from '../_fakes/MemoryTextSink.js';
+import { JsonReporter } from '../../src/reporting/JsonReporter.ts';
+import { MemoryTextSink } from '../_fakes/MemoryTextSink.ts';
 
 describe('JsonReporter', () => {
   it('emits a single JSON line per call', () => {

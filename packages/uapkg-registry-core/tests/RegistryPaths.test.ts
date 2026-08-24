@@ -10,7 +10,7 @@ import {
   getRegistryPackagesPath,
   getRegistryRepoPath,
   getRegistryRoot,
-} from '../src/index.js';
+} from '../src/index.ts';
 
 afterEach(() => {
   vi.unstubAllEnvs();

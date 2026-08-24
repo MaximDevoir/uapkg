@@ -7,11 +7,11 @@ import {
   ok,
   type Result,
 } from '@uapkg/diagnostics';
-import type { ConfigGetOptions, ConfigListOptions, ConfigScope, ConfigWriteOptions } from '../contracts/ConfigTypes.js';
-import { ConfigFileRepository } from '../files/ConfigFileRepository.js';
-import { ConfigPathResolver } from '../files/ConfigPathResolver.js';
-import { partialConfigSchema } from '../schema/configSchema.js';
-import { deleteValueByPath, setValueByPath, validateConfigPath } from '../schema/pathSchema.js';
+import type { ConfigGetOptions, ConfigListOptions, ConfigScope, ConfigWriteOptions } from '../contracts/ConfigTypes.ts';
+import { ConfigFileRepository } from '../files/ConfigFileRepository.ts';
+import { ConfigPathResolver } from '../files/ConfigPathResolver.ts';
+import { partialConfigSchema } from '../schema/configSchema.ts';
+import { deleteValueByPath, setValueByPath, validateConfigPath } from '../schema/pathSchema.ts';
 
 export class ConfigWriter {
   constructor(

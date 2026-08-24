@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
-import type { UAPKGWhoamiField } from '../../src/cli/UAPKGCommandLine.js';
-import { WhoamiCommand } from '../../src/commands/WhoamiCommand.js';
-import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.js';
-import { JsonReporter } from '../../src/reporting/JsonReporter.js';
+import type { CompositionRoot } from '../../src/app/CompositionRoot.ts';
+import type { UAPKGWhoamiField } from '../../src/cli/UAPKGCommandLine.ts';
+import { WhoamiCommand } from '../../src/commands/WhoamiCommand.ts';
+import type { RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.ts';
+import { JsonReporter } from '../../src/reporting/JsonReporter.ts';
 
 const ACCOUNT_ID = '20000000-0000-4000-a000-000000000020';
 const REGISTRY_ID = '00000000-0000-4000-a000-000000000020';

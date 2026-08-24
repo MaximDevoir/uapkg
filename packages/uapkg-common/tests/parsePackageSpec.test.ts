@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { formatPackageSpec, parsePackageSpec } from '../src/spec/parsePackageSpec';
+import { formatPackageSpec, parsePackageSpec } from '../src/spec/parsePackageSpec.ts';
 
 describe('parsePackageSpec', () => {
   it('parses unscoped package names', () => {

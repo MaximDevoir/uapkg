@@ -1,6 +1,6 @@
 import { validRange } from 'semver';
 import { z } from 'zod';
-import type { Brand } from '../brand/Brand.js';
+import type { Brand } from '../brand/Brand.ts';
 
 /**
  * Branded type for a valid semver range expression (e.g. `^1.2.0`, `>=0.5.0 <1.0.0`).

@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createManifestWriteErrorDiagnostic, DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
-import type { LockfileSyncIssue } from '../core/LockfileSyncIssue.js';
+import type { LockfileSyncIssue } from '../core/LockfileSyncIssue.ts';
 
 /**
  * Persists detailed lockfile sync issues to disk for large diagnostic sets.

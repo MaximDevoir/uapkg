@@ -1,5 +1,5 @@
 import { createUpluginMissingDiagnostic, fail, ok, type Result } from '@uapkg/diagnostics';
-import type { CollectedFile } from '../contracts/PackTypes.js';
+import type { CollectedFile } from '../contracts/PackTypes.ts';
 
 /**
  * Verifies a plugin descriptor file exists before packing.

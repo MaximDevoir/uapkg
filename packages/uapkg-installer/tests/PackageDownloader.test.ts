@@ -3,7 +3,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { AddressInfo } from 'node:net';
 import { gzipSync } from 'node:zlib';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { PackageDownloader } from '../src/core/PackageDownloader.js';
+import { PackageDownloader } from '../src/core/PackageDownloader.ts';
 
 type RequestHandler = (request: IncomingMessage, response: ServerResponse) => void;
 

@@ -4,7 +4,7 @@ import {
   DiagnosticBag,
 } from '@uapkg/diagnostics';
 import type { ZodType } from 'zod';
-import type { ConfigLayer, ConfigResolvedResult } from '../contracts/ConfigTypes.js';
+import type { ConfigLayer, ConfigResolvedResult } from '../contracts/ConfigTypes.ts';
 import {
   type ConfigSchemaNodeKind,
   describeValueType,
@@ -13,7 +13,7 @@ import {
   getObjectShape,
   getRecordValueSchema,
   isRecordValue,
-} from '../schema/runtime/ConfigSchemaIntrospection.js';
+} from '../schema/runtime/ConfigSchemaIntrospection.ts';
 
 interface MergeContext {
   readonly source: string;

@@ -2,7 +2,7 @@ import type { PackageSpec, VersionRange } from '@uapkg/common-schema';
 import { DEFAULT_REGISTRY_ALIAS, RegistryNameSchema, VersionRangeSchema } from '@uapkg/common-schema';
 import { createRegistryNotFoundDiagnostic, fail, ok, type Result } from '@uapkg/diagnostics';
 import type { Dependency } from '@uapkg/package-manifest-schema';
-import type { CompositionRoot } from '../../app/CompositionRoot.js';
+import type { CompositionRoot } from '../../app/CompositionRoot.ts';
 
 export interface ResolvedAddDependency {
   readonly dependency: Dependency;

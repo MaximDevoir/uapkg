@@ -2,13 +2,13 @@ import { ok } from '@uapkg/diagnostics';
 import type { InstallReport } from '@uapkg/installer';
 import type { Lockfile, Manifest } from '@uapkg/package-manifest-schema';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import type { CompositionRoot } from '../../src/app/CompositionRoot.js';
-import { AddCommand } from '../../src/commands/AddCommand.js';
-import { InstallCommand } from '../../src/commands/InstallCommand.js';
-import { UpdateCommand } from '../../src/commands/UpdateCommand.js';
-import { AccountManager } from '../../src/control-plane/AccountManager.js';
-import type { AuthMetadataStore } from '../../src/control-plane/AuthMetadataStore.js';
-import { CredentialStore } from '../../src/control-plane/CredentialStore.js';
+import type { CompositionRoot } from '../../src/app/CompositionRoot.ts';
+import { AddCommand } from '../../src/commands/AddCommand.ts';
+import { InstallCommand } from '../../src/commands/InstallCommand.ts';
+import { UpdateCommand } from '../../src/commands/UpdateCommand.ts';
+import { AccountManager } from '../../src/control-plane/AccountManager.ts';
+import type { AuthMetadataStore } from '../../src/control-plane/AuthMetadataStore.ts';
+import { CredentialStore } from '../../src/control-plane/CredentialStore.ts';
 
 const manifest = {
   name: 'auth-isolation',

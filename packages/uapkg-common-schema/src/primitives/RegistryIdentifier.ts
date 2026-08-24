@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Brand } from '../brand/Brand.js';
+import type { Brand } from '../brand/Brand.ts';
 
 /**
  * Branded type for the full registry identifier (64-char hex SHA-256).

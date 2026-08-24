@@ -5,7 +5,7 @@ import type {
   DiagnosticByCode,
   LoginDiagnosticCode,
   LoginReauthorizationConflictDiagnostic,
-} from '../src/index';
+} from '../src/index.ts';
 import {
   createCacheCorruptDiagnostic,
   createCacheIdentifierCollisionDiagnostic,
@@ -18,7 +18,7 @@ import {
   fail,
   fromDiagnostics,
   ok,
-} from '../src/index';
+} from '../src/index.ts';
 
 describe('Control-plane diagnostics', () => {
   it('exposes reauthorization conflicts through the login and unified diagnostic unions', () => {

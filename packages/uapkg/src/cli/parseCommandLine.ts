@@ -1,4 +1,4 @@
-import { UAPKGCommandLineParser } from './parsing/UAPKGCommandLineParser.js';
+import { UAPKGCommandLineParser } from './parsing/UAPKGCommandLineParser.ts';
 
 const parser = new UAPKGCommandLineParser();
 

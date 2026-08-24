@@ -1,5 +1,5 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
-import type { InstallAction } from './InstallerTypes.js';
+import type { InstallAction } from './InstallerTypes.ts';
 
 /**
  * Stable identifier for a built-in safety policy.

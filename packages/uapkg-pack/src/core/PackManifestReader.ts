@@ -9,7 +9,7 @@ import {
 } from '@uapkg/diagnostics';
 import semver from 'semver';
 import { z } from 'zod';
-import type { PackManifest } from '../contracts/PackTypes.js';
+import type { PackManifest } from '../contracts/PackTypes.ts';
 
 const packManifestSchema = z.object({
   name: z.string().min(1),

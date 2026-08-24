@@ -5,8 +5,8 @@ import type {
   PublishDiagnosticFact,
   PublishDiagnosticResource,
   PublishRequestFailedDiagnostic,
-} from '../src/index.js';
-import { createPublishRequestFailedDiagnostic } from '../src/index.js';
+} from '../src/index.ts';
+import { createPublishRequestFailedDiagnostic } from '../src/index.ts';
 
 describe('Publishing diagnostics', () => {
   it('exposes a strongly typed publish failure through the unified union', () => {

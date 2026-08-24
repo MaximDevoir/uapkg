@@ -1,9 +1,9 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
 import type { Lockfile } from '@uapkg/package-manifest-schema';
-import type { CompositionRoot } from '../app/CompositionRoot.js';
-import { InstallProgressReporter } from '../reporting/InstallProgressReporter.js';
-import type { Command } from './Command.js';
-import { PostinstallCandidateBuilder } from './PostinstallCandidateBuilder.js';
+import type { CompositionRoot } from '../app/CompositionRoot.ts';
+import { InstallProgressReporter } from '../reporting/InstallProgressReporter.ts';
+import type { Command } from './Command.ts';
+import { PostinstallCandidateBuilder } from './PostinstallCandidateBuilder.ts';
 
 export interface InstallCommandOptions {
   readonly force: boolean;

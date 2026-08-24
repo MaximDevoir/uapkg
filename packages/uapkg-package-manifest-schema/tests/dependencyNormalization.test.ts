@@ -5,7 +5,7 @@ import {
   ManifestSchema,
   normalizeDependencyDeclaration,
   toDependencyDeclaration,
-} from '../src/index.js';
+} from '../src/index.ts';
 
 describe('dependency registry normalization', () => {
   it('normalizes string shorthand to an inherited (absent) registry', () => {

@@ -1,4 +1,4 @@
-import type { LoggerStateResolver, LogLevel } from '../contracts/LoggerTypes.js';
+import type { LoggerStateResolver, LogLevel } from '../contracts/LoggerTypes.ts';
 
 export class LogLevelPolicy {
   resolveLevel(options: { verbose: boolean; quiet: boolean }): LogLevel {

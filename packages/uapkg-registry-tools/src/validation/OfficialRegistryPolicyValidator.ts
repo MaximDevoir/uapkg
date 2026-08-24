@@ -5,8 +5,8 @@ import { safeJsonParse } from '@uapkg/common';
 import type { PackageName, PackageVersion } from '@uapkg/common-schema';
 import { createRegistryToolsOfficialPolicyViolationDiagnostic, DiagnosticBag, type Result } from '@uapkg/diagnostics';
 import { BaseManifestSchema } from '@uapkg/package-manifest-schema';
-import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.js';
-import type { OfficialPackagePolicyReport } from '../contracts/RegistryToolsTypes.js';
+import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
+import type { OfficialPackagePolicyReport } from '../contracts/RegistryToolsTypes.ts';
 
 const UAPKG_MANIFEST = 'uapkg.json';
 const UAPKG_LOCKFILE = 'uapkg.lock';

@@ -1,14 +1,14 @@
-import { configInkComponents } from '../components/configInkComponents.js';
-import { installerInkComponents } from '../components/installerInkComponents.js';
-import { manifestInkComponents } from '../components/manifestInkComponents.js';
-import { packInkComponents } from '../components/packInkComponents.js';
-import { postinstallInkComponents } from '../components/postinstallInkComponents.js';
-import { publishingInkComponents } from '../components/publishingInkComponents.js';
-import { registryInkComponents } from '../components/registryInkComponents.js';
-import { resolverInkComponents } from '../components/resolverInkComponents.js';
-import { safetyInkComponents } from '../components/safetyInkComponents.js';
-import { specInkComponents } from '../components/specInkComponents.js';
-import type { DiagnosticInkComponentMap } from '../contracts/InkTypes.js';
+import { configInkComponents } from '../components/configInkComponents.tsx';
+import { installerInkComponents } from '../components/installerInkComponents.tsx';
+import { manifestInkComponents } from '../components/manifestInkComponents.tsx';
+import { packInkComponents } from '../components/packInkComponents.tsx';
+import { postinstallInkComponents } from '../components/postinstallInkComponents.tsx';
+import { publishingInkComponents } from '../components/publishingInkComponents.tsx';
+import { registryInkComponents } from '../components/registryInkComponents.tsx';
+import { resolverInkComponents } from '../components/resolverInkComponents.tsx';
+import { safetyInkComponents } from '../components/safetyInkComponents.tsx';
+import { specInkComponents } from '../components/specInkComponents.tsx';
+import type { DiagnosticInkComponentMap } from '../contracts/InkTypes.ts';
 
 /**
  * Aggregated default Ink component map — one entry per well-known diagnostic

@@ -1,6 +1,6 @@
 import { prettyBytes } from '@uapkg/common';
 import type { DownloadStatusSnapshot } from '@uapkg/installer';
-import { ProcessTextSink, type TextSink } from './TextSink.js';
+import { ProcessTextSink, type TextSink } from './TextSink.ts';
 
 /**
  * Text-mode progress reporter for `uapkg install / add / update`.

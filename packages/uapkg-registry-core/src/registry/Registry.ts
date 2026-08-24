@@ -12,16 +12,16 @@ import type {
   RegistryDescriptor,
   RegistryUpdateOptions,
   RegistryUpdateResult,
-} from '../contracts/RegistryCoreTypes.js';
-import { getRegistryLockPath } from '../paths/RegistryPaths.js';
-import { type ResolvedVersion, resolveVersion } from '../resolution/PackageResolver.js';
-import { RegistryCacheValidator } from './RegistryCacheValidator.js';
-import { RegistryLock } from './RegistryLock.js';
-import { RegistryMetadataReader } from './RegistryMetadataReader.js';
-import { RegistryPackageReader } from './RegistryPackageReader.js';
-import { evaluateSyncPolicy } from './RegistrySyncPolicy.js';
-import { RegistryUpdater } from './RegistryUpdater.js';
-import { redactRegistryUrlSecrets, sanitizeRegistryUrlForDisplay } from './RegistryUrlSanitizer.js';
+} from '../contracts/RegistryCoreTypes.ts';
+import { getRegistryLockPath } from '../paths/RegistryPaths.ts';
+import { type ResolvedVersion, resolveVersion } from '../resolution/PackageResolver.ts';
+import { RegistryCacheValidator } from './RegistryCacheValidator.ts';
+import { RegistryLock } from './RegistryLock.ts';
+import { RegistryMetadataReader } from './RegistryMetadataReader.ts';
+import { RegistryPackageReader } from './RegistryPackageReader.ts';
+import { evaluateSyncPolicy } from './RegistrySyncPolicy.ts';
+import { RegistryUpdater } from './RegistryUpdater.ts';
+import { redactRegistryUrlSecrets, sanitizeRegistryUrlForDisplay } from './RegistryUrlSanitizer.ts';
 
 /**
  * Represents one configured local registry cache.

@@ -13,8 +13,8 @@ export type {
   RegistryUpdateResult,
   SyncDecision,
   SyncPolicyInput,
-} from './contracts/RegistryCoreTypes.js';
-export { RegistryCore } from './core/RegistryCore.js';
+} from './contracts/RegistryCoreTypes.ts';
+export { RegistryCore } from './core/RegistryCore.ts';
 export {
   getRegistryCachePath,
   getRegistryLockPath,
@@ -22,20 +22,20 @@ export {
   getRegistryPackagesPath,
   getRegistryRepoPath,
   getRegistryRoot,
-} from './paths/RegistryPaths.js';
+} from './paths/RegistryPaths.ts';
 export {
   type GitCommandRunner,
   type GitInteractionMode,
   type GitProcessSpawner,
   GitRunner,
   type GitRunOptions,
-} from './registry/GitRunner.js';
-export { Registry } from './registry/Registry.js';
-export { RegistryLock } from './registry/RegistryLock.js';
-export { RegistryMetadataReader } from './registry/RegistryMetadataReader.js';
-export { RegistryPackageReader } from './registry/RegistryPackageReader.js';
-export { evaluateSyncPolicy } from './registry/RegistrySyncPolicy.js';
-export { RegistryUpdater } from './registry/RegistryUpdater.js';
-export { redactRegistryUrlSecrets, sanitizeRegistryUrlForDisplay } from './registry/RegistryUrlSanitizer.js';
-export { type ResolvedVersion, resolveVersion } from './resolution/PackageResolver.js';
-export { SemverSelectionPolicy } from './resolution/SemverSelectionPolicy.js';
+} from './registry/GitRunner.ts';
+export { Registry } from './registry/Registry.ts';
+export { RegistryLock } from './registry/RegistryLock.ts';
+export { RegistryMetadataReader } from './registry/RegistryMetadataReader.ts';
+export { RegistryPackageReader } from './registry/RegistryPackageReader.ts';
+export { evaluateSyncPolicy } from './registry/RegistrySyncPolicy.ts';
+export { RegistryUpdater } from './registry/RegistryUpdater.ts';
+export { redactRegistryUrlSecrets, sanitizeRegistryUrlForDisplay } from './registry/RegistryUrlSanitizer.ts';
+export { type ResolvedVersion, resolveVersion } from './resolution/PackageResolver.ts';
+export { SemverSelectionPolicy } from './resolution/SemverSelectionPolicy.ts';

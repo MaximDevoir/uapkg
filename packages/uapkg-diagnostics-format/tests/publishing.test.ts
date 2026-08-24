@@ -7,8 +7,8 @@ import {
   defaultFormatters,
   formatPublishRequestFailed,
   publishingFormatters,
-} from '../src/index.js';
-import { createInkRegistry, DiagnosticView, defaultInkComponents, publishingInkComponents } from '../src/ink/index.js';
+} from '../src/index.ts';
+import { createInkRegistry, DiagnosticView, defaultInkComponents, publishingInkComponents } from '../src/ink/index.ts';
 
 function publishFailure() {
   return createPublishRequestFailedDiagnostic(

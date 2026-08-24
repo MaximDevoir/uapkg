@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { CleanupService } from '../CleanupService';
-import { ProcessRunner } from '../ProcessRunner';
+import { CleanupService } from '../CleanupService.ts';
+import { ProcessRunner } from '../ProcessRunner.ts';
 
 const temporaryDirectories: string[] = [];
 

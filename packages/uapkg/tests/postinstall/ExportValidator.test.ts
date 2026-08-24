@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { ExportValidator } from '../../src/postinstall/loader/ExportValidator.js';
+import { ExportValidator } from '../../src/postinstall/loader/ExportValidator.ts';
 
 const v = new ExportValidator();
 

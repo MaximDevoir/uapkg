@@ -1,8 +1,8 @@
 import type { RegistryIdentifier } from '@uapkg/common-schema';
 import { createCacheIdentifierCollisionDiagnostic, fail, ok, type Result } from '@uapkg/diagnostics';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
-import { Registry, RegistryLock } from '../src/index.js';
-import type { RegistryCacheState } from '../src/registry/RegistryCacheValidator.js';
+import { Registry, RegistryLock } from '../src/index.ts';
+import type { RegistryCacheState } from '../src/registry/RegistryCacheValidator.ts';
 
 const registryId = 'a'.repeat(64) as RegistryIdentifier;
 
