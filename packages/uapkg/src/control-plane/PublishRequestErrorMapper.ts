@@ -5,7 +5,7 @@ import {
   type PublishRequestFailedDiagnostic,
 } from '@uapkg/diagnostics';
 import { z } from 'zod';
-import { ControlPlaneError } from './ControlPlaneTypes.ts';
+import { ControlPlaneError } from '#cli/control-plane/ControlPlaneTypes.ts';
 
 const SERVER_CODE_PATTERN = /^[A-Z][A-Z0-9_]{0,127}$/u;
 

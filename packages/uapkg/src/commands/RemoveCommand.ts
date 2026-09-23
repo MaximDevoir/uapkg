@@ -1,6 +1,6 @@
-import type { CompositionRoot } from '../app/CompositionRoot.ts';
-import type { Command } from './Command.ts';
-import { InstallCommand } from './InstallCommand.ts';
+import type { CompositionRoot } from '#cli/app/CompositionRoot.ts';
+import type { Command } from '#cli/commands/Command.ts';
+import { InstallCommand } from '#cli/commands/InstallCommand.ts';
 
 export interface RemoveCommandOptions {
   readonly packageName: string;

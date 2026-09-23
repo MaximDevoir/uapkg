@@ -1,16 +1,16 @@
-import type { ConfigDiagnostic } from './config/ConfigDiagnostics.ts';
-import type { ControlPlaneDiagnostic } from './controlPlane/ControlPlaneDiagnostics.ts';
-import type { GeneralDiagnostic } from './general/GeneralDiagnostics.ts';
-import type { InstallerDiagnostic } from './installer/InstallerDiagnostics.ts';
-import type { ManifestDiagnostic } from './manifest/ManifestDiagnostics.ts';
-import type { PackDiagnostic } from './pack/PackDiagnostics.ts';
-import type { PostinstallDiagnostic } from './postinstall/PostinstallDiagnostics.ts';
-import type { PublishingDiagnostic } from './publishing/PublishingDiagnostics.ts';
-import type { RegistryDiagnostic } from './registry/RegistryDiagnostics.ts';
-import type { RegistryToolsDiagnostic } from './registryTools/RegistryToolsDiagnostics.ts';
-import type { ResolverDiagnostic } from './resolver/ResolverDiagnostics.ts';
-import type { SafetyDiagnostic } from './safety/SafetyDiagnostics.ts';
-import type { SpecParseDiagnostic } from './spec/SpecDiagnostics.ts';
+import type { ConfigDiagnostic } from '#diagnostics/config/ConfigDiagnostics.ts';
+import type { ControlPlaneDiagnostic } from '#diagnostics/controlPlane/ControlPlaneDiagnostics.ts';
+import type { GeneralDiagnostic } from '#diagnostics/general/GeneralDiagnostics.ts';
+import type { InstallerDiagnostic } from '#diagnostics/installer/InstallerDiagnostics.ts';
+import type { ManifestDiagnostic } from '#diagnostics/manifest/ManifestDiagnostics.ts';
+import type { PackDiagnostic } from '#diagnostics/pack/PackDiagnostics.ts';
+import type { PostinstallDiagnostic } from '#diagnostics/postinstall/PostinstallDiagnostics.ts';
+import type { PublishingDiagnostic } from '#diagnostics/publishing/PublishingDiagnostics.ts';
+import type { RegistryDiagnostic } from '#diagnostics/registry/RegistryDiagnostics.ts';
+import type { RegistryToolsDiagnostic } from '#diagnostics/registryTools/RegistryToolsDiagnostics.ts';
+import type { ResolverDiagnostic } from '#diagnostics/resolver/ResolverDiagnostics.ts';
+import type { SafetyDiagnostic } from '#diagnostics/safety/SafetyDiagnostics.ts';
+import type { SpecParseDiagnostic } from '#diagnostics/spec/SpecDiagnostics.ts';
 
 /**
  * The unified Diagnostic type — a discriminated union of every known

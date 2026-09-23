@@ -1,5 +1,5 @@
 import type { UAPKGBuildMode } from '@uapkg/common';
-import { UAPKG_BUILD_METADATA } from '../build/BuildMetadata.ts';
+import { UAPKG_BUILD_METADATA } from '#cli/build/BuildMetadata.ts';
 
 export interface UAPKGControlPlaneEndpoints {
   readonly issuer: string;

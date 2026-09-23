@@ -1,6 +1,6 @@
 import { webcrypto } from 'node:crypto';
 import type * as oauth from 'oauth4webapi';
-import type { CredentialStore } from './CredentialStore.ts';
+import type { CredentialStore } from '#cli/control-plane/CredentialStore.ts';
 
 interface SerializedDPoPKeyPair {
   readonly algorithm: 'ES256';

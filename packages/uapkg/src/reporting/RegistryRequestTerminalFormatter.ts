@@ -1,9 +1,9 @@
-import type { UAPKGLifecycleCommandName, UAPKGOutputFormat } from '../cli/UAPKGCommandLine.ts';
+import type { UAPKGLifecycleCommandName, UAPKGOutputFormat } from '#cli/cli/UAPKGCommandLine.ts';
 import type {
   RegistryRequestDetail,
   RegistryRequestStatus,
   RegistryRequestSummary,
-} from '../control-plane/ControlPlaneTypes.ts';
+} from '#cli/control-plane/ControlPlaneTypes.ts';
 
 const TERMINAL_STATUSES: ReadonlySet<RegistryRequestStatus> = new Set([
   'ready',

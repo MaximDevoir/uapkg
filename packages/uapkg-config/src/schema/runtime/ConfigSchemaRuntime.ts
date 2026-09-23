@@ -5,7 +5,7 @@ import {
   getObjectShape,
   getRecordValueSchema,
   unwrapConfigSchema,
-} from './ConfigSchemaIntrospection.ts';
+} from '#config/schema/runtime/ConfigSchemaIntrospection.ts';
 
 export interface ResolvedConfigSchemaPath {
   readonly path: string;

@@ -1,6 +1,6 @@
 import { pack } from '@uapkg/pack';
-import { DiagnosticReporter } from '../reporting/DiagnosticReporter.ts';
-import type { Command } from './Command.ts';
+import { DiagnosticReporter } from '#cli/reporting/DiagnosticReporter.ts';
+import type { Command } from '#cli/commands/Command.ts';
 
 export interface PackCommandOptions {
   cwd: string;

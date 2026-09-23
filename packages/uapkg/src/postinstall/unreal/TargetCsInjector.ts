@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import { createIoErrorDiagnostic, fail, ok, type Result } from '@uapkg/diagnostics';
-import type { ZoneDefinition } from '../api/PostinstallDsl.ts';
-import { MarkerBlockEditor } from '../markers/MarkerBlockEditor.ts';
-import { CSharpInjectionEngine } from './CSharpInjectionEngine.ts';
-import { CSharpStructureAnalyzer } from './CSharpStructureAnalyzer.ts';
-import { CSharpWrapperFactory } from './CSharpWrapperFactory.ts';
-import { getWrapperClassName } from './PluginHash.ts';
+import type { ZoneDefinition } from '#cli/postinstall/api/PostinstallDsl.ts';
+import { MarkerBlockEditor } from '#cli/postinstall/markers/MarkerBlockEditor.ts';
+import { CSharpInjectionEngine } from '#cli/postinstall/unreal/CSharpInjectionEngine.ts';
+import { CSharpStructureAnalyzer } from '#cli/postinstall/unreal/CSharpStructureAnalyzer.ts';
+import { CSharpWrapperFactory } from '#cli/postinstall/unreal/CSharpWrapperFactory.ts';
+import { getWrapperClassName } from '#cli/postinstall/unreal/PluginHash.ts';
 
 const TARGET_CS_ZONES = ['target-includes', 'target-class-body', 'target-constructor'] as const;
 

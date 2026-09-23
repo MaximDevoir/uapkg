@@ -3,7 +3,7 @@ import SelectInput from 'ink-select-input';
 import TextInput from 'ink-text-input';
 import isCI from 'is-ci';
 import { useState } from 'react';
-import type { PromptService, SelectOption } from './PromptService.ts';
+import type { PromptService, SelectOption } from '#cli/prompts/PromptService.ts';
 
 // ---------------------------------------------------------------------------
 // InkPromptService — renders interactive prompts via Ink/React.

@@ -1,9 +1,11 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite-plus';
+import { defaultServerConditions, defineConfig } from 'vite-plus';
+import { importPolicyOverrides } from './tools/import-policy/policy.ts';
 
 const workspacePath = (relativePath: string): string => fileURLToPath(new URL(relativePath, import.meta.url));
+const sourceConditions = ['uapkg-source', ...defaultServerConditions];
 
 interface WorkspaceBuildPackage {
   readonly name: string;
@@ -119,7 +121,8 @@ interface TestProjectOptions {
 
 const testProject = (name: string, relativeRoot: string, options: TestProjectOptions = {}) => ({
   root: workspacePath(relativeRoot),
-  resolve: { alias: sourceAliases },
+  resolve: { alias: sourceAliases, conditions: sourceConditions },
+  ssr: { resolve: { conditions: sourceConditions } },
   test: {
     name,
     environment: 'node',
@@ -151,6 +154,7 @@ export default defineConfig({
       'typescript/no-deprecated': 'error',
       'vite-plus/prefer-vite-plus-imports': 'error',
     },
+    overrides: importPolicyOverrides,
     options: {
       reportUnusedDisableDirectives: 'error',
       typeAware: true,
@@ -172,8 +176,10 @@ export default defineConfig({
     clean: true,
     minify: false,
     deps: { neverBundle: true },
+    inputOptions: { resolve: { conditionNames: ['uapkg-source', 'node', 'import', 'default'] } },
   },
-  resolve: { alias: sourceAliases },
+  resolve: { alias: sourceAliases, conditions: sourceConditions },
+  ssr: { resolve: { conditions: sourceConditions } },
   test: {
     environment: 'node',
     coverage: {
@@ -200,6 +206,7 @@ export default defineConfig({
       testProject('@uapkg/registry-tools', './packages/uapkg-registry-tools'),
       testProject('consumer-bundle-tools', './tools/consumer-bundle'),
       testProject('dev-build-tools', './tools/dev-build'),
+      testProject('import-policy-tools', './tools/import-policy'),
     ],
   },
   run: {

@@ -1,4 +1,9 @@
-import type { DownloadStatusSnapshot, InstallTotals, SlotSnapshot, SlotState } from '../contracts/StatusStreamTypes.ts';
+import type {
+  DownloadStatusSnapshot,
+  InstallTotals,
+  SlotSnapshot,
+  SlotState,
+} from '#installer/contracts/StatusStreamTypes.ts';
 
 /**
  * Stable, indexed slot table. One row per concurrent installer worker.

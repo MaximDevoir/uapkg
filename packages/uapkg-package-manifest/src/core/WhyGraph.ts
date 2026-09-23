@@ -1,5 +1,5 @@
 import type { PackageName, PackageVersion } from '@uapkg/common-schema';
-import type { PackageNode, ResolvedGraph } from '../contracts/ManifestTypes.ts';
+import type { PackageNode, ResolvedGraph } from '#package-manifest/contracts/ManifestTypes.ts';
 
 /**
  * One ancestor chain showing *why* a package is present in the graph.

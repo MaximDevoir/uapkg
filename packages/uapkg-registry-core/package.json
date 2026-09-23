@@ -37,5 +37,12 @@
   },
   "devDependencies": {
     "@types/semver": "7.7.0"
+  },
+  "imports": {
+    "#registry-core/*.ts": {
+      "uapkg-source": "./src/*.ts",
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
   }
 }

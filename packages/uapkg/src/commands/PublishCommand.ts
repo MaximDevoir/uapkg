@@ -7,31 +7,31 @@ import { promisify } from 'node:util';
 import { readPackageClaimsFromArchive } from '@uapkg/package-claims';
 import { getRegistryRepoPath } from '@uapkg/registry-core';
 import { RegistryMetaSchema, type RegistryType } from '@uapkg/registry-schema';
-import type { CompositionRoot } from '../app/CompositionRoot.ts';
-import type { UAPKGOutputFormat } from '../cli/UAPKGCommandLine.ts';
-import { describeControlPlaneError } from '../control-plane/AccountManager.ts';
-import { ArtifactObserver } from '../control-plane/ArtifactObserver.ts';
-import { AuthenticationSelector } from '../control-plane/AuthenticationSelector.ts';
-import { ControlPlaneClient } from '../control-plane/ControlPlaneClient.ts';
+import type { CompositionRoot } from '#cli/app/CompositionRoot.ts';
+import type { UAPKGOutputFormat } from '#cli/cli/UAPKGCommandLine.ts';
+import { describeControlPlaneError } from '#cli/control-plane/AccountManager.ts';
+import { ArtifactObserver } from '#cli/control-plane/ArtifactObserver.ts';
+import { AuthenticationSelector } from '#cli/control-plane/AuthenticationSelector.ts';
+import { ControlPlaneClient } from '#cli/control-plane/ControlPlaneClient.ts';
 import {
   type ControlPlaneAuthMode,
   ControlPlaneError,
   type RegistryRequestDetail,
   type RegistryRequestStatus,
   type RegistryRequestSubmission,
-} from '../control-plane/ControlPlaneTypes.ts';
+} from '#cli/control-plane/ControlPlaneTypes.ts';
 import {
   createGitHubActionsPublishIdempotencyKey,
   PublishIdempotencyStore,
-} from '../control-plane/PublishIdempotencyStore.ts';
-import { publishRequestDiagnosticForError } from '../control-plane/PublishRequestErrorMapper.ts';
-import { InkPromptService } from '../prompts/InkPromptService.tsx';
+} from '#cli/control-plane/PublishIdempotencyStore.ts';
+import { publishRequestDiagnosticForError } from '#cli/control-plane/PublishRequestErrorMapper.ts';
+import { InkPromptService } from '#cli/prompts/InkPromptService.tsx';
 import {
   formatRegistryRequestTerminal,
   isRegistryRequestSuccessStatus,
   isRegistryRequestTerminalStatus,
-} from '../reporting/RegistryRequestTerminalFormatter.ts';
-import type { Command } from './Command.ts';
+} from '#cli/reporting/RegistryRequestTerminalFormatter.ts';
+import type { Command } from '#cli/commands/Command.ts';
 
 const execFileAsync = promisify(execFile);
 const PUBLISH_WATCH_TIMEOUT_MS = 30 * 60 * 1000;

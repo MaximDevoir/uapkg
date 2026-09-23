@@ -37,5 +37,12 @@
   },
   "peerDependencies": {
     "zod": "^4.3.6"
+  },
+  "imports": {
+    "#common-schema/*.ts": {
+      "uapkg-source": "./src/*.ts",
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
   }
 }

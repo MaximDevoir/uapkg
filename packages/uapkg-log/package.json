@@ -29,5 +29,12 @@
   },
   "dependencies": {
     "winston": "3.19.0"
+  },
+  "imports": {
+    "#log/*.ts": {
+      "uapkg-source": "./src/*.ts",
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
   }
 }

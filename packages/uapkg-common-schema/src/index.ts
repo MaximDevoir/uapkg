@@ -3,37 +3,40 @@
 // ---------------------------------------------------------------------------
 
 // Brand utility
-export type { Brand } from './brand/Brand.ts';
-export type { AssetHash } from './primitives/AssetHash.ts';
-export { AssetHashSchema } from './primitives/AssetHash.ts';
-export type { ConcurrencyCount } from './primitives/ConcurrencyCount.ts';
-export { ConcurrencyCountSchema } from './primitives/ConcurrencyCount.ts';
-export type { DurationSeconds } from './primitives/DurationSeconds.ts';
-export { DurationSecondsSchema } from './primitives/DurationSeconds.ts';
-export type { GitTree } from './primitives/GitTree.ts';
-export { GitTreeSchema } from './primitives/GitTree.ts';
-export type { InstallPath } from './primitives/InstallPath.ts';
-export { InstallPathSchema } from './primitives/InstallPath.ts';
+export type { Brand } from '#common-schema/brand/Brand.ts';
+export type { AssetHash } from '#common-schema/primitives/AssetHash.ts';
+export { AssetHashSchema } from '#common-schema/primitives/AssetHash.ts';
+export type { ConcurrencyCount } from '#common-schema/primitives/ConcurrencyCount.ts';
+export { ConcurrencyCountSchema } from '#common-schema/primitives/ConcurrencyCount.ts';
+export type { DurationSeconds } from '#common-schema/primitives/DurationSeconds.ts';
+export { DurationSecondsSchema } from '#common-schema/primitives/DurationSeconds.ts';
+export type { GitTree } from '#common-schema/primitives/GitTree.ts';
+export { GitTreeSchema } from '#common-schema/primitives/GitTree.ts';
+export type { InstallPath } from '#common-schema/primitives/InstallPath.ts';
+export { InstallPathSchema } from '#common-schema/primitives/InstallPath.ts';
 // Added in Phase 0 (commands/installer/postinstall work)
-export type { OrgName } from './primitives/OrgName.ts';
-export { OrgNameSchema } from './primitives/OrgName.ts';
+export type { OrgName } from '#common-schema/primitives/OrgName.ts';
+export { OrgNameSchema } from '#common-schema/primitives/OrgName.ts';
 // Branded primitives — types
-export type { PackageName } from './primitives/PackageName.ts';
+export type { PackageName } from '#common-schema/primitives/PackageName.ts';
 // Branded primitives — Zod schemas
-export { isScopedPackageName, PackageNameSchema } from './primitives/PackageName.ts';
-export type { PackageSpec } from './primitives/PackageSpec.ts';
-export { PackageSpecSchema } from './primitives/PackageSpec.ts';
-export type { PackageVersion } from './primitives/PackageVersion.ts';
-export { PackageVersionSchema } from './primitives/PackageVersion.ts';
-export type { PostInstallPolicy } from './primitives/PostInstallPolicy.ts';
-export { POSTINSTALL_POLICY_DEFAULT, PostInstallPolicySchema } from './primitives/PostInstallPolicy.ts';
-export type { RegistryIdentifier, RegistryIdentifierShort } from './primitives/RegistryIdentifier.ts';
-export { RegistryIdentifierSchema, RegistryIdentifierShortSchema } from './primitives/RegistryIdentifier.ts';
-export type { RegistryName } from './primitives/RegistryName.ts';
-export { DEFAULT_REGISTRY_ALIAS, RegistryNameSchema } from './primitives/RegistryName.ts';
-export type { RegistryURL } from './primitives/RegistryURL.ts';
-export { RegistryURLSchema } from './primitives/RegistryURL.ts';
-export type { UnixTimestamp } from './primitives/UnixTimestamp.ts';
-export { UnixTimestampSchema } from './primitives/UnixTimestamp.ts';
-export type { VersionRange } from './primitives/VersionRange.ts';
-export { VersionRangeSchema } from './primitives/VersionRange.ts';
+export { isScopedPackageName, PackageNameSchema } from '#common-schema/primitives/PackageName.ts';
+export type { PackageSpec } from '#common-schema/primitives/PackageSpec.ts';
+export { PackageSpecSchema } from '#common-schema/primitives/PackageSpec.ts';
+export type { PackageVersion } from '#common-schema/primitives/PackageVersion.ts';
+export { PackageVersionSchema } from '#common-schema/primitives/PackageVersion.ts';
+export type { PostInstallPolicy } from '#common-schema/primitives/PostInstallPolicy.ts';
+export { POSTINSTALL_POLICY_DEFAULT, PostInstallPolicySchema } from '#common-schema/primitives/PostInstallPolicy.ts';
+export type { RegistryIdentifier, RegistryIdentifierShort } from '#common-schema/primitives/RegistryIdentifier.ts';
+export {
+  RegistryIdentifierSchema,
+  RegistryIdentifierShortSchema,
+} from '#common-schema/primitives/RegistryIdentifier.ts';
+export type { RegistryName } from '#common-schema/primitives/RegistryName.ts';
+export { DEFAULT_REGISTRY_ALIAS, RegistryNameSchema } from '#common-schema/primitives/RegistryName.ts';
+export type { RegistryURL } from '#common-schema/primitives/RegistryURL.ts';
+export { RegistryURLSchema } from '#common-schema/primitives/RegistryURL.ts';
+export type { UnixTimestamp } from '#common-schema/primitives/UnixTimestamp.ts';
+export { UnixTimestampSchema } from '#common-schema/primitives/UnixTimestamp.ts';
+export type { VersionRange } from '#common-schema/primitives/VersionRange.ts';
+export { VersionRangeSchema } from '#common-schema/primitives/VersionRange.ts';

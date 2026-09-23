@@ -4,7 +4,7 @@ import {
   createSafetyOverriddenByForceDiagnostic,
   createSafetyTargetExistsNoManifestDiagnostic,
 } from '@uapkg/diagnostics';
-import type { SafetyContext, SafetyEvaluation, SafetyPolicy } from '../contracts/SafetyPolicyTypes.ts';
+import type { SafetyContext, SafetyEvaluation, SafetyPolicy } from '#installer/contracts/SafetyPolicyTypes.ts';
 
 /**
  * Policy: "target directory exists but contains no `uapkg.json`".

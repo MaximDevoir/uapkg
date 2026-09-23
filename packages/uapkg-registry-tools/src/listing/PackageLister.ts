@@ -3,10 +3,10 @@ import { readdir } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import type { PackageName } from '@uapkg/common-schema';
 import { createIoErrorDiagnostic, DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
-import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
-import type { PackageSummary } from '../contracts/RegistryToolsTypes.ts';
-import type { ManifestStore } from '../io/ManifestStore.ts';
-import type { RegistryRepoPaths } from '../paths/RegistryRepoPaths.ts';
+import type { RegistryToolsAggregator } from '#registry-tools/aggregator/RegistryToolsAggregator.ts';
+import type { PackageSummary } from '#registry-tools/contracts/RegistryToolsTypes.ts';
+import type { ManifestStore } from '#registry-tools/io/ManifestStore.ts';
+import type { RegistryRepoPaths } from '#registry-tools/paths/RegistryRepoPaths.ts';
 
 /**
  * Lists packages in the registry repo by walking `packages/{first-letter}/*.json`.

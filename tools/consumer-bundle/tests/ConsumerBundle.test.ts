@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { gzipSync } from 'node:zlib';
+import { gunzipSync, gzipSync } from 'node:zlib';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import {
   assertConsumerRootCompatibility,
@@ -212,6 +212,79 @@ describe('publish-shaped bundle identity', () => {
     normalizePackedTarball(first);
     normalizePackedTarball(second);
     expect(readFileSync(first)).toEqual(readFileSync(second));
+  });
+
+  it('preserves nested package conditions in normalized tarball bytes and native Node resolution', () => {
+    const directory = temporaryDirectory('uapkg-bundle-conditions-');
+    const tarball = path.join(directory, 'conditional.tgz');
+    const conditions = {
+      'uapkg-source': { types: './source-types.js', default: './source.js' },
+      types: './types.js',
+      default: './runtime.js',
+    };
+    writeFileSync(
+      tarball,
+      minimalPackageTarball({
+        name: '@uapkg/conditional-fixture',
+        version: '1.3.0',
+        type: 'module',
+        imports: { '#conditional': conditions },
+        exports: { '.': conditions, './alternative': [conditions, './fallback.js'] },
+        dependencies: { zebra: '1.0.0', alpha: '1.0.0' },
+        metadata: { zebra: true, alpha: false },
+      }),
+    );
+    normalizePackedTarball(tarball);
+
+    // Inspect the actual rewritten entry, not normalizePackedTarball's parsed input return value.
+    const archive = gunzipSync(readFileSync(tarball));
+    const size = Number.parseInt(archive.toString('ascii', 124, 136), 8);
+    const manifestBytes = archive.subarray(512, 512 + size);
+    const normalized = JSON.parse(manifestBytes.toString('utf8')) as {
+      imports: { '#conditional': typeof conditions };
+      exports: { '.': typeof conditions; './alternative': [typeof conditions, string] };
+      dependencies: Record<string, string>;
+      metadata: Record<string, boolean>;
+    };
+    for (const target of [
+      normalized.imports['#conditional'],
+      normalized.exports['.'],
+      normalized.exports['./alternative'][0],
+    ]) {
+      expect(Object.keys(target)).toEqual(['uapkg-source', 'types', 'default']);
+      expect(Object.keys(target['uapkg-source'])).toEqual(['types', 'default']);
+    }
+    expect(normalized.exports['./alternative'][1]).toBe('./fallback.js');
+    expect(Object.keys(normalized.dependencies)).toEqual(['alpha', 'zebra']);
+    expect(Object.keys(normalized.metadata)).toEqual(['alpha', 'zebra']);
+
+    writeFileSync(path.join(directory, 'package.json'), manifestBytes);
+    for (const target of ['runtime', 'source', 'types', 'source-types']) {
+      writeFileSync(path.join(directory, `${target}.js`), `export default ${JSON.stringify(target)};`);
+    }
+    for (const [flags, expected] of [
+      [[], 'runtime'],
+      [['--conditions=uapkg-source'], 'source'],
+      [['--conditions=types'], 'types'],
+      [['--conditions=uapkg-source', '--conditions=types'], 'source-types'],
+    ] as const) {
+      const output = execFileSync(
+        process.execPath,
+        [
+          ...flags,
+          '--input-type=module',
+          '--eval',
+          `const modules = await Promise.all([
+            import('#conditional'),
+            import('@uapkg/conditional-fixture'),
+            import('@uapkg/conditional-fixture/alternative'),
+          ]);
+          console.log(JSON.stringify(modules.map((module) => module.default)));`,
+        ],
+        { cwd: directory, encoding: 'utf8', env: { ...process.env, NODE_OPTIONS: '' } },
+      );
+      expect(JSON.parse(output)).toEqual([expected, expected, expected]);
+    }
   });
 
   it('reads the packed manifest in-process without a platform archive command', () => {

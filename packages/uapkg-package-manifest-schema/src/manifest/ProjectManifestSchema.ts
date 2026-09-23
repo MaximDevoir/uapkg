@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { BaseManifestSchema } from './BaseManifestSchema.ts';
-import { DependencySchema } from './DependencySchema.ts';
+import { BaseManifestSchema } from '#package-manifest-schema/manifest/BaseManifestSchema.ts';
+import { DependencySchema } from '#package-manifest-schema/manifest/DependencySchema.ts';
 
 /**
  * Project-only postinstall overrides.

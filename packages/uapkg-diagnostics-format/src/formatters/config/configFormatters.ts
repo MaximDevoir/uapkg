@@ -6,7 +6,7 @@ import type {
   ConfigUnresolvedDefaultRegistryDiagnostic,
   Diagnostic,
 } from '@uapkg/diagnostics';
-import type { FormatterMap } from '../../contracts/FormatterTypes.ts';
+import type { FormatterMap } from '#diagnostics-format/contracts/FormatterTypes.ts';
 
 function formatInvalidJson(diagnostic: Diagnostic): string {
   const data = (diagnostic as ConfigInvalidJsonDiagnostic).data;

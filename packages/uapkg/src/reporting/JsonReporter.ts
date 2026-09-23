@@ -1,5 +1,5 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
-import { ProcessTextSink, type TextSink } from './TextSink.ts';
+import { ProcessTextSink, type TextSink } from '#cli/reporting/TextSink.ts';
 
 /**
  * Stable JSON envelope used when any command is invoked with `--json`.

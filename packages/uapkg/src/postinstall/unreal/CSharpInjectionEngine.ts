@@ -1,5 +1,5 @@
-import { MarkerBlockService } from '../markers/MarkerBlockService.ts';
-import type { ParsedCSharpFile } from './CSharpStructures.ts';
+import { MarkerBlockService } from '#cli/postinstall/markers/MarkerBlockService.ts';
+import type { ParsedCSharpFile } from '#cli/postinstall/unreal/CSharpStructures.ts';
 
 /**
  * Applies marker-delimited edits to a parsed C# file at three well-known anchors:

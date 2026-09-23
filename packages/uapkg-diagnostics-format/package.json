@@ -38,5 +38,17 @@
   },
   "devDependencies": {
     "@types/react": "19.2.14"
+  },
+  "imports": {
+    "#diagnostics-format/*.ts": {
+      "uapkg-source": "./src/*.ts",
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    },
+    "#diagnostics-format/*.tsx": {
+      "uapkg-source": "./src/*.tsx",
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
   }
 }

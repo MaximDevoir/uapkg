@@ -2,7 +2,7 @@ import { rm } from 'node:fs/promises';
 import type { PackageName, PackageVersion } from '@uapkg/common-schema';
 import { type Diagnostic, DiagnosticBag, fail, ok, type Result } from '@uapkg/diagnostics';
 import type { Integrity, PackageRegistryManifest, RegistryVersion } from '@uapkg/registry-schema';
-import { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
+import { RegistryToolsAggregator } from '#registry-tools/aggregator/RegistryToolsAggregator.ts';
 import type {
   AddPackageVersionRequest,
   ChangedManifestValidation,
@@ -22,23 +22,23 @@ import type {
   RemovePackageVersionRequest,
   ResolvedRegistryToolsPolicy,
   WriteManifestResult,
-} from '../contracts/RegistryToolsTypes.ts';
-import { IntegrityCalculator } from '../io/IntegrityCalculator.ts';
-import { ManifestStore } from '../io/ManifestStore.ts';
-import { PackageLister } from '../listing/PackageLister.ts';
-import { AddPackageVersionPlanner } from '../mutation/AddPackageVersionPlanner.ts';
-import { RemovePackagePlanner } from '../mutation/RemovePackagePlanner.ts';
-import { RemovePackageVersionPlanner } from '../mutation/RemovePackageVersionPlanner.ts';
-import { RegistryRepoPaths } from '../paths/RegistryRepoPaths.ts';
-import { DependencyReachabilityValidator } from '../validation/DependencyReachabilityValidator.ts';
-import { ExternalRegistryPolicyValidator } from '../validation/ExternalRegistryPolicyValidator.ts';
-import { ManifestValidator } from '../validation/ManifestValidator.ts';
+} from '#registry-tools/contracts/RegistryToolsTypes.ts';
+import { IntegrityCalculator } from '#registry-tools/io/IntegrityCalculator.ts';
+import { ManifestStore } from '#registry-tools/io/ManifestStore.ts';
+import { PackageLister } from '#registry-tools/listing/PackageLister.ts';
+import { AddPackageVersionPlanner } from '#registry-tools/mutation/AddPackageVersionPlanner.ts';
+import { RemovePackagePlanner } from '#registry-tools/mutation/RemovePackagePlanner.ts';
+import { RemovePackageVersionPlanner } from '#registry-tools/mutation/RemovePackageVersionPlanner.ts';
+import { RegistryRepoPaths } from '#registry-tools/paths/RegistryRepoPaths.ts';
+import { DependencyReachabilityValidator } from '#registry-tools/validation/DependencyReachabilityValidator.ts';
+import { ExternalRegistryPolicyValidator } from '#registry-tools/validation/ExternalRegistryPolicyValidator.ts';
+import { ManifestValidator } from '#registry-tools/validation/ManifestValidator.ts';
 import {
   type OfficialRegistryPolicyRequest,
   OfficialRegistryPolicyValidator,
-} from '../validation/OfficialRegistryPolicyValidator.ts';
-import { RegistryValidator } from '../validation/RegistryValidator.ts';
-import { ReleaseFileNameValidator } from '../validation/ReleaseFileNameValidator.ts';
+} from '#registry-tools/validation/OfficialRegistryPolicyValidator.ts';
+import { RegistryValidator } from '#registry-tools/validation/RegistryValidator.ts';
+import { ReleaseFileNameValidator } from '#registry-tools/validation/ReleaseFileNameValidator.ts';
 
 /**
  * Programmatic toolkit for registry-owner workflows over a uapkg registry repo.

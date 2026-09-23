@@ -7,45 +7,58 @@
 // this barrel only.
 // ---------------------------------------------------------------------------
 
-export { definePostinstall } from './api/definePostinstall.ts';
+export { definePostinstall } from '#cli/postinstall/api/definePostinstall.ts';
 // API
-export type { PostinstallDefinition, ProjectSetupDefinition, ZoneDefinition } from './api/PostinstallDsl.ts';
-export { PostinstallDefinitionSchema, ProjectSetupSchema, ZoneSchema } from './api/PostinstallDsl.ts';
+export type {
+  PostinstallDefinition,
+  ProjectSetupDefinition,
+  ZoneDefinition,
+} from '#cli/postinstall/api/PostinstallDsl.ts';
+export { PostinstallDefinitionSchema, ProjectSetupSchema, ZoneSchema } from '#cli/postinstall/api/PostinstallDsl.ts';
 
 // Loader
-export { EntryResolver, type PostinstallEntryKind, type ResolvedEntry } from './loader/EntryResolver.ts';
-export { EsbuildTranspiler } from './loader/EsbuildTranspiler.ts';
-export { ExportValidator } from './loader/ExportValidator.ts';
-export { ModuleImporter, type ModuleSource } from './loader/ModuleImporter.ts';
-export { type LoadedPostinstall, PostinstallLoader } from './loader/PostinstallLoader.ts';
+export { EntryResolver, type PostinstallEntryKind, type ResolvedEntry } from '#cli/postinstall/loader/EntryResolver.ts';
+export { EsbuildTranspiler } from '#cli/postinstall/loader/EsbuildTranspiler.ts';
+export { ExportValidator } from '#cli/postinstall/loader/ExportValidator.ts';
+export { ModuleImporter, type ModuleSource } from '#cli/postinstall/loader/ModuleImporter.ts';
+export { type LoadedPostinstall, PostinstallLoader } from '#cli/postinstall/loader/PostinstallLoader.ts';
 // Markers
-export { MarkerBlockEditor } from './markers/MarkerBlockEditor.ts';
-export { MarkerBlockService } from './markers/MarkerBlockService.ts';
+export { MarkerBlockEditor } from '#cli/postinstall/markers/MarkerBlockEditor.ts';
+export { MarkerBlockService } from '#cli/postinstall/markers/MarkerBlockService.ts';
 export {
   type MarkerIntegrityFail,
   type MarkerIntegrityOk,
   type MarkerIntegrityResult,
   MarkerIntegrityValidator,
-} from './markers/MarkerIntegrityValidator.ts';
+} from '#cli/postinstall/markers/MarkerIntegrityValidator.ts';
 // Policy
-export { type PolicyConfigReader, type PolicyDecision, PostinstallPolicyGate } from './policy/PostinstallPolicyGate.ts';
+export {
+  type PolicyConfigReader,
+  type PolicyDecision,
+  PostinstallPolicyGate,
+} from '#cli/postinstall/policy/PostinstallPolicyGate.ts';
 // Runner
 export {
   type PostinstallCandidate,
   PostinstallOrchestrator,
   type PostinstallOrchestratorInput,
   type PostinstallReport,
-} from './runner/PostinstallOrchestrator.ts';
+} from '#cli/postinstall/runner/PostinstallOrchestrator.ts';
 // Unreal
-export { BuildCsInjector } from './unreal/BuildCsInjector.ts';
-export { CSharpInjectionEngine } from './unreal/CSharpInjectionEngine.ts';
-export { CSharpStructureAnalyzer } from './unreal/CSharpStructureAnalyzer.ts';
-export type { CSharpFileKind, ParsedClass, ParsedConstructor, ParsedCSharpFile } from './unreal/CSharpStructures.ts';
-export { CSharpWrapperFactory, type WrapperContextType } from './unreal/CSharpWrapperFactory.ts';
-export { getPluginHash, getWrapperClassName } from './unreal/PluginHash.ts';
-export { PrettyParseError } from './unreal/PrettyParseError.ts';
-export { ProjectFileLocator } from './unreal/ProjectFileLocator.ts';
-export { TargetCsInjector } from './unreal/TargetCsInjector.ts';
-export { type SourceCatalog, UnrealSourceCatalogBuilder } from './unreal/UnrealSourceCatalog.ts';
-export { UProjectInjector } from './unreal/UProjectInjector.ts';
-export { UProjectMetadataReader } from './unreal/UProjectMetadataReader.ts';
+export { BuildCsInjector } from '#cli/postinstall/unreal/BuildCsInjector.ts';
+export { CSharpInjectionEngine } from '#cli/postinstall/unreal/CSharpInjectionEngine.ts';
+export { CSharpStructureAnalyzer } from '#cli/postinstall/unreal/CSharpStructureAnalyzer.ts';
+export type {
+  CSharpFileKind,
+  ParsedClass,
+  ParsedConstructor,
+  ParsedCSharpFile,
+} from '#cli/postinstall/unreal/CSharpStructures.ts';
+export { CSharpWrapperFactory, type WrapperContextType } from '#cli/postinstall/unreal/CSharpWrapperFactory.ts';
+export { getPluginHash, getWrapperClassName } from '#cli/postinstall/unreal/PluginHash.ts';
+export { PrettyParseError } from '#cli/postinstall/unreal/PrettyParseError.ts';
+export { ProjectFileLocator } from '#cli/postinstall/unreal/ProjectFileLocator.ts';
+export { TargetCsInjector } from '#cli/postinstall/unreal/TargetCsInjector.ts';
+export { type SourceCatalog, UnrealSourceCatalogBuilder } from '#cli/postinstall/unreal/UnrealSourceCatalog.ts';
+export { UProjectInjector } from '#cli/postinstall/unreal/UProjectInjector.ts';
+export { UProjectMetadataReader } from '#cli/postinstall/unreal/UProjectMetadataReader.ts';

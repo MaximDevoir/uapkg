@@ -3,7 +3,7 @@ import type {
   DiagnosticBodyComponent,
   DiagnosticInkComponentMap,
   IDiagnosticInkRegistry,
-} from '../contracts/InkTypes.ts';
+} from '#diagnostics-format/ink/contracts/InkTypes.ts';
 
 /**
  * Lookup service for Ink diagnostic-body components.

@@ -26,5 +26,12 @@
     "build": "vp pack",
     "prepack": "vp run build",
     "build:watch": "vp pack --watch"
+  },
+  "imports": {
+    "#diagnostics/*.ts": {
+      "uapkg-source": "./src/*.ts",
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
   }
 }

@@ -1,7 +1,7 @@
 import type { PackageName, PackageVersion } from '@uapkg/common-schema';
 import { createRegistryToolsReleaseFileNameInvalidDiagnostic, DiagnosticBag, type Result } from '@uapkg/diagnostics';
-import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
-import type { ReleaseFileNameReport } from '../contracts/RegistryToolsTypes.ts';
+import type { RegistryToolsAggregator } from '#registry-tools/aggregator/RegistryToolsAggregator.ts';
+import type { ReleaseFileNameReport } from '#registry-tools/contracts/RegistryToolsTypes.ts';
 
 /**
  * Validates that release file names follow one of the accepted shapes.

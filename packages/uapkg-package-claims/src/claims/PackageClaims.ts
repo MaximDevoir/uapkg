@@ -2,7 +2,11 @@ import { PackageNameSchema, PackageVersionSchema } from '@uapkg/common-schema';
 import { DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
 import { DependencyDeclarationSchema, normalizeDependencyDeclaration } from '@uapkg/package-manifest-schema';
 import { z } from 'zod';
-import { type ClaimedDependency, type PackageClaims, PackageClaimsSchema } from '../schema/PackageClaimsSchema.ts';
+import {
+  type ClaimedDependency,
+  type PackageClaims,
+  PackageClaimsSchema,
+} from '#package-claims/schema/PackageClaimsSchema.ts';
 
 /**
  * Claims-focused manifest view: validates only the fields that publication
@@ -65,4 +69,4 @@ export function normalizePackageClaims(rawManifest: unknown): Result<PackageClai
   );
 }
 
-export type { ClaimedDependency, PackageClaims } from '../schema/PackageClaimsSchema.ts';
+export type { ClaimedDependency, PackageClaims } from '#package-claims/schema/PackageClaimsSchema.ts';

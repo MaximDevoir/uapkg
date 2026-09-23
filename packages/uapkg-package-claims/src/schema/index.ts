@@ -3,4 +3,4 @@ export {
   ClaimedDependencySchema,
   type PackageClaims,
   PackageClaimsSchema,
-} from './PackageClaimsSchema.ts';
+} from '#package-claims/schema/PackageClaimsSchema.ts';

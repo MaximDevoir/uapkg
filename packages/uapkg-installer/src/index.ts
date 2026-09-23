@@ -12,34 +12,39 @@ export type {
   InstallSummary,
   PackageInstallOutcome,
   PackageInstallStatus,
-} from './contracts/InstallerTypes.ts';
+} from '#installer/contracts/InstallerTypes.ts';
 export type {
   BuiltInSafetyPolicyId,
   SafetyContext,
   SafetyEvaluation,
   SafetyPolicy,
-} from './contracts/SafetyPolicyTypes.ts';
-export type { DownloadStatusSnapshot, InstallTotals, SlotSnapshot, SlotState } from './contracts/StatusStreamTypes.ts';
+} from '#installer/contracts/SafetyPolicyTypes.ts';
+export type {
+  DownloadStatusSnapshot,
+  InstallTotals,
+  SlotSnapshot,
+  SlotState,
+} from '#installer/contracts/StatusStreamTypes.ts';
 
 // Core
-export { type ClaimsVerificationInput, ClaimsVerifier } from './core/ClaimsVerifier.ts';
-export { type DiskStateEntry, DiskStateInspector } from './core/DiskStateInspector.ts';
-export { Installer, type InstallerConstructorOptions } from './core/Installer.ts';
-export { InstallPlanner } from './core/InstallPlanner.ts';
-export { IntegrityVerifier } from './core/IntegrityVerifier.ts';
+export { type ClaimsVerificationInput, ClaimsVerifier } from '#installer/core/ClaimsVerifier.ts';
+export { type DiskStateEntry, DiskStateInspector } from '#installer/core/DiskStateInspector.ts';
+export { Installer, type InstallerConstructorOptions } from '#installer/core/Installer.ts';
+export { InstallPlanner } from '#installer/core/InstallPlanner.ts';
+export { IntegrityVerifier } from '#installer/core/IntegrityVerifier.ts';
 export {
   type DownloadOptions,
   type DownloadProgress,
   type DownloadResult,
   PackageDownloader,
-} from './core/PackageDownloader.ts';
-export { PackageExtractor } from './core/PackageExtractor.ts';
-export { PackageRemover } from './core/PackageRemover.ts';
+} from '#installer/core/PackageDownloader.ts';
+export { PackageExtractor } from '#installer/core/PackageExtractor.ts';
+export { PackageRemover } from '#installer/core/PackageRemover.ts';
 
 // Safety
-export { NoMarkerPolicy } from './safety/NoMarkerPolicy.ts';
-export { SafetyPolicyRegistry, type SafetyVerdict } from './safety/SafetyPolicyRegistry.ts';
+export { NoMarkerPolicy } from '#installer/safety/NoMarkerPolicy.ts';
+export { SafetyPolicyRegistry, type SafetyVerdict } from '#installer/safety/SafetyPolicyRegistry.ts';
 
 // Status
-export { SlotTable } from './status/SlotTable.ts';
-export { StatusStream } from './status/StatusStream.ts';
+export { SlotTable } from '#installer/status/SlotTable.ts';
+export { StatusStream } from '#installer/status/StatusStream.ts';

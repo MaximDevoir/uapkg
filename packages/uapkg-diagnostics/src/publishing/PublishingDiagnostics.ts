@@ -1,4 +1,4 @@
-import type { DiagnosticBase } from '../base/Diagnostic.ts';
+import type { DiagnosticBase } from '#diagnostics/base/Diagnostic.ts';
 
 /**
  * Safe, user-facing context for a failed publish request. The fixed set of

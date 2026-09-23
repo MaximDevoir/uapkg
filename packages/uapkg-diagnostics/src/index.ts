@@ -2,14 +2,14 @@
 // @uapkg/diagnostics — public API
 // ---------------------------------------------------------------------------
 
-export type { DiagnosticBase, DiagnosticEmitPolicy } from './base/Diagnostic.ts';
-export { createDiagnostic } from './base/Diagnostic.ts';
-export { DiagnosticBag } from './base/DiagnosticBag.ts';
-export { createDiagnosticFingerprint } from './base/DiagnosticFingerprint.ts';
+export type { DiagnosticBase, DiagnosticEmitPolicy } from '#diagnostics/base/Diagnostic.ts';
+export { createDiagnostic } from '#diagnostics/base/Diagnostic.ts';
+export { DiagnosticBag } from '#diagnostics/base/DiagnosticBag.ts';
+export { createDiagnosticFingerprint } from '#diagnostics/base/DiagnosticFingerprint.ts';
 // Base primitives
-export type { DiagnosticLevel } from './base/DiagnosticLevel.ts';
-export type { Result, ResultFail, ResultOk } from './base/Result.ts';
-export { fail, fromDiagnostics, ok } from './base/Result.ts';
+export type { DiagnosticLevel } from '#diagnostics/base/DiagnosticLevel.ts';
+export type { Result, ResultFail, ResultOk } from '#diagnostics/base/Result.ts';
+export { fail, fromDiagnostics, ok } from '#diagnostics/base/Result.ts';
 // --- Config family ---
 export type {
   ConfigDiagnostic,
@@ -18,14 +18,14 @@ export type {
   ConfigTypeMismatchDiagnostic,
   ConfigUnknownKeyDiagnostic,
   ConfigUnresolvedDefaultRegistryDiagnostic,
-} from './config/ConfigDiagnostics.ts';
+} from '#diagnostics/config/ConfigDiagnostics.ts';
 export {
   createConfigInvalidJsonDiagnostic,
   createConfigInvalidValueDiagnostic,
   createConfigTypeMismatchDiagnostic,
   createConfigUnknownKeyDiagnostic,
   createConfigUnresolvedDefaultRegistryDiagnostic,
-} from './config/ConfigDiagnostics.ts';
+} from '#diagnostics/config/ConfigDiagnostics.ts';
 // --- Control-plane family ---
 export type {
   ControlPlaneCommandFailedDiagnostic,
@@ -40,20 +40,20 @@ export type {
   LoginFailedDiagnostic,
   LoginOAuthErrorDiagnostic,
   LoginReauthorizationConflictDiagnostic,
-} from './controlPlane/ControlPlaneDiagnostics.ts';
-export { createControlPlaneCommandFailedDiagnostic } from './controlPlane/ControlPlaneDiagnostics.ts';
+} from '#diagnostics/controlPlane/ControlPlaneDiagnostics.ts';
+export { createControlPlaneCommandFailedDiagnostic } from '#diagnostics/controlPlane/ControlPlaneDiagnostics.ts';
 // --- General family ---
 export type {
   GeneralDiagnostic,
   IoErrorDiagnostic,
   ParseErrorDiagnostic,
   UnknownErrorDiagnostic,
-} from './general/GeneralDiagnostics.ts';
+} from '#diagnostics/general/GeneralDiagnostics.ts';
 export {
   createIoErrorDiagnostic,
   createParseErrorDiagnostic,
   createUnknownErrorDiagnostic,
-} from './general/GeneralDiagnostics.ts';
+} from '#diagnostics/general/GeneralDiagnostics.ts';
 // --- Installer family ---
 export type {
   DiskRemoveFailedDiagnostic,
@@ -64,7 +64,7 @@ export type {
   IntegrityMismatchDiagnostic,
   NetworkRetriesExhaustedDiagnostic,
   NetworkTimeoutDiagnostic,
-} from './installer/InstallerDiagnostics.ts';
+} from '#diagnostics/installer/InstallerDiagnostics.ts';
 export {
   createDiskRemoveFailedDiagnostic,
   createDownloadFailedDiagnostic,
@@ -73,7 +73,7 @@ export {
   createIntegrityMismatchDiagnostic,
   createNetworkRetriesExhaustedDiagnostic,
   createNetworkTimeoutDiagnostic,
-} from './installer/InstallerDiagnostics.ts';
+} from '#diagnostics/installer/InstallerDiagnostics.ts';
 // --- Manifest family ---
 export type {
   DependencyNotFoundDiagnostic,
@@ -86,7 +86,7 @@ export type {
   ManifestReadErrorDiagnostic,
   ManifestWriteErrorDiagnostic,
   UnresolvedRegistryDiagnostic,
-} from './manifest/ManifestDiagnostics.ts';
+} from '#diagnostics/manifest/ManifestDiagnostics.ts';
 export {
   createDependencyNotFoundDiagnostic,
   createForbiddenOverridesDiagnostic,
@@ -97,7 +97,7 @@ export {
   createManifestReadErrorDiagnostic,
   createManifestWriteErrorDiagnostic,
   createUnresolvedRegistryDiagnostic,
-} from './manifest/ManifestDiagnostics.ts';
+} from '#diagnostics/manifest/ManifestDiagnostics.ts';
 // --- Pack family ---
 export type {
   CyclicSymlinkDiagnostic,
@@ -110,7 +110,7 @@ export type {
   SymlinkOutsideRootDiagnostic,
   UnresolvedLfsDiagnostic,
   UpluginMissingDiagnostic,
-} from './pack/PackDiagnostics.ts';
+} from '#diagnostics/pack/PackDiagnostics.ts';
 export {
   createCyclicSymlinkDiagnostic,
   createInvalidPathDiagnostic,
@@ -121,7 +121,7 @@ export {
   createSymlinkOutsideRootDiagnostic,
   createUnresolvedLfsDiagnostic,
   createUpluginMissingDiagnostic,
-} from './pack/PackDiagnostics.ts';
+} from '#diagnostics/pack/PackDiagnostics.ts';
 // --- Postinstall family ---
 export type {
   PostinstallDiagnostic,
@@ -131,7 +131,7 @@ export type {
   PostinstallLoadFailedDiagnostic,
   PostinstallMarkerCorruptDiagnostic,
   PostinstallPolicyDeniedDiagnostic,
-} from './postinstall/PostinstallDiagnostics.ts';
+} from '#diagnostics/postinstall/PostinstallDiagnostics.ts';
 export {
   createPostinstallDuplicateEntryDiagnostic,
   createPostinstallEsbuildErrorDiagnostic,
@@ -139,7 +139,7 @@ export {
   createPostinstallLoadFailedDiagnostic,
   createPostinstallMarkerCorruptDiagnostic,
   createPostinstallPolicyDeniedDiagnostic,
-} from './postinstall/PostinstallDiagnostics.ts';
+} from '#diagnostics/postinstall/PostinstallDiagnostics.ts';
 // --- Publishing family ---
 export type {
   PublishDiagnosticFact,
@@ -147,8 +147,8 @@ export type {
   PublishingDiagnostic,
   PublishRequestFailedDiagnostic,
   PublishRequestFailedDiagnosticData,
-} from './publishing/PublishingDiagnostics.ts';
-export { createPublishRequestFailedDiagnostic } from './publishing/PublishingDiagnostics.ts';
+} from '#diagnostics/publishing/PublishingDiagnostics.ts';
+export { createPublishRequestFailedDiagnostic } from '#diagnostics/publishing/PublishingDiagnostics.ts';
 // --- Registry family ---
 export type {
   CacheCorruptDiagnostic,
@@ -161,7 +161,7 @@ export type {
   RegistryNotFoundDiagnostic,
   RegistryUnreachableDiagnostic,
   SchemaInvalidDiagnostic,
-} from './registry/RegistryDiagnostics.ts';
+} from '#diagnostics/registry/RegistryDiagnostics.ts';
 export {
   createCacheCorruptDiagnostic,
   createCacheIdentifierCollisionDiagnostic,
@@ -172,7 +172,7 @@ export {
   createRegistryNotFoundDiagnostic,
   createRegistryUnreachableDiagnostic,
   createSchemaInvalidDiagnostic,
-} from './registry/RegistryDiagnostics.ts';
+} from '#diagnostics/registry/RegistryDiagnostics.ts';
 // --- Registry-tools family ---
 export type {
   RegistryToolsDependencyNotInRegistryDiagnostic,
@@ -191,7 +191,7 @@ export type {
   RegistryToolsVersionExistsDiagnostic,
   RegistryToolsVersionNotFoundDiagnostic,
   RegistryToolsVersionsUnsortedDiagnostic,
-} from './registryTools/RegistryToolsDiagnostics.ts';
+} from '#diagnostics/registryTools/RegistryToolsDiagnostics.ts';
 export {
   createRegistryToolsDependencyNotInRegistryDiagnostic,
   createRegistryToolsDependencyRangeUnreachableDiagnostic,
@@ -208,7 +208,7 @@ export {
   createRegistryToolsVersionExistsDiagnostic,
   createRegistryToolsVersionNotFoundDiagnostic,
   createRegistryToolsVersionsUnsortedDiagnostic,
-} from './registryTools/RegistryToolsDiagnostics.ts';
+} from '#diagnostics/registryTools/RegistryToolsDiagnostics.ts';
 // --- Resolver family ---
 export type {
   CircularDepDiagnostic,
@@ -217,37 +217,37 @@ export type {
   ResolverDiagnostic,
   VersionConflictDiagnostic,
   VersionNotFoundDiagnostic,
-} from './resolver/ResolverDiagnostics.ts';
+} from '#diagnostics/resolver/ResolverDiagnostics.ts';
 export {
   createCircularDepDiagnostic,
   createPackageNotFoundDiagnostic,
   createRegistryNameCollisionDiagnostic,
   createVersionConflictDiagnostic,
   createVersionNotFoundDiagnostic,
-} from './resolver/ResolverDiagnostics.ts';
+} from '#diagnostics/resolver/ResolverDiagnostics.ts';
 // --- Safety family ---
 export type {
   SafetyDiagnostic,
   SafetyOverriddenByForceDiagnostic,
   SafetyPathNotProjectManifestDiagnostic,
   SafetyTargetExistsNoManifestDiagnostic,
-} from './safety/SafetyDiagnostics.ts';
+} from '#diagnostics/safety/SafetyDiagnostics.ts';
 export {
   createSafetyOverriddenByForceDiagnostic,
   createSafetyPathNotProjectManifestDiagnostic,
   createSafetyTargetExistsNoManifestDiagnostic,
-} from './safety/SafetyDiagnostics.ts';
+} from '#diagnostics/safety/SafetyDiagnostics.ts';
 // --- Spec-parse family ---
 export type {
   InvalidOrgNameDiagnostic,
   InvalidPackageSpecDiagnostic,
   InvalidVersionRangeDiagnostic,
   SpecParseDiagnostic,
-} from './spec/SpecDiagnostics.ts';
+} from '#diagnostics/spec/SpecDiagnostics.ts';
 export {
   createInvalidOrgNameDiagnostic,
   createInvalidPackageSpecDiagnostic,
   createInvalidVersionRangeDiagnostic,
-} from './spec/SpecDiagnostics.ts';
+} from '#diagnostics/spec/SpecDiagnostics.ts';
 // Unified type
-export type { Diagnostic, DiagnosticByCode, DiagnosticCode } from './types.ts';
+export type { Diagnostic, DiagnosticByCode, DiagnosticCode } from '#diagnostics/types.ts';

@@ -9,11 +9,11 @@ import type {
   ConfigValueWithOrigin,
   ConfigWriteOptions,
   ResolvedConfig,
-} from '../contracts/ConfigTypes.ts';
-import { validateConfigPath } from '../schema/pathSchema.ts';
-import { ConfigLayerBuilder } from './ConfigLayerBuilder.ts';
-import { ConfigResolver } from './ConfigResolver.ts';
-import { ConfigWriter } from './ConfigWriter.ts';
+} from '#config/contracts/ConfigTypes.ts';
+import { validateConfigPath } from '#config/schema/pathSchema.ts';
+import { ConfigLayerBuilder } from '#config/core/ConfigLayerBuilder.ts';
+import { ConfigResolver } from '#config/core/ConfigResolver.ts';
+import { ConfigWriter } from '#config/core/ConfigWriter.ts';
 
 export class ConfigInstance {
   private cwd: string;

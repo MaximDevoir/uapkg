@@ -1,10 +1,10 @@
 import type { Diagnostic } from '@uapkg/diagnostics';
 import { Box, Text } from 'ink';
 import type { ReactElement } from 'react';
-import type { DiagnosticBodyComponent, IDiagnosticInkRegistry } from '../contracts/InkTypes.ts';
-import { HintLine } from '../primitives/HintLine.tsx';
-import { PlainTextBody } from '../primitives/PlainTextBody.tsx';
-import { SeverityBadge } from '../primitives/SeverityBadge.tsx';
+import type { DiagnosticBodyComponent, IDiagnosticInkRegistry } from '#diagnostics-format/ink/contracts/InkTypes.ts';
+import { HintLine } from '#diagnostics-format/ink/primitives/HintLine.tsx';
+import { PlainTextBody } from '#diagnostics-format/ink/primitives/PlainTextBody.tsx';
+import { SeverityBadge } from '#diagnostics-format/ink/primitives/SeverityBadge.tsx';
 
 export interface DiagnosticViewProps {
   readonly diagnostic: Diagnostic;

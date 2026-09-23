@@ -1,7 +1,7 @@
 import type { Argv } from 'yargs';
-import { createUAPKGCommandLineFactory } from '../../UAPKGCommandLine.ts';
-import type { CommandLineSink, UAPKGCommandModule } from '../contracts/UAPKGCommandModule.ts';
-import { resolveScope, withScopeOptions } from './sharedOptions.ts';
+import { createUAPKGCommandLineFactory } from '#cli/cli/UAPKGCommandLine.ts';
+import type { CommandLineSink, UAPKGCommandModule } from '#cli/cli/parsing/contracts/UAPKGCommandModule.ts';
+import { resolveScope, withScopeOptions } from '#cli/cli/parsing/modules/sharedOptions.ts';
 
 export class RegistryCommandModule implements UAPKGCommandModule {
   private readonly factory = createUAPKGCommandLineFactory();

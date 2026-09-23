@@ -3,21 +3,21 @@
 // ---------------------------------------------------------------------------
 
 // Human formatting
-export { prettyBytes, prettyBytesProgress } from './format/prettyBytes.ts';
+export { prettyBytes, prettyBytesProgress } from '#common/format/prettyBytes.ts';
 export {
   computeRegistryIdentifier,
   computeRegistryIdentifierShort,
   type RegistryIdentityDescriptor,
-} from './hash/registryIdentifier.ts';
+} from '#common/hash/registryIdentifier.ts';
 // Hashing
-export { sha256, sha256Prefixed } from './hash/sha256.ts';
-export { safeJsonParse } from './json/safeJsonParse.ts';
+export { sha256, sha256Prefixed } from '#common/hash/sha256.ts';
+export { safeJsonParse } from '#common/json/safeJsonParse.ts';
 // JSON
-export { stableStringify } from './json/stableStringify.ts';
+export { stableStringify } from '#common/json/stableStringify.ts';
 // Normalization
-export { normalizeUrl } from './normalize/normalizeUrl.ts';
+export { normalizeUrl } from '#common/normalize/normalizeUrl.ts';
 // Paths
-export { normalizePath, toForwardSlash } from './paths/forwardSlash.ts';
+export { normalizePath, toForwardSlash } from '#common/paths/forwardSlash.ts';
 // Runtime profile
 export {
   INTERNAL_BUILD_MODE_ENV,
@@ -26,6 +26,6 @@ export {
   resolveUapkgBuildMode,
   resolveUapkgProfileRoot,
   type UAPKGBuildMode,
-} from './runtime/UapkgRuntimeProfile.ts';
+} from '#common/runtime/UapkgRuntimeProfile.ts';
 // Package spec parsing (CLI "@org/name@range")
-export { formatPackageSpec, parsePackageSpec } from './spec/parsePackageSpec.ts';
+export { formatPackageSpec, parsePackageSpec } from '#common/spec/parsePackageSpec.ts';

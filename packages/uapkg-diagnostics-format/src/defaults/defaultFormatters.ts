@@ -1,15 +1,15 @@
-import type { FormatterMap } from '../contracts/FormatterTypes.ts';
-import { configFormatters } from '../formatters/config/configFormatters.ts';
-import { installerFormatters } from '../formatters/installer/installerFormatters.ts';
-import { manifestFormatters } from '../formatters/manifest/manifestFormatters.ts';
-import { packFormatters } from '../formatters/pack/packFormatters.ts';
-import { postinstallFormatters } from '../formatters/postinstall/postinstallFormatters.ts';
-import { publishingFormatters } from '../formatters/publishing/publishingFormatters.ts';
-import { registryFormatters } from '../formatters/registry/registryFormatters.ts';
-import { registryToolsFormatters } from '../formatters/registryTools/registryToolsFormatters.ts';
-import { resolverFormatters } from '../formatters/resolver/resolverFormatters.ts';
-import { safetyFormatters } from '../formatters/safety/safetyFormatters.ts';
-import { specFormatters } from '../formatters/spec/specFormatters.ts';
+import type { FormatterMap } from '#diagnostics-format/contracts/FormatterTypes.ts';
+import { configFormatters } from '#diagnostics-format/formatters/config/configFormatters.ts';
+import { installerFormatters } from '#diagnostics-format/formatters/installer/installerFormatters.ts';
+import { manifestFormatters } from '#diagnostics-format/formatters/manifest/manifestFormatters.ts';
+import { packFormatters } from '#diagnostics-format/formatters/pack/packFormatters.ts';
+import { postinstallFormatters } from '#diagnostics-format/formatters/postinstall/postinstallFormatters.ts';
+import { publishingFormatters } from '#diagnostics-format/formatters/publishing/publishingFormatters.ts';
+import { registryFormatters } from '#diagnostics-format/formatters/registry/registryFormatters.ts';
+import { registryToolsFormatters } from '#diagnostics-format/formatters/registryTools/registryToolsFormatters.ts';
+import { resolverFormatters } from '#diagnostics-format/formatters/resolver/resolverFormatters.ts';
+import { safetyFormatters } from '#diagnostics-format/formatters/safety/safetyFormatters.ts';
+import { specFormatters } from '#diagnostics-format/formatters/spec/specFormatters.ts';
 
 /**
  * Merged map of all built-in formatters across families.

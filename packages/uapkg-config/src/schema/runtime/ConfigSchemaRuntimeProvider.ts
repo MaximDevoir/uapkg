@@ -1,7 +1,7 @@
 import type { Result } from '@uapkg/diagnostics';
-import { partialConfigSchema } from '../configSchema.ts';
-import { ConfigCliValueParser } from './ConfigCliValueParser.ts';
-import { ConfigSchemaRuntime } from './ConfigSchemaRuntime.ts';
+import { partialConfigSchema } from '#config/schema/configSchema.ts';
+import { ConfigCliValueParser } from '#config/schema/runtime/ConfigCliValueParser.ts';
+import { ConfigSchemaRuntime } from '#config/schema/runtime/ConfigSchemaRuntime.ts';
 
 const runtime = new ConfigSchemaRuntime(partialConfigSchema);
 const cliValueParser = new ConfigCliValueParser(runtime);

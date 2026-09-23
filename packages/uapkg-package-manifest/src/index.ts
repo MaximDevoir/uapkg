@@ -8,29 +8,29 @@ export type {
   PackageNode,
   ResolvedGraph,
   ResolverOptions,
-} from './contracts/ManifestTypes.ts';
+} from '#package-manifest/contracts/ManifestTypes.ts';
 export {
   type AddDependencyOptions,
   type DependencyBucket,
   DependencyMutator,
   type RemoveDependencyResult,
-} from './core/DependencyMutator.ts';
-export { DevDependencyPolicy } from './core/DevDependencyPolicy.ts';
-export { InstallPathResolver, type ResolvedInstallPath } from './core/InstallPathResolver.ts';
-export { type LockfileChange, type LockfileDiff, LockfileDiffer } from './core/LockfileDiffer.ts';
+} from '#package-manifest/core/DependencyMutator.ts';
+export { DevDependencyPolicy } from '#package-manifest/core/DevDependencyPolicy.ts';
+export { InstallPathResolver, type ResolvedInstallPath } from '#package-manifest/core/InstallPathResolver.ts';
+export { type LockfileChange, type LockfileDiff, LockfileDiffer } from '#package-manifest/core/LockfileDiffer.ts';
 export {
   type LockfileSyncIssue,
   type LockfileSyncIssueSeverity,
   sortLockfileSyncIssues,
-} from './core/LockfileSyncIssue.ts';
-export { LockfileSyncValidator } from './core/LockfileSyncValidator.ts';
-export { OutdatedChecker, type OutdatedEntry, type OutdatedStatus } from './core/OutdatedChecker.ts';
-export { PackageManifest, type PackageManifestOptions } from './core/PackageManifest.ts';
-export { WhyGraph, type WhyPath, type WhyResult } from './core/WhyGraph.ts';
-export { LockfileReader } from './io/LockfileReader.ts';
-export { LockfileSyncIssueWriter } from './io/LockfileSyncIssueWriter.ts';
-export { LockfileWriter } from './io/LockfileWriter.ts';
-export { ManifestReader } from './io/ManifestReader.ts';
-export { ManifestWriter } from './io/ManifestWriter.ts';
-export { LockfileSync } from './resolver/LockfileSync.ts';
-export { Resolver } from './resolver/Resolver.ts';
+} from '#package-manifest/core/LockfileSyncIssue.ts';
+export { LockfileSyncValidator } from '#package-manifest/core/LockfileSyncValidator.ts';
+export { OutdatedChecker, type OutdatedEntry, type OutdatedStatus } from '#package-manifest/core/OutdatedChecker.ts';
+export { PackageManifest, type PackageManifestOptions } from '#package-manifest/core/PackageManifest.ts';
+export { WhyGraph, type WhyPath, type WhyResult } from '#package-manifest/core/WhyGraph.ts';
+export { LockfileReader } from '#package-manifest/io/LockfileReader.ts';
+export { LockfileSyncIssueWriter } from '#package-manifest/io/LockfileSyncIssueWriter.ts';
+export { LockfileWriter } from '#package-manifest/io/LockfileWriter.ts';
+export { ManifestReader } from '#package-manifest/io/ManifestReader.ts';
+export { ManifestWriter } from '#package-manifest/io/ManifestWriter.ts';
+export { LockfileSync } from '#package-manifest/resolver/LockfileSync.ts';
+export { Resolver } from '#package-manifest/resolver/Resolver.ts';

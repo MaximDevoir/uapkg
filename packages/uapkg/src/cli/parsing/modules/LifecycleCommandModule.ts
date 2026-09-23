@@ -3,8 +3,8 @@ import {
   createUAPKGCommandLineFactory,
   type UAPKGControlPlaneAuthMode,
   type UAPKGLifecycleCommandName,
-} from '../../UAPKGCommandLine.ts';
-import type { CommandLineSink, UAPKGCommandModule } from '../contracts/UAPKGCommandModule.ts';
+} from '#cli/cli/UAPKGCommandLine.ts';
+import type { CommandLineSink, UAPKGCommandModule } from '#cli/cli/parsing/contracts/UAPKGCommandModule.ts';
 
 const AUTH_MODES = ['auto', 'login', 'gat', 'oidc'] as const;
 

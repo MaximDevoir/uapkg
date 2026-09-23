@@ -2,11 +2,11 @@ import { ConfigInstance } from '@uapkg/config';
 import { Installer } from '@uapkg/installer';
 import { PackageManifest } from '@uapkg/package-manifest';
 import { RegistryCore } from '@uapkg/registry-core';
-import { AccountManager } from '../control-plane/AccountManager.ts';
-import { RegistryTrustResolver } from '../control-plane/RegistryTrustResolver.ts';
-import { PostinstallOrchestrator } from '../postinstall/runner/PostinstallOrchestrator.ts';
-import { DiagnosticReporter } from '../reporting/DiagnosticReporter.ts';
-import { JsonReporter } from '../reporting/JsonReporter.ts';
+import { AccountManager } from '#cli/control-plane/AccountManager.ts';
+import { RegistryTrustResolver } from '#cli/control-plane/RegistryTrustResolver.ts';
+import { PostinstallOrchestrator } from '#cli/postinstall/runner/PostinstallOrchestrator.ts';
+import { DiagnosticReporter } from '#cli/reporting/DiagnosticReporter.ts';
+import { JsonReporter } from '#cli/reporting/JsonReporter.ts';
 
 export interface CompositionRootOptions {
   readonly cwd: string;

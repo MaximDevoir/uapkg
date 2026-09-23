@@ -1,6 +1,6 @@
 import fs from 'node:fs';
-import { CSharpStructureAnalyzer } from './CSharpStructureAnalyzer.ts';
-import { ProjectFileLocator } from './ProjectFileLocator.ts';
+import { CSharpStructureAnalyzer } from '#cli/postinstall/unreal/CSharpStructureAnalyzer.ts';
+import { ProjectFileLocator } from '#cli/postinstall/unreal/ProjectFileLocator.ts';
 
 export interface SourceCatalog {
   /** ModuleName → absolute path of its `*.Build.cs`. */

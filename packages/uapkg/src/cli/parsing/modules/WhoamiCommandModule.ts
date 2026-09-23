@@ -1,6 +1,10 @@
 import type { Argv } from 'yargs';
-import { createUAPKGCommandLineFactory, UAPKG_WHOAMI_FIELDS, type UAPKGWhoamiField } from '../../UAPKGCommandLine.ts';
-import type { CommandLineSink, UAPKGCommandModule } from '../contracts/UAPKGCommandModule.ts';
+import {
+  createUAPKGCommandLineFactory,
+  UAPKG_WHOAMI_FIELDS,
+  type UAPKGWhoamiField,
+} from '#cli/cli/UAPKGCommandLine.ts';
+import type { CommandLineSink, UAPKGCommandModule } from '#cli/cli/parsing/contracts/UAPKGCommandModule.ts';
 
 export class WhoamiCommandModule implements UAPKGCommandModule {
   private readonly factory = createUAPKGCommandLineFactory();

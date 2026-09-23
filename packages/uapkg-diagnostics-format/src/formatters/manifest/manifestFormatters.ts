@@ -6,7 +6,7 @@ import type {
   LockfileOutOfSyncDiagnostic,
   ManifestInvalidDiagnostic,
 } from '@uapkg/diagnostics';
-import type { FormatterMap } from '../../contracts/FormatterTypes.ts';
+import type { FormatterMap } from '#diagnostics-format/contracts/FormatterTypes.ts';
 
 function formatManifestInvalid(d: Diagnostic): string {
   const data = (d as ManifestInvalidDiagnostic).data;

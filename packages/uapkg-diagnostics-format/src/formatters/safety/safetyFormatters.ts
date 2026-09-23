@@ -4,7 +4,7 @@ import type {
   SafetyPathNotProjectManifestDiagnostic,
   SafetyTargetExistsNoManifestDiagnostic,
 } from '@uapkg/diagnostics';
-import type { FormatterMap } from '../../contracts/FormatterTypes.ts';
+import type { FormatterMap } from '#diagnostics-format/contracts/FormatterTypes.ts';
 
 function formatTargetExistsNoManifest(d: Diagnostic): string {
   const data = (d as SafetyTargetExistsNoManifestDiagnostic).data;

@@ -4,13 +4,13 @@ import { join } from 'node:path';
 import { normalizeUrl } from '@uapkg/common';
 import { getRegistryRepoPath } from '@uapkg/registry-core';
 import { RegistryMetaSchema } from '@uapkg/registry-schema';
-import type { CompositionRoot } from '../app/CompositionRoot.ts';
+import type { CompositionRoot } from '#cli/app/CompositionRoot.ts';
 import {
   type RegistryTrust,
   registryAudience,
   UAPKG_AUTHORIZATION_ISSUER,
   UAPKG_CONTROL_PLANE_API,
-} from './ControlPlaneTypes.ts';
+} from '#cli/control-plane/ControlPlaneTypes.ts';
 
 export class RegistryTrustResolver {
   public constructor(private readonly root: CompositionRoot) {}

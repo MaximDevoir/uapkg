@@ -1,12 +1,12 @@
 import isCI from 'is-ci';
-import type { PromptService } from '../prompts/PromptService.ts';
-import type { AccountManager } from './AccountManager.ts';
-import type { ControlPlaneCredential } from './ControlPlaneClient.ts';
-import type { ControlPlaneAuthMode, RegistryTrust, UAPKGCliScope } from './ControlPlaneTypes.ts';
+import type { PromptService } from '#cli/prompts/PromptService.ts';
+import type { AccountManager } from '#cli/control-plane/AccountManager.ts';
+import type { ControlPlaneCredential } from '#cli/control-plane/ControlPlaneClient.ts';
+import type { ControlPlaneAuthMode, RegistryTrust, UAPKGCliScope } from '#cli/control-plane/ControlPlaneTypes.ts';
 import {
   GitHubActionsOidcCredentialProvider,
   type GitHubActionsOidcTarget,
-} from './GitHubActionsOidcCredentialProvider.ts';
+} from '#cli/control-plane/GitHubActionsOidcCredentialProvider.ts';
 
 export interface SelectedAuthentication {
   readonly kind: 'oidc' | 'login' | 'gat';

@@ -1,7 +1,7 @@
 import { GitTreeSchema, PackageNameSchema, UnixTimestampSchema } from '@uapkg/common-schema';
 import { z } from 'zod';
-import { RegistryAssetSchema } from './RegistryAssetSchema.ts';
-import { RegistryDependencySchema } from './RegistryDependencySchema.ts';
+import { RegistryAssetSchema } from '#registry-schema/schemas/RegistryAssetSchema.ts';
+import { RegistryDependencySchema } from '#registry-schema/schemas/RegistryDependencySchema.ts';
 
 /**
  * Release files attached to a version.

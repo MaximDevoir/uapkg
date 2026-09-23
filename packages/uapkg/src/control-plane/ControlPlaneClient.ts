@@ -19,7 +19,7 @@ import {
   type RegistryRequestSummary,
   UAPKG_CONTROL_PLANE_API,
   type UAPKGCliScope,
-} from './ControlPlaneTypes.ts';
+} from '#cli/control-plane/ControlPlaneTypes.ts';
 
 export type ControlPlaneCredential =
   | {

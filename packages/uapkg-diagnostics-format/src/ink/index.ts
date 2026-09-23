@@ -10,26 +10,29 @@
 // ---------------------------------------------------------------------------
 
 // Family component maps — exported individually so consumers can cherry-pick.
-export { installerInkComponents } from './components/installerInkComponents.tsx';
-export { manifestInkComponents } from './components/manifestInkComponents.tsx';
-export { postinstallInkComponents } from './components/postinstallInkComponents.tsx';
-export { publishingInkComponents } from './components/publishingInkComponents.tsx';
-export { registryInkComponents } from './components/registryInkComponents.tsx';
-export { resolverInkComponents } from './components/resolverInkComponents.tsx';
-export { safetyInkComponents } from './components/safetyInkComponents.tsx';
-export { specInkComponents } from './components/specInkComponents.tsx';
+export { installerInkComponents } from '#diagnostics-format/ink/components/installerInkComponents.tsx';
+export { manifestInkComponents } from '#diagnostics-format/ink/components/manifestInkComponents.tsx';
+export { postinstallInkComponents } from '#diagnostics-format/ink/components/postinstallInkComponents.tsx';
+export { publishingInkComponents } from '#diagnostics-format/ink/components/publishingInkComponents.tsx';
+export { registryInkComponents } from '#diagnostics-format/ink/components/registryInkComponents.tsx';
+export { resolverInkComponents } from '#diagnostics-format/ink/components/resolverInkComponents.tsx';
+export { safetyInkComponents } from '#diagnostics-format/ink/components/safetyInkComponents.tsx';
+export { specInkComponents } from '#diagnostics-format/ink/components/specInkComponents.tsx';
 export type {
   DiagnosticBodyComponent,
   DiagnosticBodyProps,
   DiagnosticInkComponentMap,
   IDiagnosticInkRegistry,
-} from './contracts/InkTypes.ts';
-export { defaultInkComponents } from './defaults/defaultInkComponents.ts';
+} from '#diagnostics-format/ink/contracts/InkTypes.ts';
+export { defaultInkComponents } from '#diagnostics-format/ink/defaults/defaultInkComponents.ts';
 // Primitives.
-export { HintLine } from './primitives/HintLine.tsx';
-export { PlainTextBody } from './primitives/PlainTextBody.tsx';
-export { SeverityBadge } from './primitives/SeverityBadge.tsx';
-export { createInkRegistry, DiagnosticInkRegistry } from './registry/DiagnosticInkRegistry.ts';
-export { DiagnosticsListView, type DiagnosticsListViewProps } from './views/DiagnosticsListView.tsx';
+export { HintLine } from '#diagnostics-format/ink/primitives/HintLine.tsx';
+export { PlainTextBody } from '#diagnostics-format/ink/primitives/PlainTextBody.tsx';
+export { SeverityBadge } from '#diagnostics-format/ink/primitives/SeverityBadge.tsx';
+export { createInkRegistry, DiagnosticInkRegistry } from '#diagnostics-format/ink/registry/DiagnosticInkRegistry.ts';
+export {
+  DiagnosticsListView,
+  type DiagnosticsListViewProps,
+} from '#diagnostics-format/ink/views/DiagnosticsListView.tsx';
 // Views.
-export { DiagnosticView, type DiagnosticViewProps } from './views/DiagnosticView.tsx';
+export { DiagnosticView, type DiagnosticViewProps } from '#diagnostics-format/ink/views/DiagnosticView.tsx';

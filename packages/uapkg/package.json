@@ -63,5 +63,17 @@
   "devDependencies": {
     "@types/react": "19.2.14",
     "tar": "7.5.13"
+  },
+  "imports": {
+    "#cli/*.ts": {
+      "uapkg-source": "./src/*.ts",
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    },
+    "#cli/*.tsx": {
+      "uapkg-source": "./src/*.tsx",
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
   }
 }

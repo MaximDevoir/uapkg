@@ -1,5 +1,10 @@
-import type { CSharpFileKind, ParsedClass, ParsedConstructor, ParsedCSharpFile } from './CSharpStructures.ts';
-import { PrettyParseError } from './PrettyParseError.ts';
+import type {
+  CSharpFileKind,
+  ParsedClass,
+  ParsedConstructor,
+  ParsedCSharpFile,
+} from '#cli/postinstall/unreal/CSharpStructures.ts';
+import { PrettyParseError } from '#cli/postinstall/unreal/PrettyParseError.ts';
 
 const CLASS_REGEX = /\bclass\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*([^{\r\n]+)/g;
 

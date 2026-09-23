@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { OrgNameSchema } from './OrgName.ts';
-import { PackageNameSchema } from './PackageName.ts';
-import { VersionRangeSchema } from './VersionRange.ts';
+import { OrgNameSchema } from '#common-schema/primitives/OrgName.ts';
+import { PackageNameSchema } from '#common-schema/primitives/PackageName.ts';
+import { VersionRangeSchema } from '#common-schema/primitives/VersionRange.ts';
 
 /**
  * Parsed CLI package specifier.

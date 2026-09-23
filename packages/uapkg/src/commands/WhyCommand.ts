@@ -1,6 +1,6 @@
 import type { PackageName } from '@uapkg/common-schema';
-import type { CompositionRoot } from '../app/CompositionRoot.ts';
-import type { Command } from './Command.ts';
+import type { CompositionRoot } from '#cli/app/CompositionRoot.ts';
+import type { Command } from '#cli/commands/Command.ts';
 
 export interface WhyCommandOptions {
   readonly target: string;

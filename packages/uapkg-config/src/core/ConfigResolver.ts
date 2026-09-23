@@ -4,10 +4,10 @@ import type {
   ConfigResolvedResult,
   ConfigTraceEntry,
   ConfigValueWithOrigin,
-} from '../contracts/ConfigTypes.ts';
-import { ConfigMerger } from '../merge/ConfigMerger.ts';
-import { getValueByPath } from '../schema/pathSchema.ts';
-import { ConfigSemanticValidator } from './ConfigSemanticValidator.ts';
+} from '#config/contracts/ConfigTypes.ts';
+import { ConfigMerger } from '#config/merge/ConfigMerger.ts';
+import { getValueByPath } from '#config/schema/pathSchema.ts';
+import { ConfigSemanticValidator } from '#config/core/ConfigSemanticValidator.ts';
 
 export class ConfigResolver {
   constructor(

@@ -7,7 +7,7 @@ import {
   ok,
   type Result,
 } from '@uapkg/diagnostics';
-import type { ConfigReadResult } from '../contracts/ConfigTypes.ts';
+import type { ConfigReadResult } from '#config/contracts/ConfigTypes.ts';
 
 export class ConfigFileRepository {
   read(filePath: string): Result<ConfigReadResult> {

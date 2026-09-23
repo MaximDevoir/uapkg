@@ -1,8 +1,8 @@
 import { PackageNameSchema, PackageVersionSchema } from '@uapkg/common-schema';
 import { z } from 'zod';
-import { PackageSourceSchema } from './PackageSourceSchema.ts';
-import type { RegistryType } from './RegistryMetaSchema.ts';
-import { RegistryVersionSchema } from './RegistryVersionSchema.ts';
+import { PackageSourceSchema } from '#registry-schema/schemas/PackageSourceSchema.ts';
+import type { RegistryType } from '#registry-schema/schemas/RegistryMetaSchema.ts';
+import { RegistryVersionSchema } from '#registry-schema/schemas/RegistryVersionSchema.ts';
 
 /**
  * The top-level package registry manifest — one per package in the registry repo.

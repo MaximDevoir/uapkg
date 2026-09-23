@@ -1,7 +1,7 @@
 import type { PackageName, PackageVersion } from '@uapkg/common-schema';
 import type { RegistryVersion } from '@uapkg/registry-schema';
-import { canonicalJsonStringify, sha256OfCanonicalJson } from '../json/CanonicalJson.ts';
-import type { ClaimedDependency, PackageClaims } from './PackageClaims.ts';
+import { canonicalJsonStringify, sha256OfCanonicalJson } from '#package-claims/json/CanonicalJson.ts';
+import type { ClaimedDependency, PackageClaims } from '#package-claims/claims/PackageClaims.ts';
 
 /**
  * The permanent mandatory comparison core. These keys are always materialized

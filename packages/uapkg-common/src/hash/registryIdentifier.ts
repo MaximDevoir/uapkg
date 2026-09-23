@@ -1,6 +1,6 @@
-import { stableStringify } from '../json/stableStringify.ts';
-import { normalizeUrl } from '../normalize/normalizeUrl.ts';
-import { sha256 } from './sha256.ts';
+import { stableStringify } from '#common/json/stableStringify.ts';
+import { normalizeUrl } from '#common/normalize/normalizeUrl.ts';
+import { sha256 } from '#common/hash/sha256.ts';
 
 /**
  * Descriptor shape for a registry identity (mirrors `registries.<name>` from config).

@@ -1,7 +1,7 @@
-import type { Diagnostic } from '../types.ts';
-import { createDiagnostic } from './Diagnostic.ts';
-import type { DiagnosticLevel } from './DiagnosticLevel.ts';
-import { fail, ok, type Result } from './Result.ts';
+import type { Diagnostic } from '#diagnostics/types.ts';
+import { createDiagnostic } from '#diagnostics/base/Diagnostic.ts';
+import type { DiagnosticLevel } from '#diagnostics/base/DiagnosticLevel.ts';
+import { fail, ok, type Result } from '#diagnostics/base/Result.ts';
 
 /**
  * Mutable accumulator for diagnostics produced during an operation.

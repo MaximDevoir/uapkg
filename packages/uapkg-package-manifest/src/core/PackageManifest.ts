@@ -11,20 +11,20 @@ import {
 } from '@uapkg/diagnostics';
 import type { Dependency, Lockfile, Manifest } from '@uapkg/package-manifest-schema';
 import type { RegistryCore } from '@uapkg/registry-core';
-import type { ResolvedGraph, ResolverOptions } from '../contracts/ManifestTypes.ts';
-import { LockfileReader } from '../io/LockfileReader.ts';
-import { LockfileSyncIssueWriter } from '../io/LockfileSyncIssueWriter.ts';
-import { LockfileWriter } from '../io/LockfileWriter.ts';
-import { ManifestReader } from '../io/ManifestReader.ts';
-import { ManifestWriter } from '../io/ManifestWriter.ts';
-import { LockfileSync } from '../resolver/LockfileSync.ts';
-import { Resolver } from '../resolver/Resolver.ts';
-import { type AddDependencyOptions, DependencyMutator } from './DependencyMutator.ts';
-import { type LockfileDiff, LockfileDiffer } from './LockfileDiffer.ts';
-import { sortLockfileSyncIssues } from './LockfileSyncIssue.ts';
-import { LockfileSyncValidator } from './LockfileSyncValidator.ts';
-import { OutdatedChecker, type OutdatedEntry } from './OutdatedChecker.ts';
-import { WhyGraph, type WhyResult } from './WhyGraph.ts';
+import type { ResolvedGraph, ResolverOptions } from '#package-manifest/contracts/ManifestTypes.ts';
+import { LockfileReader } from '#package-manifest/io/LockfileReader.ts';
+import { LockfileSyncIssueWriter } from '#package-manifest/io/LockfileSyncIssueWriter.ts';
+import { LockfileWriter } from '#package-manifest/io/LockfileWriter.ts';
+import { ManifestReader } from '#package-manifest/io/ManifestReader.ts';
+import { ManifestWriter } from '#package-manifest/io/ManifestWriter.ts';
+import { LockfileSync } from '#package-manifest/resolver/LockfileSync.ts';
+import { Resolver } from '#package-manifest/resolver/Resolver.ts';
+import { type AddDependencyOptions, DependencyMutator } from '#package-manifest/core/DependencyMutator.ts';
+import { type LockfileDiff, LockfileDiffer } from '#package-manifest/core/LockfileDiffer.ts';
+import { sortLockfileSyncIssues } from '#package-manifest/core/LockfileSyncIssue.ts';
+import { LockfileSyncValidator } from '#package-manifest/core/LockfileSyncValidator.ts';
+import { OutdatedChecker, type OutdatedEntry } from '#package-manifest/core/OutdatedChecker.ts';
+import { WhyGraph, type WhyResult } from '#package-manifest/core/WhyGraph.ts';
 
 export interface PackageManifestOptions {
   /** Absolute path to the directory containing `uapkg.json`. */

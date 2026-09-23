@@ -1,14 +1,14 @@
 import type { Diagnostic, Result } from '@uapkg/diagnostics';
 import { createIoErrorDiagnostic, createUnknownErrorDiagnostic, DiagnosticBag } from '@uapkg/diagnostics';
-import type { PostinstallDefinition } from '../api/PostinstallDsl.ts';
-import { type LoadedPostinstall, PostinstallLoader } from '../loader/PostinstallLoader.ts';
-import { PostinstallPolicyGate } from '../policy/PostinstallPolicyGate.ts';
-import { BuildCsInjector } from '../unreal/BuildCsInjector.ts';
-import { ProjectFileLocator } from '../unreal/ProjectFileLocator.ts';
-import { TargetCsInjector } from '../unreal/TargetCsInjector.ts';
-import { UnrealSourceCatalogBuilder } from '../unreal/UnrealSourceCatalog.ts';
-import { UProjectInjector } from '../unreal/UProjectInjector.ts';
-import { UProjectMetadataReader } from '../unreal/UProjectMetadataReader.ts';
+import type { PostinstallDefinition } from '#cli/postinstall/api/PostinstallDsl.ts';
+import { type LoadedPostinstall, PostinstallLoader } from '#cli/postinstall/loader/PostinstallLoader.ts';
+import { PostinstallPolicyGate } from '#cli/postinstall/policy/PostinstallPolicyGate.ts';
+import { BuildCsInjector } from '#cli/postinstall/unreal/BuildCsInjector.ts';
+import { ProjectFileLocator } from '#cli/postinstall/unreal/ProjectFileLocator.ts';
+import { TargetCsInjector } from '#cli/postinstall/unreal/TargetCsInjector.ts';
+import { UnrealSourceCatalogBuilder } from '#cli/postinstall/unreal/UnrealSourceCatalog.ts';
+import { UProjectInjector } from '#cli/postinstall/unreal/UProjectInjector.ts';
+import { UProjectMetadataReader } from '#cli/postinstall/unreal/UProjectMetadataReader.ts';
 
 /**
  * Projection of an installer action that the orchestrator needs. The CLI

@@ -9,19 +9,19 @@ import type {
   InstallerOptions,
   InstallReport,
   PackageInstallOutcome,
-} from '../contracts/InstallerTypes.ts';
-import type { DownloadStatusSnapshot } from '../contracts/StatusStreamTypes.ts';
-import { NoMarkerPolicy } from '../safety/NoMarkerPolicy.ts';
-import { SafetyPolicyRegistry } from '../safety/SafetyPolicyRegistry.ts';
-import { SlotTable } from '../status/SlotTable.ts';
-import { StatusStream } from '../status/StatusStream.ts';
-import { ClaimsVerifier } from './ClaimsVerifier.ts';
-import { DiskStateInspector } from './DiskStateInspector.ts';
-import { InstallPlanner } from './InstallPlanner.ts';
-import { IntegrityVerifier } from './IntegrityVerifier.ts';
-import { PackageDownloader } from './PackageDownloader.ts';
-import { PackageExtractor } from './PackageExtractor.ts';
-import { PackageRemover } from './PackageRemover.ts';
+} from '#installer/contracts/InstallerTypes.ts';
+import type { DownloadStatusSnapshot } from '#installer/contracts/StatusStreamTypes.ts';
+import { NoMarkerPolicy } from '#installer/safety/NoMarkerPolicy.ts';
+import { SafetyPolicyRegistry } from '#installer/safety/SafetyPolicyRegistry.ts';
+import { SlotTable } from '#installer/status/SlotTable.ts';
+import { StatusStream } from '#installer/status/StatusStream.ts';
+import { ClaimsVerifier } from '#installer/core/ClaimsVerifier.ts';
+import { DiskStateInspector } from '#installer/core/DiskStateInspector.ts';
+import { InstallPlanner } from '#installer/core/InstallPlanner.ts';
+import { IntegrityVerifier } from '#installer/core/IntegrityVerifier.ts';
+import { PackageDownloader } from '#installer/core/PackageDownloader.ts';
+import { PackageExtractor } from '#installer/core/PackageExtractor.ts';
+import { PackageRemover } from '#installer/core/PackageRemover.ts';
 
 interface ExecutionRuntime {
   readonly slots: SlotTable;

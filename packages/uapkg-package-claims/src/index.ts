@@ -10,7 +10,7 @@ export {
   type ReadPackagedManifestOptions,
   readPackageClaimsFromArchive,
   readPackagedManifest,
-} from './archive/PackagedManifestReader.ts';
+} from '#package-claims/archive/PackagedManifestReader.ts';
 export {
   type ClaimsComparisonResult,
   type ClaimsDifference,
@@ -18,7 +18,7 @@ export {
   compareClaims,
   MANDATORY_CLAIM_KEYS,
   UNDERSTOOD_OPTIONAL_CLAIM_KEYS,
-} from './claims/ClaimsComparison.ts';
-export { normalizePackageClaims } from './claims/PackageClaims.ts';
-export { canonicalJsonStringify, parseJsonStrict, sha256OfCanonicalJson } from './json/CanonicalJson.ts';
-export type { ClaimedDependency, PackageClaims } from './schema/index.ts';
+} from '#package-claims/claims/ClaimsComparison.ts';
+export { normalizePackageClaims } from '#package-claims/claims/PackageClaims.ts';
+export { canonicalJsonStringify, parseJsonStrict, sha256OfCanonicalJson } from '#package-claims/json/CanonicalJson.ts';
+export type { ClaimedDependency, PackageClaims } from '#package-claims/schema/index.ts';

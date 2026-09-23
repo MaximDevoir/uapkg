@@ -4,7 +4,7 @@ import type {
   PublishDiagnosticResource,
   PublishRequestFailedDiagnostic,
 } from '@uapkg/diagnostics';
-import type { FormatterMap } from '../../contracts/FormatterTypes.ts';
+import type { FormatterMap } from '#diagnostics-format/contracts/FormatterTypes.ts';
 
 export const publishFactLabels: Record<PublishDiagnosticFact['kind'], string> = {
   package: 'Package',

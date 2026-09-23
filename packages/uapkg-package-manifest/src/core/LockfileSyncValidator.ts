@@ -2,10 +2,10 @@ import type { ConfigInstance } from '@uapkg/config';
 import type { Dependency, LockDependency, Lockfile, Manifest } from '@uapkg/package-manifest-schema';
 import type { RegistryCore } from '@uapkg/registry-core';
 import semver from 'semver';
-import type { LockfileSync } from '../resolver/LockfileSync.ts';
-import type { Resolver } from '../resolver/Resolver.ts';
-import type { LockfileDiffer } from './LockfileDiffer.ts';
-import { type LockfileSyncIssue, sortLockfileSyncIssues } from './LockfileSyncIssue.ts';
+import type { LockfileSync } from '#package-manifest/resolver/LockfileSync.ts';
+import type { Resolver } from '#package-manifest/resolver/Resolver.ts';
+import type { LockfileDiffer } from '#package-manifest/core/LockfileDiffer.ts';
+import { type LockfileSyncIssue, sortLockfileSyncIssues } from '#package-manifest/core/LockfileSyncIssue.ts';
 
 /**
  * Validates whether a lockfile is still in sync with manifest + registry state.

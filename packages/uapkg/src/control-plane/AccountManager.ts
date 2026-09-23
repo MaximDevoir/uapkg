@@ -8,9 +8,9 @@ import {
 } from '@uapkg/diagnostics';
 import isCI from 'is-ci';
 import * as oauth from 'oauth4webapi';
-import { AuthMetadataStore } from './AuthMetadataStore.ts';
-import { resolveAuthStoragePaths } from './AuthStoragePaths.ts';
-import { ControlPlaneClient, type ControlPlaneCredential } from './ControlPlaneClient.ts';
+import { AuthMetadataStore } from '#cli/control-plane/AuthMetadataStore.ts';
+import { resolveAuthStoragePaths } from '#cli/control-plane/AuthStoragePaths.ts';
+import { ControlPlaneClient, type ControlPlaneCredential } from '#cli/control-plane/ControlPlaneClient.ts';
 import {
   ControlPlaneError,
   isUAPKGCliScope,
@@ -25,10 +25,10 @@ import {
   UAPKG_CLI_SCOPES,
   UAPKG_CONTROL_PLANE_API,
   type UAPKGCliScope,
-} from './ControlPlaneTypes.ts';
-import { CredentialStore } from './CredentialStore.ts';
-import { DPoPKeyStore } from './DPoPKeyStore.ts';
-import { FileRegistryGrantLock, type RegistryGrantLock } from './RegistryGrantLock.ts';
+} from '#cli/control-plane/ControlPlaneTypes.ts';
+import { CredentialStore } from '#cli/control-plane/CredentialStore.ts';
+import { DPoPKeyStore } from '#cli/control-plane/DPoPKeyStore.ts';
+import { FileRegistryGrantLock, type RegistryGrantLock } from '#cli/control-plane/RegistryGrantLock.ts';
 
 const INTERACTIVE_LOGIN_TIMEOUT_MS = 3 * 60 * 1000;
 const INTERACTIVE_LOGIN_FINALIZATION_TIMEOUT_MS = 60 * 1000;

@@ -1,14 +1,14 @@
-import { configInkComponents } from '../components/configInkComponents.tsx';
-import { installerInkComponents } from '../components/installerInkComponents.tsx';
-import { manifestInkComponents } from '../components/manifestInkComponents.tsx';
-import { packInkComponents } from '../components/packInkComponents.tsx';
-import { postinstallInkComponents } from '../components/postinstallInkComponents.tsx';
-import { publishingInkComponents } from '../components/publishingInkComponents.tsx';
-import { registryInkComponents } from '../components/registryInkComponents.tsx';
-import { resolverInkComponents } from '../components/resolverInkComponents.tsx';
-import { safetyInkComponents } from '../components/safetyInkComponents.tsx';
-import { specInkComponents } from '../components/specInkComponents.tsx';
-import type { DiagnosticInkComponentMap } from '../contracts/InkTypes.ts';
+import { configInkComponents } from '#diagnostics-format/ink/components/configInkComponents.tsx';
+import { installerInkComponents } from '#diagnostics-format/ink/components/installerInkComponents.tsx';
+import { manifestInkComponents } from '#diagnostics-format/ink/components/manifestInkComponents.tsx';
+import { packInkComponents } from '#diagnostics-format/ink/components/packInkComponents.tsx';
+import { postinstallInkComponents } from '#diagnostics-format/ink/components/postinstallInkComponents.tsx';
+import { publishingInkComponents } from '#diagnostics-format/ink/components/publishingInkComponents.tsx';
+import { registryInkComponents } from '#diagnostics-format/ink/components/registryInkComponents.tsx';
+import { resolverInkComponents } from '#diagnostics-format/ink/components/resolverInkComponents.tsx';
+import { safetyInkComponents } from '#diagnostics-format/ink/components/safetyInkComponents.tsx';
+import { specInkComponents } from '#diagnostics-format/ink/components/specInkComponents.tsx';
+import type { DiagnosticInkComponentMap } from '#diagnostics-format/ink/contracts/InkTypes.ts';
 
 /**
  * Aggregated default Ink component map — one entry per well-known diagnostic

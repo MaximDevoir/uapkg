@@ -1,6 +1,6 @@
 import { Text } from 'ink';
 import type { ReactElement } from 'react';
-import type { DiagnosticBodyProps } from '../contracts/InkTypes.ts';
+import type { DiagnosticBodyProps } from '#diagnostics-format/ink/contracts/InkTypes.ts';
 
 /**
  * Fallback body used when no family-specific component is registered for a

@@ -12,16 +12,19 @@ import type {
   RegistryDescriptor,
   RegistryUpdateOptions,
   RegistryUpdateResult,
-} from '../contracts/RegistryCoreTypes.ts';
-import { getRegistryLockPath } from '../paths/RegistryPaths.ts';
-import { type ResolvedVersion, resolveVersion } from '../resolution/PackageResolver.ts';
-import { RegistryCacheValidator } from './RegistryCacheValidator.ts';
-import { RegistryLock } from './RegistryLock.ts';
-import { RegistryMetadataReader } from './RegistryMetadataReader.ts';
-import { RegistryPackageReader } from './RegistryPackageReader.ts';
-import { evaluateSyncPolicy } from './RegistrySyncPolicy.ts';
-import { RegistryUpdater } from './RegistryUpdater.ts';
-import { redactRegistryUrlSecrets, sanitizeRegistryUrlForDisplay } from './RegistryUrlSanitizer.ts';
+} from '#registry-core/contracts/RegistryCoreTypes.ts';
+import { getRegistryLockPath } from '#registry-core/paths/RegistryPaths.ts';
+import { type ResolvedVersion, resolveVersion } from '#registry-core/resolution/PackageResolver.ts';
+import { RegistryCacheValidator } from '#registry-core/registry/RegistryCacheValidator.ts';
+import { RegistryLock } from '#registry-core/registry/RegistryLock.ts';
+import { RegistryMetadataReader } from '#registry-core/registry/RegistryMetadataReader.ts';
+import { RegistryPackageReader } from '#registry-core/registry/RegistryPackageReader.ts';
+import { evaluateSyncPolicy } from '#registry-core/registry/RegistrySyncPolicy.ts';
+import { RegistryUpdater } from '#registry-core/registry/RegistryUpdater.ts';
+import {
+  redactRegistryUrlSecrets,
+  sanitizeRegistryUrlForDisplay,
+} from '#registry-core/registry/RegistryUrlSanitizer.ts';
 
 /**
  * Represents one configured local registry cache.

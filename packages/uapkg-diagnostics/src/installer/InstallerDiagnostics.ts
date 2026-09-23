@@ -1,4 +1,4 @@
-import type { DiagnosticBase } from '../base/Diagnostic.ts';
+import type { DiagnosticBase } from '#diagnostics/base/Diagnostic.ts';
 
 // ---------------------------------------------------------------------------
 // Installer diagnostic codes

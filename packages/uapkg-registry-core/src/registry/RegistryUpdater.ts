@@ -1,9 +1,9 @@
 import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { DiagnosticBag, type Result } from '@uapkg/diagnostics';
-import type { RegistryDescriptor } from '../contracts/RegistryCoreTypes.ts';
-import { getRegistryRepoPath } from '../paths/RegistryPaths.ts';
-import { type GitCommandRunner, GitRunner } from './GitRunner.ts';
+import type { RegistryDescriptor } from '#registry-core/contracts/RegistryCoreTypes.ts';
+import { getRegistryRepoPath } from '#registry-core/paths/RegistryPaths.ts';
+import { type GitCommandRunner, GitRunner } from '#registry-core/registry/GitRunner.ts';
 
 /**
  * Handles git clone and git fetch/pull for a single registry.

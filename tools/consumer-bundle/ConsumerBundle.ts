@@ -476,6 +476,19 @@ function sortedJsonValue(value: unknown): unknown {
   return value;
 }
 
+function normalizedPackageManifest(value: unknown): JsonObject {
+  const manifest = asObject(value, 'packed package manifest');
+  return Object.fromEntries(
+    Object.keys(manifest)
+      .sort()
+      .map((key) => [
+        key,
+        // Node selects the first matching condition, including nested conditions and array alternatives.
+        key === 'imports' || key === 'exports' ? manifest[key] : sortedJsonValue(manifest[key]),
+      ]),
+  );
+}
+
 function tarEntryName(header: Buffer): string {
   const name = header.subarray(0, 100).toString('utf8').replace(/\0.*$/u, '');
   const prefix = header.subarray(345, 500).toString('utf8').replace(/\0.*$/u, '');
@@ -540,7 +553,7 @@ export function normalizePackedTarball(tarballPath: string): unknown {
     if (type === '0' && tarEntryName(header) === 'package/package.json') {
       const parsed = JSON.parse(body.toString('utf8')) as unknown;
       packedManifest = parsed;
-      body = Buffer.from(JSON.stringify(sortedJsonValue(parsed), null, 2), 'utf8');
+      body = Buffer.from(JSON.stringify(normalizedPackageManifest(parsed), null, 2), 'utf8');
       writeTarSizeAndChecksum(header, body.length);
       manifestCount += 1;
     }

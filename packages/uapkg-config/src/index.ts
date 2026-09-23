@@ -1,5 +1,5 @@
-import { ConfigInstance } from './core/ConfigInstance.ts';
-import { createConfig } from './factory/createConfig.ts';
+import { ConfigInstance } from '#config/core/ConfigInstance.ts';
+import { createConfig } from '#config/factory/createConfig.ts';
 
 const singleton = new ConfigInstance({ cwd: process.cwd() });
 
@@ -37,8 +37,13 @@ export type {
   RegistryConfig,
   RegistryRef,
   ResolvedConfig,
-} from './contracts/ConfigTypes.ts';
-export { PostInstallPolicyResolver } from './core/PostInstallPolicyResolver.ts';
-export { getConfigSchemaAtPath, isLeafConfigPath, isValidConfigPath, validateConfigPath } from './schema/pathSchema.ts';
-export { parseConfigCliValue } from './schema/runtime/ConfigSchemaRuntimeProvider.ts';
+} from '#config/contracts/ConfigTypes.ts';
+export { PostInstallPolicyResolver } from '#config/core/PostInstallPolicyResolver.ts';
+export {
+  getConfigSchemaAtPath,
+  isLeafConfigPath,
+  isValidConfigPath,
+  validateConfigPath,
+} from '#config/schema/pathSchema.ts';
+export { parseConfigCliValue } from '#config/schema/runtime/ConfigSchemaRuntimeProvider.ts';
 export { ConfigInstance, createConfig };

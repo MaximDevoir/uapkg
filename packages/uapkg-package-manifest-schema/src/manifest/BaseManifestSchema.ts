@@ -1,8 +1,8 @@
 import { PackageNameSchema, PackageVersionSchema } from '@uapkg/common-schema';
 import { z } from 'zod';
-import { DependencySchema } from './DependencySchema.ts';
-import { ManifestKindSchema } from './ManifestKind.ts';
-import { PublishSchema } from './PublishSchema.ts';
+import { DependencySchema } from '#package-manifest-schema/manifest/DependencySchema.ts';
+import { ManifestKindSchema } from '#package-manifest-schema/manifest/ManifestKind.ts';
+import { PublishSchema } from '#package-manifest-schema/manifest/PublishSchema.ts';
 
 /**
  * Fields shared by all manifest kinds.

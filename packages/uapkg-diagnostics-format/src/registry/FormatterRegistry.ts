@@ -1,6 +1,10 @@
 import type { Diagnostic, DiagnosticCode } from '@uapkg/diagnostics';
-import type { DiagnosticFormatterFn, FormatterMap, IFormatterRegistry } from '../contracts/FormatterTypes.ts';
-import { formatPlainText } from '../formatters/PlainTextFormatter.ts';
+import type {
+  DiagnosticFormatterFn,
+  FormatterMap,
+  IFormatterRegistry,
+} from '#diagnostics-format/contracts/FormatterTypes.ts';
+import { formatPlainText } from '#diagnostics-format/formatters/PlainTextFormatter.ts';
 
 /**
  * Registry that maps diagnostic codes to formatter functions.

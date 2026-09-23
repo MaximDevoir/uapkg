@@ -1,5 +1,5 @@
-import type { DownloadStatusSnapshot } from '../contracts/StatusStreamTypes.ts';
-import type { SlotTable } from './SlotTable.ts';
+import type { DownloadStatusSnapshot } from '#installer/contracts/StatusStreamTypes.ts';
+import type { SlotTable } from '#installer/status/SlotTable.ts';
 
 /**
  * Minimal async-iterable broadcaster of status snapshots.

@@ -16,7 +16,7 @@ import type {
   RegistryToolsVersionNotFoundDiagnostic,
   RegistryToolsVersionsUnsortedDiagnostic,
 } from '@uapkg/diagnostics';
-import type { FormatterMap } from '../../contracts/FormatterTypes.ts';
+import type { FormatterMap } from '#diagnostics-format/contracts/FormatterTypes.ts';
 
 function header(diagnostic: Diagnostic): string {
   return `[${diagnostic.level.toUpperCase()} ${diagnostic.code}]: ${diagnostic.message}`;

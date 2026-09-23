@@ -5,8 +5,11 @@ import {
   type Result,
 } from '@uapkg/diagnostics';
 import type { PackageRegistryManifest, RegistryDependency } from '@uapkg/registry-schema';
-import type { RegistryToolsAggregator } from '../aggregator/RegistryToolsAggregator.ts';
-import type { ExternalRegistryPolicyReport, ResolvedRegistryToolsPolicy } from '../contracts/RegistryToolsTypes.ts';
+import type { RegistryToolsAggregator } from '#registry-tools/aggregator/RegistryToolsAggregator.ts';
+import type {
+  ExternalRegistryPolicyReport,
+  ResolvedRegistryToolsPolicy,
+} from '#registry-tools/contracts/RegistryToolsTypes.ts';
 
 type Bucket = 'dependencies' | 'devDependencies' | 'peerDependencies';
 

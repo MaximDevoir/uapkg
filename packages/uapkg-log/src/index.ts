@@ -1,5 +1,5 @@
-import type { Logger, LoggerOptions, LoggerStateResolver } from './contracts/LoggerTypes.ts';
-import { LoggerFactory } from './core/LoggerFactory.ts';
+import type { Logger, LoggerOptions, LoggerStateResolver } from '#log/contracts/LoggerTypes.ts';
+import { LoggerFactory } from '#log/core/LoggerFactory.ts';
 
 const defaultResolver: LoggerStateResolver = {
   isVerboseEnabled: () => false,
@@ -61,4 +61,4 @@ const Log: Logger = {
 };
 
 export default Log;
-export type { Logger, LoggerOptions, LoggerStateResolver } from './contracts/LoggerTypes.ts';
+export type { Logger, LoggerOptions, LoggerStateResolver } from '#log/contracts/LoggerTypes.ts';

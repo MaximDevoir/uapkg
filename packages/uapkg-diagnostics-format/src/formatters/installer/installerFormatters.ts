@@ -8,7 +8,7 @@ import type {
   NetworkRetriesExhaustedDiagnostic,
   NetworkTimeoutDiagnostic,
 } from '@uapkg/diagnostics';
-import type { FormatterMap } from '../../contracts/FormatterTypes.ts';
+import type { FormatterMap } from '#diagnostics-format/contracts/FormatterTypes.ts';
 
 function formatDownloadFailed(d: Diagnostic): string {
   const data = (d as DownloadFailedDiagnostic).data;

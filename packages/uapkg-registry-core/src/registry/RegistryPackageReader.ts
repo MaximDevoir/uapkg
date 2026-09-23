@@ -16,7 +16,7 @@ import {
   PackageRegistryManifestSchema,
   RegistryMetaSchema,
 } from '@uapkg/registry-schema';
-import { getRegistryRepoPath } from '../paths/RegistryPaths.ts';
+import { getRegistryRepoPath } from '#registry-core/paths/RegistryPaths.ts';
 
 /**
  * Reads package manifests from the local cloned registry repo.

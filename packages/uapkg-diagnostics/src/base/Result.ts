@@ -1,4 +1,4 @@
-import type { Diagnostic } from '../types.ts';
+import type { Diagnostic } from '#diagnostics/types.ts';
 
 // ---------------------------------------------------------------------------
 // Result<T> — the universal return type for fallible operations.

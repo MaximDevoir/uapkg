@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { PluginManifestSchema } from './PluginManifestSchema.ts';
-import { ProjectManifestSchema } from './ProjectManifestSchema.ts';
+import { PluginManifestSchema } from '#package-manifest-schema/manifest/PluginManifestSchema.ts';
+import { ProjectManifestSchema } from '#package-manifest-schema/manifest/ProjectManifestSchema.ts';
 
 /**
  * Discriminated manifest schema — dispatches to `ProjectManifestSchema`

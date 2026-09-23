@@ -1,25 +1,25 @@
-import type { UAPKGCommandLine } from '../cli/UAPKGCommandLine.ts';
-import { AddCommand } from '../commands/AddCommand.ts';
-import { ConfigCommand } from '../commands/ConfigCommand.ts';
-import { InitCommand } from '../commands/InitCommand.ts';
-import { InstallCommand } from '../commands/InstallCommand.ts';
-import { ListCommand } from '../commands/ListCommand.ts';
-import { LoginCommand } from '../commands/LoginCommand.ts';
-import { LogoutCommand } from '../commands/LogoutCommand.ts';
-import { OutdatedCommand } from '../commands/OutdatedCommand.ts';
-import { PackageLifecycleCommand } from '../commands/PackageLifecycleCommand.ts';
-import { PackCommand } from '../commands/PackCommand.ts';
-import { ProjectGetNameCommand } from '../commands/ProjectGetNameCommand.ts';
-import { PublishCommand } from '../commands/PublishCommand.ts';
-import { RegistryCommand } from '../commands/RegistryCommand.ts';
-import { RemoveCommand } from '../commands/RemoveCommand.ts';
-import { RequestsCommand } from '../commands/RequestsCommand.ts';
-import { UpdateCommand } from '../commands/UpdateCommand.ts';
-import { WhoamiCommand } from '../commands/WhoamiCommand.ts';
-import { WhyCommand } from '../commands/WhyCommand.ts';
-import { InkPromptService } from '../prompts/InkPromptService.tsx';
-import { ProjectContextDetector } from '../prompts/ProjectContextDetector.ts';
-import { CompositionRoot } from './CompositionRoot.ts';
+import type { UAPKGCommandLine } from '#cli/cli/UAPKGCommandLine.ts';
+import { AddCommand } from '#cli/commands/AddCommand.ts';
+import { ConfigCommand } from '#cli/commands/ConfigCommand.ts';
+import { InitCommand } from '#cli/commands/InitCommand.ts';
+import { InstallCommand } from '#cli/commands/InstallCommand.ts';
+import { ListCommand } from '#cli/commands/ListCommand.ts';
+import { LoginCommand } from '#cli/commands/LoginCommand.ts';
+import { LogoutCommand } from '#cli/commands/LogoutCommand.ts';
+import { OutdatedCommand } from '#cli/commands/OutdatedCommand.ts';
+import { PackageLifecycleCommand } from '#cli/commands/PackageLifecycleCommand.ts';
+import { PackCommand } from '#cli/commands/PackCommand.ts';
+import { ProjectGetNameCommand } from '#cli/commands/ProjectGetNameCommand.ts';
+import { PublishCommand } from '#cli/commands/PublishCommand.ts';
+import { RegistryCommand } from '#cli/commands/RegistryCommand.ts';
+import { RemoveCommand } from '#cli/commands/RemoveCommand.ts';
+import { RequestsCommand } from '#cli/commands/RequestsCommand.ts';
+import { UpdateCommand } from '#cli/commands/UpdateCommand.ts';
+import { WhoamiCommand } from '#cli/commands/WhoamiCommand.ts';
+import { WhyCommand } from '#cli/commands/WhyCommand.ts';
+import { InkPromptService } from '#cli/prompts/InkPromptService.tsx';
+import { ProjectContextDetector } from '#cli/prompts/ProjectContextDetector.ts';
+import { CompositionRoot } from '#cli/app/CompositionRoot.ts';
 
 /**
  * Dispatcher: maps the parsed command-line shape to a concrete command

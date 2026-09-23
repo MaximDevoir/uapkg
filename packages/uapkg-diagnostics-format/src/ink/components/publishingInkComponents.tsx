@@ -1,8 +1,15 @@
 import type { PublishRequestFailedDiagnostic } from '@uapkg/diagnostics';
 import { Box, Text } from 'ink';
 import type { ReactElement } from 'react';
-import { publishFactLabels, publishResourceLabel } from '../../formatters/publishing/publishingFormatters.ts';
-import type { DiagnosticBodyComponent, DiagnosticBodyProps, DiagnosticInkComponentMap } from '../contracts/InkTypes.ts';
+import {
+  publishFactLabels,
+  publishResourceLabel,
+} from '#diagnostics-format/formatters/publishing/publishingFormatters.ts';
+import type {
+  DiagnosticBodyComponent,
+  DiagnosticBodyProps,
+  DiagnosticInkComponentMap,
+} from '#diagnostics-format/ink/contracts/InkTypes.ts';
 
 const PublishRequestFailed: DiagnosticBodyComponent = ({ diagnostic }: DiagnosticBodyProps): ReactElement => {
   const d = diagnostic as PublishRequestFailedDiagnostic;

@@ -1,6 +1,6 @@
 import type { Argv } from 'yargs';
-import { createUAPKGCommandLineFactory } from '../../UAPKGCommandLine.ts';
-import type { CommandLineSink, UAPKGCommandModule } from '../contracts/UAPKGCommandModule.ts';
+import { createUAPKGCommandLineFactory } from '#cli/cli/UAPKGCommandLine.ts';
+import type { CommandLineSink, UAPKGCommandModule } from '#cli/cli/parsing/contracts/UAPKGCommandModule.ts';
 
 export class ProjectGetNameCommandModule implements UAPKGCommandModule {
   private readonly factory = createUAPKGCommandLineFactory();

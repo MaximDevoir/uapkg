@@ -10,8 +10,8 @@ import {
 } from '@uapkg/diagnostics';
 import type { Dependency, Manifest } from '@uapkg/package-manifest-schema';
 import type { RegistryCore } from '@uapkg/registry-core';
-import type { PackageNode, ResolvedGraph, ResolverOptions } from '../contracts/ManifestTypes.ts';
-import { DevDependencyPolicy } from '../core/DevDependencyPolicy.ts';
+import type { PackageNode, ResolvedGraph, ResolverOptions } from '#package-manifest/contracts/ManifestTypes.ts';
+import { DevDependencyPolicy } from '#package-manifest/core/DevDependencyPolicy.ts';
 
 export class Resolver {
   private readonly devPolicy = new DevDependencyPolicy();

@@ -39,5 +39,12 @@
     "@uapkg/registry-schema": "workspace:^",
     "p-limit": "7.1.1",
     "tar": "7.5.13"
+  },
+  "imports": {
+    "#installer/*.ts": {
+      "uapkg-source": "./src/*.ts",
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
   }
 }

@@ -11,17 +11,17 @@ import {
 } from '@uapkg/diagnostics';
 import Log, { createLogger } from '@uapkg/log';
 import semver from 'semver';
-import type { PackOptions, PackResult } from '../contracts/PackTypes.ts';
-import { FileCrawler } from './FileCrawler.ts';
-import { IgnoreEvaluator } from './IgnoreEvaluator.ts';
-import { IgnoreRuleLoader } from './IgnoreRuleLoader.ts';
-import { IntegrityWriter } from './IntegrityWriter.ts';
-import { LFSPointerDetector } from './LFSPointerDetector.ts';
-import { PackArtifactExcluder } from './PackArtifactExcluder.ts';
-import { PackManifestReader } from './PackManifestReader.ts';
-import { PluginDescriptorGuard } from './PluginDescriptorGuard.ts';
-import { PluginRootResolver } from './PluginRootResolver.ts';
-import { TarArchiveWriter } from './TarArchiveWriter.ts';
+import type { PackOptions, PackResult } from '#pack/contracts/PackTypes.ts';
+import { FileCrawler } from '#pack/core/FileCrawler.ts';
+import { IgnoreEvaluator } from '#pack/core/IgnoreEvaluator.ts';
+import { IgnoreRuleLoader } from '#pack/core/IgnoreRuleLoader.ts';
+import { IntegrityWriter } from '#pack/core/IntegrityWriter.ts';
+import { LFSPointerDetector } from '#pack/core/LFSPointerDetector.ts';
+import { PackArtifactExcluder } from '#pack/core/PackArtifactExcluder.ts';
+import { PackManifestReader } from '#pack/core/PackManifestReader.ts';
+import { PluginDescriptorGuard } from '#pack/core/PluginDescriptorGuard.ts';
+import { PluginRootResolver } from '#pack/core/PluginRootResolver.ts';
+import { TarArchiveWriter } from '#pack/core/TarArchiveWriter.ts';
 
 export class PackService {
   private readonly logger = createLogger({ context: 'pack' });

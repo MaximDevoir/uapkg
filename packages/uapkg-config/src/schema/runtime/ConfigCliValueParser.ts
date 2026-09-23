@@ -1,6 +1,6 @@
 import { createParseErrorDiagnostic, fail, ok, type Result } from '@uapkg/diagnostics';
-import type { ConfigSchemaNodeKind } from './ConfigSchemaIntrospection.ts';
-import type { ConfigSchemaRuntime } from './ConfigSchemaRuntime.ts';
+import type { ConfigSchemaNodeKind } from '#config/schema/runtime/ConfigSchemaIntrospection.ts';
+import type { ConfigSchemaRuntime } from '#config/schema/runtime/ConfigSchemaRuntime.ts';
 
 /**
  * Parses scalar CLI input (`uapkg config set ...`) using the schema node at

@@ -1,7 +1,7 @@
 import { DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
 import { t as listTar } from 'tar';
-import { normalizePackageClaims, type PackageClaims } from '../claims/PackageClaims.ts';
-import { parseJsonStrict } from '../json/CanonicalJson.ts';
+import { normalizePackageClaims, type PackageClaims } from '#package-claims/claims/PackageClaims.ts';
+import { parseJsonStrict } from '#package-claims/json/CanonicalJson.ts';
 
 /** Raw packaged manifest read out of an artifact archive. */
 export interface PackagedManifest {

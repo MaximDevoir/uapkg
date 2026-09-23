@@ -5,7 +5,7 @@ import type {
   RegistryConfig,
   RegistryRef,
   ResolvedConfig,
-} from '../schema/configSchema.ts';
+} from '#config/schema/configSchema.ts';
 
 export type ConfigLayerSource = 'default' | 'global' | 'intermediary' | 'local';
 

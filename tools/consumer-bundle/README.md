@@ -17,7 +17,8 @@ or unpushed. CI must pass both `--ci` and `--expected-commit <40-character-sha>`
 
 The command builds the selected workspace dependency closure through Vite Task and delegates package tarball creation to
 the repository's Vite+-managed pnpm, so `workspace:` ranges receive their publish-time rewrite. It canonicalizes the
-packed `package.json` key order and writes content-addressed tarballs plus `uapkg-bundle.json`. The manifest has no
+packed `package.json` metadata while preserving `imports`/`exports` condition order, and writes content-addressed
+tarballs plus `uapkg-bundle.json`. The manifest has no
 timestamp and is deterministic for the same consumer manifest, source identity, requested ref, and package contents.
 
 `bundleDigest` is lowercase SHA-256 over the canonical JSON representation of every manifest member except

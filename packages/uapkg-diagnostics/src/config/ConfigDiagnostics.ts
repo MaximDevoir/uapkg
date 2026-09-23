@@ -1,4 +1,4 @@
-import type { DiagnosticBase } from '../base/Diagnostic.ts';
+import type { DiagnosticBase } from '#diagnostics/base/Diagnostic.ts';
 
 /** A config file contains invalid JSON and could not be parsed. */
 export type ConfigInvalidJsonDiagnostic = DiagnosticBase<

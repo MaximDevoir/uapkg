@@ -6,8 +6,8 @@ import { DiagnosticBag, ok, type Result } from '@uapkg/diagnostics';
 import type { Lockfile } from '@uapkg/package-manifest-schema';
 import { getRegistryRepoPath, type RegistryCore } from '@uapkg/registry-core';
 import { RegistryMetaSchema, type RegistryType, type RegistryVersion } from '@uapkg/registry-schema';
-import type { InstallAction, InstallPlan, InstallSummary } from '../contracts/InstallerTypes.ts';
-import type { DiskStateEntry } from './DiskStateInspector.ts';
+import type { InstallAction, InstallPlan, InstallSummary } from '#installer/contracts/InstallerTypes.ts';
+import type { DiskStateEntry } from '#installer/core/DiskStateInspector.ts';
 
 /**
  * Diffs (previousLockfile, currentLockfile, diskState) → InstallPlan.

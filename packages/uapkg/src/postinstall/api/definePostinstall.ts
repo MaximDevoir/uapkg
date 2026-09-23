@@ -1,4 +1,4 @@
-import type { PostinstallDefinition } from './PostinstallDsl.ts';
+import type { PostinstallDefinition } from '#cli/postinstall/api/PostinstallDsl.ts';
 
 /**
  * Identity helper used in user-authored `.uapkg/postinstall.ts` files:

@@ -3,9 +3,9 @@ import path from 'node:path';
 import type { ConfigInstance } from '@uapkg/config';
 import { createParseErrorDiagnostic, type Diagnostic } from '@uapkg/diagnostics';
 import Log from '@uapkg/log';
-import type { CompositionRoot } from '../app/CompositionRoot.ts';
-import type { UAPKGConfigScope, UAPKGOutputFormat, UAPKGRegistryAction } from '../cli/UAPKGCommandLine.ts';
-import type { Command } from './Command.ts';
+import type { CompositionRoot } from '#cli/app/CompositionRoot.ts';
+import type { UAPKGConfigScope, UAPKGOutputFormat, UAPKGRegistryAction } from '#cli/cli/UAPKGCommandLine.ts';
+import type { Command } from '#cli/commands/Command.ts';
 
 export interface RegistryCommandOptions {
   action: UAPKGRegistryAction;

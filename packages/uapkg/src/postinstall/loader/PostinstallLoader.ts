@@ -1,9 +1,9 @@
 import { fail, ok, type Result } from '@uapkg/diagnostics';
-import type { PostinstallDefinition } from '../api/PostinstallDsl.ts';
-import { EntryResolver, type ResolvedEntry } from './EntryResolver.ts';
-import { EsbuildTranspiler } from './EsbuildTranspiler.ts';
-import { ExportValidator } from './ExportValidator.ts';
-import { ModuleImporter, type ModuleSource } from './ModuleImporter.ts';
+import type { PostinstallDefinition } from '#cli/postinstall/api/PostinstallDsl.ts';
+import { EntryResolver, type ResolvedEntry } from '#cli/postinstall/loader/EntryResolver.ts';
+import { EsbuildTranspiler } from '#cli/postinstall/loader/EsbuildTranspiler.ts';
+import { ExportValidator } from '#cli/postinstall/loader/ExportValidator.ts';
+import { ModuleImporter, type ModuleSource } from '#cli/postinstall/loader/ModuleImporter.ts';
 
 export interface LoadedPostinstall {
   readonly packageName: string;
