@@ -10,15 +10,15 @@ export class PublishCommandModule implements UAPKGCommandModule {
   register(parser: Argv, sink: CommandLineSink): Argv {
     return parser.command(
       'publish',
-      'Submit a GitHub Release for authorized publication',
+      'Submit a GitHub Release asset for publication',
       (builder) =>
         builder
           .option('registry', { type: 'string', describe: 'Configured registry alias' })
           .option('owner', {
             type: 'string',
-            describe: 'UAPKG organization namespace for a new unscoped package',
+            describe: 'UAPKG organization name for a new unscoped package',
           })
-          .option('repository', { type: 'string', describe: 'GitHub owner/repository coordinate' })
+          .option('repository', { type: 'string', describe: 'GitHub repository in owner/repository form' })
           .option('tag', { type: 'string', describe: 'GitHub Release tag (defaults to v<version>)' })
           .option('asset', { type: 'string', describe: 'GitHub Release asset name (defaults to package.tgz)' })
           .option('asset-path', {

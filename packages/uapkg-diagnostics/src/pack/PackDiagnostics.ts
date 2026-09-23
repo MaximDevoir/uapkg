@@ -73,7 +73,7 @@ export function createPluginRootNotFoundDiagnostic(cwd: string): PluginRootNotFo
   return {
     level: 'error',
     code: 'PLUGIN_ROOT_NOT_FOUND',
-    message: 'No uapkg.json found from current directory upward.',
+    message: 'No uapkg.json found in the current directory or its parent directories.',
     hint: 'Run this command from within a uapkg project.',
     data: { cwd },
   };
@@ -84,7 +84,7 @@ export function createUnresolvedLfsDiagnostic(filePath: string): UnresolvedLfsDi
     level: 'error',
     code: 'UNRESOLVED_LFS',
     message: `Unresolved LFS pointer file: ${filePath}.`,
-    hint: "Run 'git lfs pull' or use --allow-missing-lfs.",
+    hint: "Run 'git lfs pull' to download the file, or use --allow-missing-lfs to leave it out of the archive.",
     data: { filePath },
   };
 }
@@ -102,7 +102,7 @@ export function createNoFilesSelectedDiagnostic(): NoFilesSelectedDiagnostic {
   return {
     level: 'error',
     code: 'NO_FILES_SELECTED',
-    message: 'No files selected for packing after ignore/LFS resolution.',
+    message: 'No files remain to pack after applying ignore rules and checking Git LFS files.',
     data: {},
   };
 }

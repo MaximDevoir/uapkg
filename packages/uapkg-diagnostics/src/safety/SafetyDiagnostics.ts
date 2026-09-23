@@ -73,7 +73,7 @@ export function createSafetyPathNotProjectManifestDiagnostic(
     level: 'warning',
     code: 'SAFETY_PATH_NOT_PROJECT_MANIFEST',
     message: `Plugin "${pluginName}" requested install path "${requestedPath}" for "${dependencyName}"; using default "${fallbackPath}" instead.`,
-    hint: 'Only project-kind manifests may dictate install paths. Move the override to your project manifest.',
+    hint: 'Only project manifests can set install paths. Move the override to your project manifest.',
     data: { pluginName, dependencyName, requestedPath, fallbackPath },
   };
 }

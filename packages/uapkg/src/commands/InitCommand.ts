@@ -41,7 +41,7 @@ export class InitCommand implements Command {
     const kind =
       this.options.explicitKind ??
       ((await this.prompts.select(
-        'Select manifest kind',
+        'Manifest type',
         [
           { label: 'Project', value: 'project' },
           { label: 'Plugin', value: 'plugin' },
@@ -53,7 +53,9 @@ export class InitCommand implements Command {
 
     const nameResult = PackageNameSchema.safeParse(rawName.trim());
     if (!nameResult.success) {
-      process.stderr.write(`[uapkg] Invalid package name "${rawName}": must be lowercase alphanumeric with hyphens\n`);
+      process.stderr.write(
+        `[uapkg] Invalid package name "${rawName}": use lowercase letters, digits, and hyphens, optionally scoped as @owner/package (214 characters maximum)\n`,
+      );
       return 1;
     }
     const versionResult = PackageVersionSchema.safeParse(DEFAULT_INITIAL_VERSION);

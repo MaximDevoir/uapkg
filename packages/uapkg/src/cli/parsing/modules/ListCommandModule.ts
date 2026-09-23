@@ -11,7 +11,11 @@ export class ListCommandModule implements UAPKGCommandModule {
       'Show installed packages from the lockfile',
       (builder) =>
         builder
-          .option('depth', { type: 'number', default: 0, describe: 'Max tree depth (0 = declared only)' })
+          .option('depth', {
+            type: 'number',
+            default: 0,
+            describe: '0: declared dependencies only; greater than 0: include all transitive dependencies',
+          })
           .option('json', { type: 'boolean', default: false, describe: 'Emit JSON on stdout' }),
       (argv) => {
         sink.set(

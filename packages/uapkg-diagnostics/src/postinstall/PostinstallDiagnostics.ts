@@ -129,7 +129,7 @@ export function createPostinstallDuplicateEntryDiagnostic(
     level: 'error',
     code: 'POSTINSTALL_DUPLICATE_ENTRY',
     message: `Multiple postinstall entry files found for "${packageName}".`,
-    hint: 'Keep only one of `.uapkg/postinstall.ts|.js|.mjs`.',
+    hint: 'Keep one entry file: `.uapkg/postinstall.ts`, `.uapkg/postinstall.js`, or `.uapkg/postinstall.mjs`.',
     data: { packageName, candidates },
   };
 }
@@ -157,7 +157,7 @@ export function createPostinstallEsbuildErrorDiagnostic(
     level: 'error',
     code: 'POSTINSTALL_ESBUILD_ERROR',
     message: `esbuild failed on "${entryFile}" for "${packageName}": ${reason}.`,
-    hint: 'Note: uapkg transpiles but does not type-check; fix the file in your IDE.',
+    hint: 'Fix the script in your editor. UAPKG transpiles it without checking TypeScript types.',
     data: { packageName, entryFile, reason },
   };
 }

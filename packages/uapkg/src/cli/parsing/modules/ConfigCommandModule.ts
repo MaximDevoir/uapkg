@@ -24,7 +24,7 @@ export class ConfigCommandModule implements UAPKGCommandModule {
           })
           .positional('value', {
             type: 'string',
-            describe: 'Scalar value for set action',
+            describe: 'Value to set (string, number, or boolean)',
           })
           .option('json', {
             type: 'boolean',
@@ -39,7 +39,7 @@ export class ConfigCommandModule implements UAPKGCommandModule {
           .option('trace', {
             type: 'boolean',
             default: false,
-            describe: 'Trace value across all layers',
+            describe: 'Show the value in each configuration layer',
           }),
       (argv) => {
         const scope = resolveScope(argv.global, argv.local);

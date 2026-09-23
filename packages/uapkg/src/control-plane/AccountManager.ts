@@ -1134,7 +1134,7 @@ function loginConfirmationAmbiguousError(registryAlias: string): LoginError {
     'LOGIN_FAILED',
     [
       'UAPKG could not determine whether the service activated this login.',
-      'The locally saved credentials were kept to avoid orphaning a possibly active grant.',
+      'Your saved credentials were kept because this login may be active.',
       `Run \`uapkg whoami --registry ${registryAlias}\` to check the login before retrying.`,
     ].join(' '),
   );

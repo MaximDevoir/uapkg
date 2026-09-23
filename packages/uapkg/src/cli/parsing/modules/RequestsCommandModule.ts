@@ -62,7 +62,7 @@ export class RequestsCommandModule implements UAPKGCommandModule {
                 .option('watch', {
                   type: 'boolean',
                   default: false,
-                  describe: 'Watch until the request reaches a terminal state',
+                  describe: 'Watch until the request is ready, rejected, or fails',
                 })
                 .option('json', {
                   type: 'boolean',

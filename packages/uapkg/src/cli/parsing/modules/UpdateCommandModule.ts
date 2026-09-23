@@ -8,16 +8,20 @@ export class UpdateCommandModule implements UAPKGCommandModule {
   register(parser: Argv, sink: CommandLineSink) {
     return parser.command(
       'update [specs..]',
-      'Update dependency graph and lockfile from remote refs',
+      'Update dependencies and the lockfile',
       (builder) =>
         builder
-          .positional('specs', { type: 'string', array: true, describe: 'Optional list of package names to update' })
+          .positional('specs', { type: 'string', array: true, describe: 'Package names with optional version ranges' })
           .option('force', {
             type: 'boolean',
             default: false,
             describe: 'Override safety policies for local drift/branch divergence',
           })
-          .option('dry-run', { type: 'boolean', default: false, describe: 'Compute the plan but perform no IO' })
+          .option('dry-run', {
+            type: 'boolean',
+            default: false,
+            describe: 'Preview installation; the manifest, lockfile, and registry cache may still change',
+          })
           .option('json', { type: 'boolean', default: false, describe: 'Emit JSON on stdout' }),
       (argv) => {
         const specsArg = argv.specs;

@@ -61,8 +61,8 @@ export function createUnknownErrorDiagnostic(reason: string): UnknownErrorDiagno
   return {
     level: 'error',
     code: 'UNKNOWN_ERROR',
-    message: `An unexpected error occurred: ${reason}.`,
-    hint: 'If this persists, please report a bug.',
+    message: `Unexpected error: ${reason}.`,
+    hint: 'If the error continues, report it to the UAPKG maintainers.',
     data: { reason },
   };
 }

@@ -8,7 +8,7 @@ export class WhyCommandModule implements UAPKGCommandModule {
   register(parser: Argv, sink: CommandLineSink): Argv {
     return parser.command(
       'why <package>',
-      'Print every dependency path from a graph root to <package>',
+      'Show which dependencies require <package>',
       (builder) =>
         builder
           .positional('package', { type: 'string', demandOption: true, describe: 'Target package name' })

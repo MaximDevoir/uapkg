@@ -8,7 +8,7 @@ export class LoginCommandModule implements UAPKGCommandModule {
   register(parser: Argv, sink: CommandLineSink): Argv {
     return parser.command(
       'login',
-      'Authorize this browser-capable workstation for one registry',
+      'Sign in to one registry using your browser',
       (builder) =>
         builder
           .option('registry', {
@@ -22,7 +22,7 @@ export class LoginCommandModule implements UAPKGCommandModule {
           .option('reauthorize', {
             type: 'boolean',
             default: false,
-            describe: 'Replace the saved grant for this registry',
+            describe: 'Replace the saved login for this registry',
           })
           .option('json', {
             type: 'boolean',

@@ -107,7 +107,7 @@ function presentationLines(presentation: RegistryRequestPresentation, request: R
   if (presentation.kind === 'publish') {
     const lines = [`Publishing request ${request.id}: ${request.status}.`];
     if (request.status === 'ready_superseded') {
-      lines.push('The publication was accepted; a newer change to the same package is already projected.');
+      lines.push('The publication was accepted; the Git registry already includes a newer change to this package.');
     }
     return lines;
   }

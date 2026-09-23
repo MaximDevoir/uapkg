@@ -8,12 +8,12 @@ export class AddCommandModule implements UAPKGCommandModule {
   register(parser: Argv, sink: CommandLineSink) {
     return parser.command(
       'add <source>',
-      'Add dependency source to current uapkg.json',
+      'Add a dependency to uapkg.json and install it',
       (builder) =>
         builder
           .positional('source', {
             type: 'string',
-            describe: 'Dependency source specifier',
+            describe: 'Package name with an optional version range',
             demandOption: true,
           })
           .option('force', {
@@ -24,11 +24,15 @@ export class AddCommandModule implements UAPKGCommandModule {
           .option('pin', {
             type: 'boolean',
             default: false,
-            describe: 'Add/replace project override for this dependency',
+            describe: 'Add or replace the project override for this dependency',
           })
           .option('dev', { type: 'boolean', default: false, describe: 'Add to devDependencies' })
           .option('registry', { type: 'string', describe: 'Registry name (defaults to config `registry`)' })
-          .option('dry-run', { type: 'boolean', default: false, describe: 'Compute the plan but perform no IO' })
+          .option('dry-run', {
+            type: 'boolean',
+            default: false,
+            describe: 'Preview installation; the manifest, lockfile, and registry cache may still change',
+          })
           .option('json', { type: 'boolean', default: false, describe: 'Emit JSON on stdout' }),
       (argv) => {
         sink.set(

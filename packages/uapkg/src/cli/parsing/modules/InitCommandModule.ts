@@ -14,11 +14,11 @@ export class InitCommandModule implements UAPKGCommandModule {
           .option('type', {
             type: 'string',
             choices: ['project', 'plugin'] as const,
-            describe: 'Explicit manifest type for init',
+            describe: 'Manifest type',
           })
           .option('name', {
             type: 'string',
-            describe: 'Explicit package name for init',
+            describe: 'Package name',
           }),
       (argv) => {
         sink.set(

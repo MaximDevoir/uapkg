@@ -980,7 +980,7 @@ describe('AccountManager', () => {
 
     await expect(manager.login(trust)).rejects.toMatchObject({
       code: 'LOGIN_FAILED',
-      message: expect.stringContaining('locally saved credentials were kept'),
+      message: expect.stringContaining('saved credentials were kept because this login may be active'),
     });
 
     expect(confirmationGets).toBe(3);

@@ -51,7 +51,7 @@ export class AuthenticationSelector {
     if (mode === 'gat' || (mode === 'auto' && environmentToken)) {
       if (!this.isInteractive()) {
         throw new Error(
-          'Human GAT authentication requires an attended TTY. Headless publishing must use a configured GitHub Actions OIDC trusted publisher.',
+          'Using a granular access token requires an interactive terminal. For automated publishing, configure a GitHub Actions OIDC trusted publisher.',
         );
       }
       const accessToken = environmentToken || (await this.prompts.secret('UAPKG granular access token')).trim();
@@ -68,16 +68,16 @@ export class AuthenticationSelector {
         `No supported publishing credential is available for "${trust.alias}".`,
         '',
         `Run \`uapkg login --registry ${trust.alias}\` on a browser-capable workstation,`,
-        'set UAPKG_TOKEN for an attended GAT publish, or configure GitHub Actions OIDC.',
+        'set UAPKG_TOKEN for an interactive publish with a granular access token, or configure GitHub Actions OIDC.',
       ].join('\n'),
     );
   }
 
   private async readOtp(): Promise<string> {
     this.assertInteractiveRequestOtp();
-    const otp = (await this.prompts.secret('Current TOTP code')).trim();
+    const otp = (await this.prompts.secret('Current 6-digit code from your authenticator app')).trim();
     if (!/^[0-9]{6}$/.test(otp)) {
-      throw new Error('A current 6-digit TOTP code is required for this publishing request.');
+      throw new Error('Enter the current 6-digit code from your authenticator app to confirm this publishing request.');
     }
     return otp;
   }
@@ -85,7 +85,7 @@ export class AuthenticationSelector {
   private assertInteractiveRequestOtp(): void {
     if (this.isInteractive()) return;
     throw new Error(
-      'Request-scoped TOTP confirmation requires an attended TTY. Human publishing is not supported in headless environments.',
+      'Confirm this publishing request with an authenticator code in an interactive terminal. For automated publishing, configure a GitHub Actions OIDC trusted publisher.',
     );
   }
 }

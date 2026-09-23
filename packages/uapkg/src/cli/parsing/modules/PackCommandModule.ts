@@ -8,13 +8,13 @@ export class PackCommandModule implements UAPKGCommandModule {
   register(parser: Argv, sink: CommandLineSink) {
     return parser.command(
       'pack',
-      'Create package tgz and integrity file',
+      'Create a .tgz package archive and integrity file',
       (builder) =>
         builder
           .option('dry-run', {
             type: 'boolean',
             default: false,
-            describe: 'Print what would be included without creating archive',
+            describe: 'List the files to include without creating an archive',
           })
           .option('allow-missing-lfs', {
             type: 'boolean',

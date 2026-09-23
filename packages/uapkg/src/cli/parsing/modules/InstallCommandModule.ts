@@ -8,7 +8,7 @@ export class InstallCommandModule implements UAPKGCommandModule {
   register(parser: Argv, sink: CommandLineSink) {
     return parser.command(
       'install',
-      'Install dependency graph for current manifest',
+      'Install dependencies from uapkg.json',
       (builder) =>
         builder
           .option('force', {
@@ -19,9 +19,13 @@ export class InstallCommandModule implements UAPKGCommandModule {
           .option('frozen', {
             type: 'boolean',
             default: false,
-            describe: 'Use the existing uapkg.lock verbatim; do not re-resolve',
+            describe: 'Install from the existing uapkg.lock without resolving new versions',
           })
-          .option('dry-run', { type: 'boolean', default: false, describe: 'Compute the plan but perform no IO' })
+          .option('dry-run', {
+            type: 'boolean',
+            default: false,
+            describe: 'Preview installation; the lockfile and registry cache may still change',
+          })
           .option('json', { type: 'boolean', default: false, describe: 'Emit JSON on stdout' })
           .conflicts('force', 'frozen'),
       (argv) => {

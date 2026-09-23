@@ -146,7 +146,7 @@ describe('AuthenticationSelector', () => {
     );
 
     await expect(selector.select('auto', trust, ['publishing.request.create'], false)).rejects.toThrow(
-      'requires an attended TTY',
+      'Using a granular access token requires an interactive terminal.',
     );
     expect(prompt.secret).not.toHaveBeenCalled();
   });
@@ -167,7 +167,7 @@ describe('AuthenticationSelector', () => {
     );
 
     await expect(selector.select('auto', trust, ['publishing.request.create'], true)).rejects.toThrow(
-      'Request-scoped TOTP confirmation requires an attended TTY',
+      'Confirm this publishing request with an authenticator code in an interactive terminal.',
     );
     expect(account.getAccessCredential).not.toHaveBeenCalled();
     expect(prompt.secret).not.toHaveBeenCalled();
@@ -186,7 +186,7 @@ describe('AuthenticationSelector', () => {
     );
 
     await expect(selector.select('gat', trust, ['publishing.request.create'], true)).rejects.toThrow(
-      'A current 6-digit TOTP code is required for this publishing request.',
+      'Enter the current 6-digit code from your authenticator app to confirm this publishing request.',
     );
   });
 });
