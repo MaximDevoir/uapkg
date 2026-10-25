@@ -5,6 +5,10 @@ import { INTERNAL_PROFILE_HOME_ENV } from '@uapkg/common';
 import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 import { getRegistryRepoPath } from '../src/paths/RegistryPaths.ts';
 import { RegistryPackageReader } from '../src/registry/RegistryPackageReader.ts';
+import {
+  registryMetaFixture,
+  type RegistryMetaFixtureFormat,
+} from '../../uapkg-registry-schema/tests/fixtures/registryMetaFixture.ts';
 
 const shortId = 'schema-context-test';
 const previousProfileHome = process.env[INTERNAL_PROFILE_HOME_ENV];
@@ -21,9 +25,9 @@ afterEach(async () => {
   await rm(profileHome, { recursive: true, force: true });
 });
 
-describe('RegistryPackageReader registry-type context', () => {
+describe.each(['reduced', 'rich'] as const)('RegistryPackageReader (%s metadata)', (format) => {
   it('requires gitTree for a public registry version', async () => {
-    await writeRegistry('public', false);
+    await writeRegistry('public', false, 1, format);
 
     const result = await new RegistryPackageReader(shortId).readPackageManifest('no-tree');
 
@@ -32,15 +36,24 @@ describe('RegistryPackageReader registry-type context', () => {
   });
 
   it('allows a trusted private registry version to omit gitTree', async () => {
-    await writeRegistry('private', false);
+    await writeRegistry('private', false, 1, format);
 
     const result = await new RegistryPackageReader(shortId).readPackageManifest('no-tree');
 
     expect(result.ok).toBe(true);
   });
 
+  it('accepts a public registry version with gitTree', async () => {
+    await writeRegistry('public', true, 1, format);
+
+    const result = await new RegistryPackageReader(shortId).readPackageManifest('no-tree');
+
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(Object.values(result.value.versions)[0].gitTree).toBe('a'.repeat(40));
+  });
+
   it('fails closed when the registry metadata file is absent', async () => {
-    await writeRegistry('private', false);
+    await writeRegistry('private', false, 1, format);
     await rm(join(getRegistryRepoPath(shortId), '.uapkg', 'registry.meta.json'));
 
     const result = await new RegistryPackageReader(shortId).readPackageManifest('no-tree');
@@ -50,7 +63,7 @@ describe('RegistryPackageReader registry-type context', () => {
   });
 
   it('fails closed when present metadata has an unknown schema version', async () => {
-    await writeRegistry('private', false, 2);
+    await writeRegistry('private', false, 2, format);
 
     const result = await new RegistryPackageReader(shortId).readPackageManifest('no-tree');
 
@@ -63,6 +76,7 @@ async function writeRegistry(
   registryType: 'public' | 'private',
   includeGitTree: boolean,
   schemaVersion = 1,
+  format: RegistryMetaFixtureFormat = 'reduced',
 ): Promise<void> {
   const repoPath = getRegistryRepoPath(shortId);
   const packagePath = join(repoPath, 'packages', 'n', 'no-tree.json');
@@ -89,24 +103,7 @@ async function writeRegistry(
   );
   await writeFile(
     join(repoPath, '.uapkg', 'registry.meta.json'),
-    JSON.stringify({
-      schemaVersion,
-      registry: {
-        id: '00000000-0000-4000-a000-000000000020',
-        name: 'Test registry',
-        normalizedName: 'test-registry',
-        registryType,
-        createdAt: 1_700_000_000,
-      },
-      owner: {
-        kind: 'organization',
-        id: '00000000-0000-4000-a000-000000000021',
-        name: 'Test owner',
-        normalizedName: 'test-owner',
-      },
-      sourceOfTruth: { type: 'uapkg-service', apiBaseUrl: 'https://api.uapkg.dev/v1' },
-      generated: { generatedAt: 1_700_000_001, generatedBy: 'uapkg-registry-app' },
-    }),
+    JSON.stringify(registryMetaFixture({ format, registryType, schemaVersion, name: 'Test registry' })),
     'utf8',
   );
 }

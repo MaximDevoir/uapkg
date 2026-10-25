@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import type { CompositionRoot } from '../../src/app/CompositionRoot.ts';
+import { registryMetaFixture } from '../../../uapkg-registry-schema/tests/fixtures/registryMetaFixture.ts';
 import {
   canonicalizeRegistryGitOrigin,
   fingerprintRegistryGitOrigin,
@@ -30,33 +31,17 @@ describe('registry control-plane source identity', () => {
   });
 
   it.each([
-    ['metadata without an identifier', {}],
-    ['legacy metadata with an extra identifier', { identifier: 'legacy-service-generated-value' }],
-  ])('resolves %s using the UUID, display name, and Git origin', async (_label, legacyFields) => {
+    ['reduced', {}],
+    ['rich', {}],
+    ['rich', { identifier: 'legacy-service-generated-value' }],
+  ] as const)('resolves %s metadata using the UUID, display name, and Git origin', async (format, legacyFields) => {
+    const meta = registryMetaFixture({ format });
     readFileMock.mockResolvedValue(
       JSON.stringify({
-        schemaVersion: 1,
+        ...meta,
         registry: {
-          id: '00000000-0000-4000-a000-000000000020',
-          name: 'Official',
-          normalizedName: 'official',
-          registryType: 'public',
-          createdAt: 1_700_000_000,
+          ...meta.registry,
           ...legacyFields,
-        },
-        owner: {
-          kind: 'organization',
-          id: '00000000-0000-4000-a000-000000000021',
-          name: 'UAPKG',
-          normalizedName: 'uapkg',
-        },
-        sourceOfTruth: {
-          type: 'uapkg-service',
-          apiBaseUrl: 'https://untrusted.example.invalid',
-        },
-        generated: {
-          generatedAt: 1_700_000_001,
-          generatedBy: 'uapkg-registry-app',
         },
         authorization: {
           issuer: 'https://untrusted.example.invalid/oauth',
@@ -96,27 +81,8 @@ describe('registry control-plane source identity', () => {
     expect(trust).not.toHaveProperty('registryIdentifier');
   });
 
-  it('rejects an unknown registry metadata schema version', async () => {
-    readFileMock.mockResolvedValue(
-      JSON.stringify({
-        schemaVersion: 2,
-        registry: {
-          id: '00000000-0000-4000-a000-000000000020',
-          name: 'Official',
-          normalizedName: 'official',
-          registryType: 'public',
-          createdAt: 1_700_000_000,
-        },
-        owner: {
-          kind: 'organization',
-          id: '00000000-0000-4000-a000-000000000021',
-          name: 'UAPKG',
-          normalizedName: 'uapkg',
-        },
-        sourceOfTruth: { type: 'uapkg-service', apiBaseUrl: 'https://api.uapkg.dev/v1' },
-        generated: { generatedAt: 1_700_000_001, generatedBy: 'uapkg-registry-app' },
-      }),
-    );
+  it.each(['reduced', 'rich'] as const)('rejects an unknown %s metadata schema version', async (format) => {
+    readFileMock.mockResolvedValue(JSON.stringify(registryMetaFixture({ format, schemaVersion: 2 })));
     const root = {
       config: { get: vi.fn().mockReturnValue('official') },
       registryCore: {

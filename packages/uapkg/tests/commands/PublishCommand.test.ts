@@ -13,6 +13,10 @@ import { AuthenticationSelector } from '../../src/control-plane/AuthenticationSe
 import { ControlPlaneClient } from '../../src/control-plane/ControlPlaneClient.ts';
 import { ControlPlaneError, type RegistryTrust } from '../../src/control-plane/ControlPlaneTypes.ts';
 import { createGitHubActionsPublishIdempotencyKey } from '../../src/control-plane/PublishIdempotencyStore.ts';
+import {
+  registryMetaFixture,
+  type RegistryMetaFixtureFormat,
+} from '../../../uapkg-registry-schema/tests/fixtures/registryMetaFixture.ts';
 
 const cleanups: string[] = [];
 let profileHome: string;
@@ -46,47 +50,80 @@ async function writeTrustedRegistryMeta(
   shortId: string,
   registryType: 'public' | 'private',
   schemaVersion = 1,
+  format: RegistryMetaFixtureFormat = 'reduced',
 ): Promise<void> {
   const metaDir = join(getRegistryRepoPath(shortId), '.uapkg');
   await mkdir(metaDir, { recursive: true });
   await writeFile(
     join(metaDir, 'registry.meta.json'),
-    JSON.stringify({
-      schemaVersion,
-      registry: {
-        id: '00000000-0000-4000-a000-000000000020',
-        name: 'Official',
-        normalizedName: 'official',
-        registryType,
-        createdAt: 1_700_000_000,
-      },
-      owner: {
-        kind: 'organization',
-        id: '00000000-0000-4000-a000-000000000021',
-        name: 'UAPKG',
-        normalizedName: 'uapkg',
-      },
-      sourceOfTruth: { type: 'uapkg-service', apiBaseUrl: 'https://api.uapkg.dev/v1' },
-      generated: { generatedAt: 1_700_000_001, generatedBy: 'uapkg-registry-app' },
-      futureOptional: true,
-    }),
+    JSON.stringify(registryMetaFixture({ format, registryType, schemaVersion })),
     'utf8',
   );
 }
 
-describe('trusted registry metadata for publishing', () => {
+describe.each(['reduced', 'rich'] as const)('trusted registry metadata for publishing (%s)', (format) => {
   it('rejects both an absent metadata file and an unsupported present version', async () => {
     await expect(readTrustedRegistryType('missing-meta')).rejects.toThrow('metadata is missing');
 
-    await writeTrustedRegistryMeta('future-meta', 'private', 2);
+    await writeTrustedRegistryMeta('future-meta', 'private', 2, format);
     await expect(readTrustedRegistryType('future-meta')).rejects.toThrow('unsupported schema version');
   });
 
-  it('reads the registry type through the shared metadata schema', async () => {
-    await writeTrustedRegistryMeta('valid-meta', 'public');
+  it.each(['public', 'private'] as const)(
+    'reads the %s type through the shared metadata schema',
+    async (registryType) => {
+      await writeTrustedRegistryMeta('valid-meta', registryType, 1, format);
 
-    await expect(readTrustedRegistryType('valid-meta')).resolves.toBe('public');
-  });
+      await expect(readTrustedRegistryType('valid-meta')).resolves.toBe(registryType);
+    },
+  );
+
+  it.each(['public', 'private'] as const)(
+    'preserves the %s registry policy for private packages',
+    async (registryType) => {
+      const trust = registryTrust();
+      await writeTrustedRegistryMeta(trust.cacheShortId, registryType, 1, format);
+      const archivePath = await makeArchive({ name: 'example', version: '1.2.3', kind: 'plugin', private: true });
+      const select = vi.spyOn(AuthenticationSelector.prototype, 'select').mockResolvedValue({
+        kind: 'login',
+        credential: { kind: 'bearer', accessToken: 'memory-only-token' },
+      });
+      const submit = vi.spyOn(ControlPlaneClient.prototype, 'submitRegistryRequest').mockResolvedValue({
+        requestId: 'request-private-policy',
+        status: 'queued',
+        message: 'queued',
+      });
+      vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+      const stderr = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+      const command = new PublishCommand(publishRoot(trust), {
+        repository: 'acme/example',
+        tag: 'v1.2.3',
+        asset: 'package.tgz',
+        assetPath: archivePath,
+        auth: 'login',
+        detach: true,
+        outputFormat: 'text',
+      });
+
+      await expect(command.execute()).resolves.toBe(registryType === 'public' ? 1 : 0);
+      if (registryType === 'public') {
+        expect(stderr.mock.calls.map(([value]) => String(value)).join('')).toContain(
+          'does not accept private packages',
+        );
+        expect(select).not.toHaveBeenCalled();
+        expect(submit).not.toHaveBeenCalled();
+      } else {
+        expect(submit).toHaveBeenCalledWith(
+          expect.anything(),
+          'publish',
+          expect.objectContaining({
+            payload: expect.objectContaining({ claims: expect.objectContaining({ private: true }) }),
+          }),
+          expect.anything(),
+        );
+      }
+    },
+  );
 });
 
 describe('PublishCommand (artifact-first)', () => {

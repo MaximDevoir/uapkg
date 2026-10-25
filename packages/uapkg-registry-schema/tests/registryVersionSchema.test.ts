@@ -7,6 +7,7 @@ import {
   RegistryMetaSchema,
   RegistryVersionSchema,
 } from '../src/index.ts';
+import { registryMetaFixture } from './fixtures/registryMetaFixture.ts';
 
 const versionRecord = {
   gitTree: 'a'.repeat(40),
@@ -78,25 +79,16 @@ describe('PackageRegistryManifestSchema', () => {
   });
 });
 
-describe('RegistryMetaSchema', () => {
-  const meta = {
-    schemaVersion: 1,
-    registry: {
-      id: '00000000-0000-4000-a000-000000000020',
-      name: 'Official',
-      normalizedName: 'official',
-      registryType: 'public',
-      createdAt: 1_700_000_000,
-    },
-    owner: {
-      kind: 'organization',
-      id: '00000000-0000-4000-a000-000000000021',
-      name: 'UAPKG',
-      normalizedName: 'uapkg',
-    },
-    sourceOfTruth: { type: 'uapkg-service', apiBaseUrl: 'https://api.uapkg.dev/v1' },
-    generated: { generatedAt: 1_700_000_001, generatedBy: 'uapkg-registry-app' },
-  } as const;
+describe.each(['reduced', 'rich'] as const)('RegistryMetaSchema (%s v1)', (format) => {
+  const meta = registryMetaFixture({ format });
+
+  it.each(['public', 'private'] as const)('preserves the %s registry core and exact name spelling', (registryType) => {
+    const input = registryMetaFixture({ format, registryType, name: 'Official Registry' });
+    const parsed = RegistryMetaSchema.parse(input);
+
+    expect(parsed).toEqual(input);
+    expect(parsed.registry).toMatchObject({ id: input.registry.id, name: 'Official Registry', registryType });
+  });
 
   it('accepts and preserves unknown optional members', () => {
     const parsed = RegistryMetaSchema.parse({
@@ -110,6 +102,19 @@ describe('RegistryMetaSchema', () => {
 
   it('rejects unknown metadata schema versions', () => {
     expect(RegistryMetaSchema.safeParse({ ...meta, schemaVersion: 2 }).success).toBe(false);
+  });
+
+  it.each([
+    ['id', undefined],
+    ['id', 'not-a-uuid'],
+    ['name', undefined],
+    ['name', ''],
+    ['registryType', undefined],
+    ['registryType', 'unlisted'],
+  ])('rejects an invalid or missing %s (%s)', (field, value) => {
+    expect(RegistryMetaSchema.safeParse({ ...meta, registry: { ...meta.registry, [field]: value } }).success).toBe(
+      false,
+    );
   });
 });
 
