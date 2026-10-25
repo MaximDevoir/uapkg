@@ -1,5 +1,12 @@
 # @uapkg/package-manifest-schema
 
+## 1.4.0
+
+### Patch Changes
+
+- @uapkg/common-schema@1.4.0
+- @uapkg/diagnostics@1.4.0
+
 ## 1.3.2
 
 ### Patch Changes

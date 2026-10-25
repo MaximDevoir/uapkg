@@ -1,5 +1,16 @@
 # @uapkg/registry-schema
 
+## 1.4.0
+
+### Minor Changes
+
+- ab49fc7: Accept reduced schema v1 registry metadata containing only the registry ID, name, and registry type. Existing richer v1 metadata remains readable. Preserve CLI registry names, authentication binding, and public/private package verification without changing command behavior.
+
+### Patch Changes
+
+- @uapkg/common-schema@1.4.0
+- @uapkg/diagnostics@1.4.0
+
 ## 1.3.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @uapkg/diagnostics-format
 
+## 1.4.0
+
+### Patch Changes
+
+- @uapkg/diagnostics@1.4.0
+
 ## 1.3.2
 
 ### Patch Changes

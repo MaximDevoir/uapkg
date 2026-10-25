@@ -1,5 +1,16 @@
 # @uapkg/package-manifest
 
+## 1.4.0
+
+### Patch Changes
+
+- @uapkg/common@1.4.0
+- @uapkg/common-schema@1.4.0
+- @uapkg/config@1.4.0
+- @uapkg/diagnostics@1.4.0
+- @uapkg/package-manifest-schema@1.4.0
+- @uapkg/registry-core@1.4.0
+
 ## 1.3.2
 
 ### Patch Changes
