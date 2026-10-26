@@ -247,7 +247,7 @@ describe('publishRequestDiagnosticForError', () => {
   it.each([
     ['login', 'Your account', undefined],
     ['gat', 'granular access token', 'Access token settings'],
-    ['oidc', 'GitHub Actions workflow', 'Trusted publishers'],
+    ['oidc', 'GitHub Actions workflow', 'Package settings'],
   ] as const)(
     'tailors a generic authority denial to a %s credential',
     (credentialKind, expectedMessage, expectedResourceLabel) => {
@@ -297,8 +297,8 @@ describe('publishRequestDiagnosticForError', () => {
     );
     expect(diagnostic.data.resources).toContainEqual({
       kind: 'url',
-      url: 'https://account.uapkg.dev/trusted-publishers',
-      label: 'Trusted publishers',
+      url: 'https://account.uapkg.dev/packages',
+      label: 'Package settings',
     });
   });
 
@@ -341,6 +341,9 @@ describe('publishRequestDiagnosticForError', () => {
       label: 'Inspect the related request',
     });
     expect(JSON.stringify(ownershipConflict)).not.toContain('request-not-readable');
+    expect(duplicate.data.resources).not.toContainEqual(
+      expect.objectContaining({ url: 'https://account.uapkg.dev/requests' }),
+    );
   });
 
   it('links a caller-readable request that is blocking further package changes', () => {

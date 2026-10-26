@@ -838,13 +838,12 @@ function resourcesFor(
             label: 'Inspect the related request',
           });
         }
-        addAccountUrl(resources, accountOrigin, '/requests', 'Publishing requests');
         break;
       case 'access-tokens':
         addAccountUrl(resources, accountOrigin, '/settings/access-tokens', 'Access token settings');
         break;
       case 'trusted-publishers':
-        addAccountUrl(resources, accountOrigin, '/trusted-publishers', 'Trusted publishers');
+        addAccountUrl(resources, accountOrigin, '/packages', 'Package settings');
         break;
       case 'registries':
         addAccountUrl(resources, accountOrigin, '/settings/registries', 'Registry settings');
