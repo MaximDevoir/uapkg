@@ -1,5 +1,14 @@
 # @uapkg/config
 
+## 1.4.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @uapkg/common@1.4.1
+  - @uapkg/common-schema@1.4.1
+  - @uapkg/diagnostics@1.4.1
+
 ## 1.4.0
 
 ### Patch Changes
