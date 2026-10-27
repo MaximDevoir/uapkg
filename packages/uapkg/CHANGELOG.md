@@ -1,5 +1,26 @@
 # uapkg
 
+## 1.4.1
+
+### Patch Changes
+
+- [`8ff492a`](https://github.com/MaximDevoir/uapkg/commit/8ff492a897ff738d15c609f148f122e00ac7e843) Thanks [@MaximDevoir](https://github.com/MaximDevoir)! - Point trusted publishing recovery to package settings and keep request recovery in the CLI after removing the standalone account pages.
+
+- Updated dependencies []:
+  - @uapkg/common@1.4.1
+  - @uapkg/common-schema@1.4.1
+  - @uapkg/config@1.4.1
+  - @uapkg/diagnostics@1.4.1
+  - @uapkg/diagnostics-format@1.4.1
+  - @uapkg/installer@1.4.1
+  - @uapkg/log@1.4.1
+  - @uapkg/pack@1.4.1
+  - @uapkg/package-claims@1.4.1
+  - @uapkg/package-manifest@1.4.1
+  - @uapkg/package-manifest-schema@1.4.1
+  - @uapkg/registry-core@1.4.1
+  - @uapkg/registry-schema@1.4.1
+
 ## 1.4.0
 
 ### Patch Changes
