@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { parseRetryAfter, retryBackoff } from '#cli/control-plane/RetryAfter.ts';
 import {
   ControlPlaneError,
   type RegistryTrust,
@@ -9,7 +10,6 @@ import {
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_RESPONSE_BYTES = 64 * 1024;
 const DEFAULT_MAX_ATTEMPTS = 3;
-const DEFAULT_RETRY_DELAY_MS = 1_000;
 const DEFAULT_MAX_RETRY_DELAY_MS = 30_000;
 const RETRYABLE_STATUS_CODES = new Set([429, 503]);
 
@@ -46,14 +46,16 @@ export type GitHubActionsOidcErrorCode =
 
 /** Stable local failures from the GitHub Actions OIDC credential flow. */
 export class GitHubActionsOidcError extends Error {
+  public readonly retryAfterMs?: number;
   public constructor(
     public readonly code: GitHubActionsOidcErrorCode,
     message: string,
     public readonly status?: number,
-    options?: ErrorOptions,
+    options?: ErrorOptions & { readonly retryAfterMs?: number },
   ) {
     super(message, options);
     this.name = 'GitHubActionsOidcError';
+    this.retryAfterMs = options?.retryAfterMs;
   }
 }
 
@@ -132,14 +134,16 @@ export class GitHubActionsOidcCredentialProvider {
       },
       'github',
     );
-    const githubValue = githubResponseSchema.safeParse(await this.readJson(githubResponse, 'github'));
     if (!githubResponse.ok) {
+      await githubResponse.body?.cancel().catch(() => undefined);
       throw new GitHubActionsOidcError(
         'OIDC_GITHUB_TOKEN_REJECTED',
         `GitHub Actions did not issue an OIDC identity token (HTTP ${githubResponse.status}).`,
         githubResponse.status,
+        { retryAfterMs: parseRetryAfter(githubResponse.headers.get('retry-after')) },
       );
     }
+    const githubValue = githubResponseSchema.safeParse(await this.readJson(githubResponse, 'github'));
     if (!githubValue.success) {
       throw new GitHubActionsOidcError(
         'OIDC_GITHUB_TOKEN_RESPONSE_INVALID',
@@ -174,6 +178,7 @@ export class GitHubActionsOidcCredentialProvider {
           error.data.error.message,
           exchangeResponse.status,
           error.data.error.details,
+          { retryAfterMs: parseRetryAfter(exchangeResponse.headers.get('retry-after')) },
         );
       }
       throw new GitHubActionsOidcError(
@@ -204,7 +209,7 @@ export class GitHubActionsOidcCredentialProvider {
         });
       } catch (error) {
         if (attempt < this.maxAttempts) {
-          await this.sleep(this.retryDelay(undefined, attempt));
+          await this.sleep(retryBackoff(attempt, this.maxRetryDelayMs));
           continue;
         }
         throw requestFailure(endpoint, error);
@@ -213,17 +218,14 @@ export class GitHubActionsOidcCredentialProvider {
       if (!RETRYABLE_STATUS_CODES.has(response.status) || attempt === this.maxAttempts) return response;
 
       const retryAfter = response.headers.get('retry-after');
+      const serverDelay = parseRetryAfter(retryAfter);
+      // A server's minimum wait must never be shortened to fit our retry budget.
+      if (serverDelay !== undefined && serverDelay > this.maxRetryDelayMs) return response;
       await response.body?.cancel().catch(() => undefined);
-      await this.sleep(this.retryDelay(retryAfter, attempt));
+      await this.sleep(serverDelay ?? retryBackoff(attempt, this.maxRetryDelayMs));
     }
 
     throw new Error('OIDC retry loop exhausted unexpectedly.');
-  }
-
-  private retryDelay(retryAfter: string | null | undefined, attempt: number): number {
-    const parsed = parseRetryAfter(retryAfter);
-    const fallback = DEFAULT_RETRY_DELAY_MS * 2 ** (attempt - 1);
-    return Math.min(parsed ?? fallback, this.maxRetryDelayMs);
   }
 
   private async readJson(response: Response, endpoint: OidcEndpoint): Promise<unknown> {
@@ -357,13 +359,6 @@ function parseContentLength(value: string | null): number | undefined {
   if (value === null || !/^\d+$/.test(value)) return undefined;
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) ? parsed : undefined;
-}
-
-function parseRetryAfter(value: string | null | undefined, now = Date.now()): number | undefined {
-  if (!value) return undefined;
-  if (/^\d+$/.test(value)) return Number(value) * 1_000;
-  const timestamp = Date.parse(value);
-  return Number.isFinite(timestamp) ? Math.max(0, timestamp - now) : undefined;
 }
 
 function positiveInteger(value: number | undefined, fallback: number): number {

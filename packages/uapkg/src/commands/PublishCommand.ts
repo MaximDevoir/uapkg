@@ -13,6 +13,7 @@ import { describeControlPlaneError } from '#cli/control-plane/AccountManager.ts'
 import { ArtifactObserver } from '#cli/control-plane/ArtifactObserver.ts';
 import { AuthenticationSelector } from '#cli/control-plane/AuthenticationSelector.ts';
 import { ControlPlaneClient } from '#cli/control-plane/ControlPlaneClient.ts';
+import { RequestWatch } from '#cli/control-plane/RequestWatch.ts';
 import {
   type ControlPlaneAuthMode,
   ControlPlaneError,
@@ -175,9 +176,9 @@ export class PublishCommand implements Command {
           return 0;
         }
 
-        const readRequest = async () => {
+        const readRequest = async (signal: AbortSignal) => {
           try {
-            return await client.getRegistryRequestDetail(authentication.credential, created.requestId);
+            return await client.getRegistryRequestDetail(authentication.credential, created.requestId, signal);
           } catch (error) {
             if (!(error instanceof ControlPlaneError) || error.status !== 401) throw error;
             if (authentication.kind === 'gat') throw error;
@@ -191,27 +192,30 @@ export class PublishCommand implements Command {
               false,
               oidcTarget,
             );
-            return client.getRegistryRequestDetail(authentication.credential, created.requestId);
+            return client.getRegistryRequestDetail(authentication.credential, created.requestId, signal);
           }
         };
 
-        let detail = await readRequest();
-        let previousStatus = '';
-        const deadline = Date.now() + PUBLISH_WATCH_TIMEOUT_MS;
-        while (!isRegistryRequestTerminalStatus(detail.request.status)) {
-          if (Date.now() >= deadline) {
-            throw new Error(
-              `Timed out waiting for publishing request ${detail.request.id}. Check it with \`uapkg requests status ${detail.request.id}\`.`,
-            );
+        const watch = new RequestWatch(
+          Date.now() + PUBLISH_WATCH_TIMEOUT_MS,
+          `Timed out waiting for publishing request ${created.requestId}. Check it with \`uapkg requests status ${created.requestId}\`.`,
+        );
+        let detail: Awaited<ReturnType<typeof readRequest>>;
+        try {
+          detail = await watch.read(readRequest);
+          let previousStatus = '';
+          while (!isRegistryRequestTerminalStatus(detail.request.status)) {
+            if (this.options.outputFormat === 'text' && detail.request.status !== previousStatus) {
+              process.stdout.write(
+                `${detail.request.id}: ${detail.request.status}${detail.request.currentStep ? ` (${detail.request.currentStep})` : ''}\n`,
+              );
+              previousStatus = detail.request.status;
+            }
+            await watch.wait();
+            detail = await watch.read(readRequest);
           }
-          if (this.options.outputFormat === 'text' && detail.request.status !== previousStatus) {
-            process.stdout.write(
-              `${detail.request.id}: ${detail.request.status}${detail.request.currentStep ? ` (${detail.request.currentStep})` : ''}\n`,
-            );
-            previousStatus = detail.request.status;
-          }
-          await delay(2_000);
-          detail = await readRequest();
+        } finally {
+          watch.dispose();
         }
 
         if (!usesActionsIdempotency) idempotencyStore.clear(submissionDigest);
@@ -353,8 +357,4 @@ function normalizeOwner(value: string | undefined): string | undefined {
     throw new Error('The publish owner must be a valid UAPKG organization name.');
   }
   return owner;
-}
-
-function delay(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }

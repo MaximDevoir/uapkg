@@ -4,6 +4,7 @@ import type { UAPKGLifecycleCommandName, UAPKGOutputFormat } from '#cli/cli/UAPK
 import { describeControlPlaneError } from '#cli/control-plane/AccountManager.ts';
 import { AuthenticationSelector } from '#cli/control-plane/AuthenticationSelector.ts';
 import { ControlPlaneClient } from '#cli/control-plane/ControlPlaneClient.ts';
+import { RequestWatch } from '#cli/control-plane/RequestWatch.ts';
 import {
   type ControlPlaneAuthMode,
   ControlPlaneError,
@@ -96,24 +97,9 @@ export class PackageLifecycleCommand implements Command {
         return 0;
       }
 
-      let detail = await client.getRegistryRequestDetail(authentication.credential, created.requestId);
-      let previousStatus = '';
-      const deadline = Date.now() + WATCH_TIMEOUT_MS;
-      while (!isRegistryRequestTerminalStatus(detail.request.status)) {
-        if (Date.now() >= deadline) {
-          throw new Error(
-            `Timed out waiting for request ${detail.request.id}. Check it with \`uapkg requests status ${detail.request.id}\`.`,
-          );
-        }
-        if (this.options.outputFormat === 'text' && detail.request.status !== previousStatus) {
-          process.stdout.write(
-            `${detail.request.id}: ${detail.request.status}${detail.request.currentStep ? ` (${detail.request.currentStep})` : ''}\n`,
-          );
-          previousStatus = detail.request.status;
-        }
-        await delay(2_000);
+      const readRequest = async (signal: AbortSignal) => {
         try {
-          detail = await client.getRegistryRequestDetail(authentication.credential, created.requestId);
+          return await client.getRegistryRequestDetail(authentication.credential, created.requestId, signal);
         } catch (error) {
           if (!(error instanceof ControlPlaneError) || error.status !== 401) throw error;
           if (authentication.kind === 'gat') throw error;
@@ -127,8 +113,29 @@ export class PackageLifecycleCommand implements Command {
             false,
             oidcTarget,
           );
-          detail = await client.getRegistryRequestDetail(authentication.credential, created.requestId);
+          return client.getRegistryRequestDetail(authentication.credential, created.requestId, signal);
         }
+      };
+      const watch = new RequestWatch(
+        Date.now() + WATCH_TIMEOUT_MS,
+        `Timed out waiting for request ${created.requestId}. Check it with \`uapkg requests status ${created.requestId}\`.`,
+      );
+      let detail: Awaited<ReturnType<typeof readRequest>>;
+      try {
+        detail = await watch.read(readRequest);
+        let previousStatus = '';
+        while (!isRegistryRequestTerminalStatus(detail.request.status)) {
+          if (this.options.outputFormat === 'text' && detail.request.status !== previousStatus) {
+            process.stdout.write(
+              `${detail.request.id}: ${detail.request.status}${detail.request.currentStep ? ` (${detail.request.currentStep})` : ''}\n`,
+            );
+            previousStatus = detail.request.status;
+          }
+          await watch.wait();
+          detail = await watch.read(readRequest);
+        }
+      } finally {
+        watch.dispose();
       }
 
       idempotencyStore.clear(submissionDigest);
@@ -186,8 +193,4 @@ export class PackageLifecycleCommand implements Command {
     process.stdout.write(output.stdout);
     if (output.stderr) process.stderr.write(output.stderr);
   }
-}
-
-function delay(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
