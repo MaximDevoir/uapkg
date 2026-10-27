@@ -532,7 +532,7 @@ describe('PublishCommand (artifact-first)', () => {
     );
   });
 
-  it('leaves status-polling failures on the existing outer error path', async () => {
+  it('leaves permanent status-polling failures on the existing outer error path', async () => {
     const trust = registryTrust();
     const archivePath = await makeArchive({ name: 'example', version: '1.2.3', kind: 'plugin' });
     vi.spyOn(AuthenticationSelector.prototype, 'select').mockResolvedValue({
@@ -545,7 +545,7 @@ describe('PublishCommand (artifact-first)', () => {
       message: 'queued',
     });
     vi.spyOn(ControlPlaneClient.prototype, 'getRegistryRequestDetail').mockRejectedValue(
-      new ControlPlaneError('REQUEST_STATUS_UNAVAILABLE', 'Status polling failed.', 503),
+      new ControlPlaneError('REQUEST_STATUS_FORBIDDEN', 'Status polling failed.', 403),
     );
     const reportOne = vi.fn();
     const root = publishRoot(trust);
@@ -564,8 +564,49 @@ describe('PublishCommand (artifact-first)', () => {
 
     expect(reportOne).not.toHaveBeenCalled();
     expect(stderr.mock.calls.map(([value]) => String(value)).join('')).toBe(
-      'Status polling failed. (REQUEST_STATUS_UNAVAILABLE)\n',
+      'Status polling failed. (REQUEST_STATUS_FORBIDDEN)\n',
     );
+  });
+
+  it('backs off a throttled status read without submitting the publication twice', async () => {
+    const trust = registryTrust();
+    const archivePath = await makeArchive({ name: 'example', version: '1.2.3', kind: 'plugin' });
+    vi.useFakeTimers();
+    vi.spyOn(AuthenticationSelector.prototype, 'select').mockResolvedValue({
+      kind: 'login',
+      credential: { kind: 'bearer', accessToken: 'test-token' },
+    });
+    const submit = vi
+      .spyOn(ControlPlaneClient.prototype, 'submitRegistryRequest')
+      .mockResolvedValue({ requestId: 'request-ready', status: 'queued', message: 'queued' });
+    let started!: () => void;
+    const firstRead = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const read = vi
+      .spyOn(ControlPlaneClient.prototype, 'getRegistryRequestDetail')
+      .mockImplementationOnce(async () => {
+        started();
+        throw new ControlPlaneError('RATE_LIMIT_EXCEEDED', 'Wait', 429, undefined, { retryAfterMs: 60_000 });
+      })
+      .mockResolvedValueOnce({
+        request: { id: 'request-ready', registryId: trust.registryId, kind: 'publish', status: 'ready' },
+      });
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const result = new PublishCommand(publishRoot(trust), {
+      repository: 'acme/example',
+      assetPath: archivePath,
+      auth: 'login',
+      detach: false,
+      outputFormat: 'json',
+    }).execute();
+    await firstRead;
+    await vi.advanceTimersByTimeAsync(59_999);
+    expect(read).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(result).resolves.toBe(0);
+    expect(submit).toHaveBeenCalledTimes(1);
+    expect(read).toHaveBeenCalledTimes(2);
   });
 
   it('re-exchanges an expired OIDC session while reading request status', async () => {
@@ -626,8 +667,18 @@ describe('PublishCommand (artifact-first)', () => {
       registryId: trust.registryId,
       packageName: 'example',
     });
-    expect(getRequest).toHaveBeenNthCalledWith(1, { kind: 'bearer', accessToken: 'oidc-session-one' }, 'request-ready');
-    expect(getRequest).toHaveBeenNthCalledWith(2, { kind: 'bearer', accessToken: 'oidc-session-two' }, 'request-ready');
+    expect(getRequest).toHaveBeenNthCalledWith(
+      1,
+      { kind: 'bearer', accessToken: 'oidc-session-one' },
+      'request-ready',
+      expect.any(AbortSignal),
+    );
+    expect(getRequest).toHaveBeenNthCalledWith(
+      2,
+      { kind: 'bearer', accessToken: 'oidc-session-two' },
+      'request-ready',
+      expect.any(AbortSignal),
+    );
   });
 });
 

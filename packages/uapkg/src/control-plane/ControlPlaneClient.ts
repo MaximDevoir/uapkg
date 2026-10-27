@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import * as oauth from 'oauth4webapi';
 import { z } from 'zod';
+import { parseRetryAfter } from '#cli/control-plane/RetryAfter.ts';
 import {
   type AccountSelf,
   type ActivatedCliLoginGrant,
@@ -254,8 +255,11 @@ export class ControlPlaneClient {
   public async getRegistryRequestDetail(
     credential: ControlPlaneCredential,
     requestId: string,
+    signal?: AbortSignal,
   ): Promise<RegistryRequestDetail> {
-    const value = await this.requestJson(credential, 'GET', `/v1/registry-requests/${encodeURIComponent(requestId)}`);
+    const value = await this.requestJson(credential, 'GET', `/v1/registry-requests/${encodeURIComponent(requestId)}`, {
+      signal,
+    });
     const parsed = requestDetailResponseSchema.safeParse(value);
     if (!parsed.success) {
       throw new ControlPlaneError('REGISTRY_REQUEST_RESPONSE_INVALID', 'The publishing request response was invalid.');
@@ -332,6 +336,7 @@ export class ControlPlaneClient {
 
     const value = await readJson(response);
     if (!response.ok) {
+      const retryAfterMs = parseRetryAfter(response.headers.get('retry-after'));
       const parsed = errorSchema.safeParse(value);
       if (parsed.success) {
         throw new ControlPlaneError(
@@ -339,12 +344,15 @@ export class ControlPlaneClient {
           parsed.data.error.message,
           response.status,
           parsed.data.error.details,
+          { retryAfterMs },
         );
       }
       throw new ControlPlaneError(
         `HTTP_${response.status}`,
         `The UAPKG control plane returned HTTP ${response.status}.`,
         response.status,
+        undefined,
+        { retryAfterMs },
       );
     }
     return value;
@@ -395,7 +403,7 @@ async function readJson(response: Response): Promise<unknown> {
       `The UAPKG control plane returned a non-JSON response (HTTP ${response.status}).`,
       response.status,
       undefined,
-      { cause: error },
+      { cause: error, retryAfterMs: parseRetryAfter(response.headers.get('retry-after')) },
     );
   }
 }

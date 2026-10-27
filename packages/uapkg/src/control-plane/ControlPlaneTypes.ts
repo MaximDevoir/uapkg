@@ -219,15 +219,18 @@ export interface ControlPlaneApiErrorBody {
 }
 
 export class ControlPlaneError extends Error {
+  public readonly retryAfterMs?: number;
+
   public constructor(
     public readonly code: string,
     message: string,
     public readonly status?: number,
     public readonly details?: Readonly<Record<string, unknown>>,
-    options?: ErrorOptions,
+    options?: ErrorOptions & { readonly retryAfterMs?: number },
   ) {
     super(message, options);
     this.name = 'ControlPlaneError';
+    this.retryAfterMs = options?.retryAfterMs;
   }
 }
 

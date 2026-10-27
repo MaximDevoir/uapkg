@@ -20,6 +20,31 @@ afterEach(() => {
 });
 
 describe('ControlPlaneClient CLI login confirmation', () => {
+  it('preserves retry timing without automatically resubmitting a mutation', async () => {
+    const fetch = vi.fn(async () =>
+      Response.json(
+        { ok: false, error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Wait' } },
+        { status: 429, headers: { 'retry-after': '90' } },
+      ),
+    );
+    vi.stubGlobal('fetch', fetch);
+    const client = new ControlPlaneClient();
+    await expect(client.confirmCliLogin({ kind: 'bearer', accessToken: 'test-token' })).rejects.toMatchObject({
+      status: 429,
+      retryAfterMs: 90_000,
+    });
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves Retry-After on a non-JSON unavailable response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('Unavailable', { status: 503, headers: { 'retry-after': '45' } })),
+    );
+    await expect(
+      new ControlPlaneClient().getRegistryRequestDetail({ kind: 'bearer', accessToken: 'test-token' }, 'request'),
+    ).rejects.toMatchObject({ status: 503, retryAfterMs: 45_000 });
+  });
   it('validates preparation and activation responses over DPoP', async () => {
     const grantId = '22222222-2222-4222-8222-222222222222';
     const predecessorGrantId = '11111111-1111-4111-8111-111111111111';

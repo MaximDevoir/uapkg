@@ -73,12 +73,12 @@ describe('GitHubActionsOidcCredentialProvider', () => {
     });
   });
 
-  it('honors bounded Retry-After delays for GitHub 429 and exchange 503 responses', async () => {
+  it('honors Retry-After delays within the retry budget', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(new Response(null, { status: 429, headers: { 'retry-after': '2' } }))
       .mockResolvedValueOnce(Response.json({ value: 'github-identity-secret' }))
-      .mockResolvedValueOnce(new Response(null, { status: 503, headers: { 'retry-after': '90' } }))
+      .mockResolvedValueOnce(new Response(null, { status: 503, headers: { 'retry-after': '4' } }))
       .mockResolvedValueOnce(Response.json({ ok: true, token: 'uapkg-session-secret', expiresAt: 2_000_000_000 }));
     const sleep = vi.fn(async (_milliseconds: number) => undefined);
     const provider = new GitHubActionsOidcCredentialProvider({
@@ -90,8 +90,37 @@ describe('GitHubActionsOidcCredentialProvider', () => {
 
     await expect(provider.exchange(trust, target)).resolves.toBe('uapkg-session-secret');
 
-    expect(sleep.mock.calls).toEqual([[2_000], [5_000]]);
+    expect(sleep.mock.calls).toEqual([[2_000], [4_000]]);
     expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it('surfaces a server delay beyond the retry budget without retrying early', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(Response.json({ value: 'github-identity-secret' }))
+      .mockResolvedValueOnce(
+        Response.json(
+          { ok: false, error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Wait' } },
+          { status: 429, headers: { 'retry-after': '90' } },
+        ),
+      );
+    const sleep = vi.fn(async (_milliseconds: number) => undefined);
+    const provider = new GitHubActionsOidcCredentialProvider({ fetch: fetchMock, sleep });
+    await expect(provider.exchange(trust, target)).rejects.toMatchObject({ status: 429, retryAfterMs: 90_000 });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(sleep).not.toHaveBeenCalled();
+  });
+
+  it('preserves a GitHub throttle beyond budget even when its response has no JSON body', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(null, { status: 429, headers: { 'retry-after': '90' } }));
+    const sleep = vi.fn(async (_milliseconds: number) => undefined);
+    await expect(
+      new GitHubActionsOidcCredentialProvider({ fetch: fetchMock, sleep }).exchange(trust, target),
+    ).rejects.toMatchObject({ code: 'OIDC_GITHUB_TOKEN_REJECTED', status: 429, retryAfterMs: 90_000 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(sleep).not.toHaveBeenCalled();
   });
 
   it('returns stable timeout diagnostics after the bounded retry budget', async () => {

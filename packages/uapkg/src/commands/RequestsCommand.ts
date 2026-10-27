@@ -2,6 +2,7 @@ import type { CompositionRoot } from '#cli/app/CompositionRoot.ts';
 import type { UAPKGOutputFormat } from '#cli/cli/UAPKGCommandLine.ts';
 import { describeControlPlaneError } from '#cli/control-plane/AccountManager.ts';
 import { ControlPlaneClient } from '#cli/control-plane/ControlPlaneClient.ts';
+import { RequestWatch } from '#cli/control-plane/RequestWatch.ts';
 import {
   ControlPlaneError,
   type RegistryRequestDetail,
@@ -46,27 +47,39 @@ export class RequestsCommand implements Command {
       }
 
       if (!this.options.requestId) throw new Error('`uapkg requests status` requires a request ID.');
-      let detail = await client.getRegistryRequestDetail(authentication.credential, this.options.requestId);
-      if (this.options.watch) {
-        let lastStatus = '';
-        while (!isRegistryRequestTerminalStatus(detail.request.status)) {
-          if (this.options.outputFormat === 'text' && detail.request.status !== lastStatus) {
-            process.stdout.write(
-              `${detail.request.id}: ${detail.request.status}${detail.request.currentStep ? ` (${detail.request.currentStep})` : ''}\n`,
-            );
-            lastStatus = detail.request.status;
-          }
-          await delay(2_000);
+      const requestId = this.options.requestId;
+      let detail: RegistryRequestDetail;
+      if (!this.options.watch) {
+        detail = await client.getRegistryRequestDetail(authentication.credential, requestId);
+      } else {
+        const readRequest = async (signal: AbortSignal) => {
           try {
-            detail = await client.getRegistryRequestDetail(authentication.credential, this.options.requestId);
+            return await client.getRegistryRequestDetail(authentication.credential, requestId, signal);
           } catch (error) {
             if (!(error instanceof ControlPlaneError) || error.status !== 401) throw error;
             this.root.accountManager.invalidateAccessCredentials(trust);
             authentication = await this.root.accountManager.getAccessCredential(trust, [
               'publishing.request.read.self',
             ]);
-            detail = await client.getRegistryRequestDetail(authentication.credential, this.options.requestId);
+            return client.getRegistryRequestDetail(authentication.credential, requestId, signal);
           }
+        };
+        const watch = new RequestWatch();
+        try {
+          detail = await watch.read(readRequest);
+          let lastStatus = '';
+          while (!isRegistryRequestTerminalStatus(detail.request.status)) {
+            if (this.options.outputFormat === 'text' && detail.request.status !== lastStatus) {
+              process.stdout.write(
+                `${detail.request.id}: ${detail.request.status}${detail.request.currentStep ? ` (${detail.request.currentStep})` : ''}\n`,
+              );
+              lastStatus = detail.request.status;
+            }
+            await watch.wait();
+            detail = await watch.read(readRequest);
+          }
+        } finally {
+          watch.dispose();
         }
       }
       this.printRequest(detail, trust.alias);
@@ -111,8 +124,4 @@ export class RequestsCommand implements Command {
     });
     process.stdout.write(output.stdout);
   }
-}
-
-function delay(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
